@@ -61,14 +61,88 @@
 <input type="file" id="import-in" accept=".json,application/json" onchange="handleImport(event)" style="display:none">
 <div class="container">
 <div class="site-header">
+
+  <!-- Stone texture + borders -->
+  <div class="sh-stone"></div>
+  <div class="sh-border-top"></div>
+  <div class="sh-border-bottom"></div>
+
+  <!-- Blood drips -->
+  <div class="sh-drip" style="left:15%;height:9px;opacity:.75"></div>
+  <div class="sh-drip" style="left:28%;height:5px;opacity:.5"></div>
+  <div class="sh-drip" style="left:44%;height:4px;opacity:.4"></div>
+  <div class="sh-drip" style="left:67%;height:12px;opacity:.8"></div>
+  <div class="sh-drip" style="left:81%;height:6px;opacity:.6"></div>
+
+  <!-- Rune inscriptions -->
+  <div class="sh-runes sh-runes-l">ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾ</div>
+  <div class="sh-runes sh-runes-r">ᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗ</div>
+
+  <!-- Chains -->
+  <div class="sh-chain sh-chain-l"></div>
+  <div class="sh-chain sh-chain-r"></div>
+
+  <!-- Torch LEFT -->
+  <div class="sh-torch sh-torch-l">
+    <svg width="22" height="52" viewBox="0 0 22 52">
+      <ellipse class="sh-flame-a" cx="11" cy="18" rx="5" ry="8" fill="rgba(255,200,50,.9)"/>
+      <ellipse class="sh-flame-b" cx="11" cy="21" rx="3.5" ry="5" fill="rgba(255,120,20,.85)"/>
+      <ellipse cx="11" cy="24" rx="2" ry="3" fill="rgba(255,60,0,.95)"/>
+      <rect x="9" y="26" width="4" height="16" rx="1" fill="#6b4a15"/>
+      <rect x="8" y="26" width="6" height="3" rx="1" fill="#8a6030"/>
+      <rect x="7.5" y="38" width="7" height="3" rx="1" fill="#5a4010"/>
+    </svg>
+    <div class="sh-smoke" style="left:8px;top:8px;animation-delay:0s"></div>
+    <div class="sh-smoke" style="left:12px;top:6px;animation-delay:.4s;width:3px"></div>
+  </div>
+
+  <!-- Torch RIGHT -->
+  <div class="sh-torch sh-torch-r">
+    <svg width="22" height="52" viewBox="0 0 22 52">
+      <ellipse class="sh-flame-b" cx="11" cy="18" rx="5" ry="8" fill="rgba(255,200,50,.9)"/>
+      <ellipse class="sh-flame-a" cx="11" cy="21" rx="3.5" ry="5" fill="rgba(255,120,20,.85)"/>
+      <ellipse cx="11" cy="24" rx="2" ry="3" fill="rgba(255,60,0,.95)"/>
+      <rect x="9" y="26" width="4" height="16" rx="1" fill="#6b4a15"/>
+      <rect x="8" y="26" width="6" height="3" rx="1" fill="#8a6030"/>
+      <rect x="7.5" y="38" width="7" height="3" rx="1" fill="#5a4010"/>
+    </svg>
+    <div class="sh-smoke" style="left:8px;top:8px;animation-delay:.2s"></div>
+    <div class="sh-smoke" style="left:13px;top:6px;animation-delay:.6s;width:3px"></div>
+  </div>
+
+  <!-- Torch ambient glow -->
+  <div class="sh-glow-l"></div>
+  <div class="sh-glow-r"></div>
+
+  <!-- Bats -->
+  <div class="sh-bat sh-bat-1"><svg width="24" height="14" viewBox="0 0 24 14"><path d="M12,7 C8,2 2,0 0,3 C3,3 5,5 6,7 C5,5 7,4 9,6 L12,4 L15,6 C17,4 19,5 18,7 C19,5 21,3 24,3 C22,0 16,2 12,7Z" fill="rgba(20,8,30,.95)"/></svg></div>
+  <div class="sh-bat sh-bat-2"><svg width="18" height="10" viewBox="0 0 24 14"><path d="M12,7 C8,2 2,0 0,3 C3,3 5,5 6,7 C5,5 7,4 9,6 L12,4 L15,6 C17,4 19,5 18,7 C19,5 21,3 24,3 C22,0 16,2 12,7Z" fill="rgba(20,8,30,.85)"/></svg></div>
+  <div class="sh-bat sh-bat-3"><svg width="14" height="8" viewBox="0 0 24 14"><path d="M12,7 C8,2 2,0 0,3 C3,3 5,5 6,7 C5,5 7,4 9,6 L12,4 L15,6 C17,4 19,5 18,7 C19,5 21,3 24,3 C22,0 16,2 12,7Z" fill="rgba(20,8,30,.8)"/></svg></div>
+
+  <!-- Corner ornaments -->
+  <svg class="sh-corner sh-corner-tl" viewBox="0 0 40 40"><path d="M2,2 L18,2 L18,4 L4,4 L4,18 L2,18 Z" fill="rgba(201,168,76,.65)"/><circle cx="3" cy="3" r="2" fill="rgba(201,168,76,.85)"/><path d="M8,8 L14,8 L14,10 L10,10 L10,14 L8,14 Z" fill="rgba(201,168,76,.3)"/></svg>
+  <svg class="sh-corner sh-corner-tr" viewBox="0 0 40 40"><path d="M2,2 L18,2 L18,4 L4,4 L4,18 L2,18 Z" fill="rgba(201,168,76,.65)"/><circle cx="3" cy="3" r="2" fill="rgba(201,168,76,.85)"/><path d="M8,8 L14,8 L14,10 L10,10 L10,14 L8,14 Z" fill="rgba(201,168,76,.3)"/></svg>
+  <svg class="sh-corner sh-corner-bl" viewBox="0 0 40 40"><path d="M2,2 L18,2 L18,4 L4,4 L4,18 L2,18 Z" fill="rgba(201,168,76,.65)"/><circle cx="3" cy="3" r="2" fill="rgba(201,168,76,.85)"/></svg>
+  <svg class="sh-corner sh-corner-br" viewBox="0 0 40 40"><path d="M2,2 L18,2 L18,4 L4,4 L4,18 L2,18 Z" fill="rgba(201,168,76,.65)"/><circle cx="3" cy="3" r="2" fill="rgba(201,168,76,.85)"/></svg>
+
+  <!-- Cobwebs -->
+  <svg class="sh-web sh-web-tl" viewBox="0 0 70 70"><line x1="0" y1="0" x2="70" y2="20" stroke="rgba(200,200,180,.55)" stroke-width=".5"/><line x1="0" y1="0" x2="50" y2="70" stroke="rgba(200,200,180,.55)" stroke-width=".5"/><line x1="0" y1="0" x2="0" y2="70" stroke="rgba(200,200,180,.35)" stroke-width=".5"/><path d="M0,15 Q25,18 35,8" stroke="rgba(200,200,180,.5)" stroke-width=".5" fill="none"/><path d="M0,32 Q30,35 42,20" stroke="rgba(200,200,180,.4)" stroke-width=".5" fill="none"/><path d="M0,50 Q28,52 48,35" stroke="rgba(200,200,180,.3)" stroke-width=".5" fill="none"/><path d="M15,0 Q18,25 8,38" stroke="rgba(200,200,180,.5)" stroke-width=".5" fill="none"/><path d="M32,0 Q35,22 22,42" stroke="rgba(200,200,180,.4)" stroke-width=".5" fill="none"/></svg>
+  <svg class="sh-web sh-web-tr" viewBox="0 0 70 70"><line x1="0" y1="0" x2="70" y2="20" stroke="rgba(200,200,180,.55)" stroke-width=".5"/><line x1="0" y1="0" x2="50" y2="70" stroke="rgba(200,200,180,.55)" stroke-width=".5"/><line x1="0" y1="0" x2="0" y2="70" stroke="rgba(200,200,180,.35)" stroke-width=".5"/><path d="M0,15 Q25,18 35,8" stroke="rgba(200,200,180,.5)" stroke-width=".5" fill="none"/><path d="M0,32 Q30,35 42,20" stroke="rgba(200,200,180,.4)" stroke-width=".5" fill="none"/><path d="M15,0 Q18,25 8,38" stroke="rgba(200,200,180,.5)" stroke-width=".5" fill="none"/><path d="M32,0 Q35,22 22,42" stroke="rgba(200,200,180,.4)" stroke-width=".5" fill="none"/></svg>
+
+  <!-- Skulls -->
+  <div class="sh-skull sh-skull-l">💀</div>
+  <div class="sh-skull sh-skull-r">💀</div>
+
+  <!-- Central content -->
   <div class="sub">✦ Transforme Hábitos em Lenda ✦</div>
-  <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:6px">
-    <span style="color:var(--gold);opacity:.35;font-size:18px">⚔</span>
-    <span style="color:var(--gold);opacity:.2;font-size:11px">✦ ─────── ✦</span>
-    <span style="color:var(--gold);opacity:.35;font-size:18px">🛡</span>
+  <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:6px;position:relative;z-index:2">
+    <span style="color:var(--gold);opacity:.4;font-size:18px">⚔</span>
+    <span style="color:var(--gold);opacity:.25;font-size:11px">✦ ─────── ✦</span>
+    <span style="color:var(--gold);opacity:.4;font-size:18px">🛡</span>
   </div>
   <h1>Life RPG</h1>
   <div class="orn"><span style="color:var(--gold);opacity:.5">✦ ❖ ✦</span></div>
+
 </div>
 <div class="hero-status mb12" id="hero-status-card">
 

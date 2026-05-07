@@ -33,11 +33,125 @@ body::after{
 }
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(201,168,76,.05) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 20% 80%,rgba(139,26,26,.07) 0%,transparent 50%),repeating-linear-gradient(0deg,transparent,transparent 80px,rgba(201,168,76,.006) 80px,rgba(201,168,76,.006) 81px);pointer-events:none;z-index:1;}
 .container{max-width:1200px;margin:0 auto;padding:0 16px 96px;position:relative;z-index:1;}
-.site-header{text-align:center;padding:32px 16px 20px;position:relative;}
-.site-header .sub{font-size:11px;letter-spacing:.4em;color:var(--gold);text-transform:uppercase;margin-bottom:6px;opacity:.8;}
-.site-header h1{font-family:'Cinzel Decorative',serif;font-size:clamp(18px,5vw,36px);color:var(--gold3);text-shadow:0 0 40px rgba(201,168,76,.6);line-height:1.15;margin-bottom:4px;}
-.site-header .tagline{font-style:italic;font-size:14px;color:var(--text2);margin-bottom:14px;}
-.orn{display:flex;align-items:center;gap:10px;margin:4px 0;}.orn::before,.orn::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.25;}
+/* ══════════════════════════════════════════════════════════════
+   SITE HEADER — Dark Fantasy Dungeon
+   ══════════════════════════════════════════════════════════════ */
+@keyframes shFlame1{0%,100%{transform:scaleY(1) scaleX(1);opacity:.9;}25%{transform:scaleY(1.1) scaleX(.94);opacity:1;}50%{transform:scaleY(.93) scaleX(1.06);opacity:.78;}75%{transform:scaleY(1.07) scaleX(.97);opacity:.92;}}
+@keyframes shFlame2{0%,100%{transform:scaleY(1) scaleX(1);opacity:.7;}33%{transform:scaleY(1.12) scaleX(.93);opacity:.9;}66%{transform:scaleY(.91) scaleX(1.07);opacity:.6;}}
+@keyframes shTorchGlow{0%,100%{filter:drop-shadow(0 0 8px rgba(255,140,0,.65)) drop-shadow(0 0 18px rgba(255,80,0,.35));}50%{filter:drop-shadow(0 0 15px rgba(255,165,0,.95)) drop-shadow(0 0 30px rgba(255,100,0,.55));}}
+@keyframes shSmoke{0%{transform:translateY(0) scaleX(1);opacity:.35;}100%{transform:translateY(-28px) scaleX(1.6);opacity:0;}}
+@keyframes shBat1{0%{transform:translate(-30px,0);}100%{transform:translate(calc(100vw + 30px),0);}}
+@keyframes shBat2{0%{transform:translate(-20px,0);}100%{transform:translate(calc(100vw + 20px),0);}}
+@keyframes shBat3{0%{transform:translate(calc(100vw + 20px),0);}100%{transform:translate(-20px,0);}}
+@keyframes shSkull{0%,100%{transform:translateY(0) rotate(0deg);}50%{transform:translateY(-4px) rotate(2deg);}}
+@keyframes shChain{0%,100%{transform:rotate(-4deg);}50%{transform:rotate(4deg);}}
+@keyframes shRune{0%,100%{opacity:.07;}50%{opacity:.2;}}
+@keyframes shGlowPulse{0%,100%{text-shadow:0 0 22px rgba(201,168,76,.55),0 0 60px rgba(201,168,76,.2);}50%{text-shadow:0 0 35px rgba(201,168,76,.85),0 0 90px rgba(201,168,76,.35),0 0 130px rgba(201,168,76,.12);}}
+@keyframes shCorner{0%,100%{opacity:.5;}50%{opacity:.95;}}
+
+.site-header{
+  text-align:center;padding:32px 16px 20px;
+  position:relative;overflow:hidden;
+  background:linear-gradient(180deg,rgba(8,5,16,.98) 0%,rgba(7,6,13,.96) 60%,rgba(11,9,20,.97) 100%);
+  min-height:160px;
+}
+
+/* Stone texture */
+.sh-stone{
+  position:absolute;inset:0;pointer-events:none;
+  background-image:
+    repeating-linear-gradient(0deg,transparent,transparent 4px,rgba(255,255,255,.007) 4px,rgba(255,255,255,.007) 5px),
+    repeating-linear-gradient(90deg,transparent,transparent 6px,rgba(0,0,0,.06) 6px,rgba(0,0,0,.06) 7px);
+}
+
+/* Gold borders */
+.sh-border-top{
+  position:absolute;top:0;left:0;right:0;height:5px;z-index:3;
+  background:linear-gradient(90deg,#1a1208 0%,#3d2a0a 8%,#6b4a15 18%,#c9a84c 33%,#f5e098 50%,#c9a84c 67%,#6b4a15 82%,#3d2a0a 92%,#1a1208 100%);
+}
+.sh-border-bottom{
+  position:absolute;bottom:0;left:0;right:0;height:3px;z-index:3;
+  background:linear-gradient(90deg,transparent,rgba(201,168,76,.45),rgba(201,168,76,.7),rgba(201,168,76,.45),transparent);
+}
+
+/* Blood drips */
+.sh-drip{
+  position:absolute;top:5px;width:3px;border-radius:0 0 3px 3px;z-index:2;
+  background:linear-gradient(180deg,rgba(139,0,0,.9),rgba(100,0,0,.25));
+}
+
+/* Runes */
+.sh-runes{
+  position:absolute;top:50%;transform:translateY(-50%);
+  font-size:10px;letter-spacing:7px;color:rgba(201,168,76,.1);
+  writing-mode:vertical-lr;animation:shRune 5s ease-in-out infinite;
+  pointer-events:none;z-index:1;
+}
+.sh-runes-l{left:6px;}
+.sh-runes-r{right:6px;animation-delay:2.5s;}
+
+/* Chains */
+.sh-chain{
+  position:absolute;top:0;width:2px;z-index:2;
+  background:repeating-linear-gradient(180deg,#5a4a2a 0px,#8a6a35 4px,#4a3a1a 8px);
+  animation:shChain 5s ease-in-out infinite;transform-origin:top center;
+}
+.sh-chain-l{left:52px;height:38px;animation-delay:.8s;}
+.sh-chain-r{right:52px;height:30px;animation-delay:1.8s;}
+
+/* Torches */
+.sh-torch{position:absolute;top:5px;z-index:4;animation:shTorchGlow 1.6s ease-in-out infinite;}
+.sh-torch-l{left:26px;}
+.sh-torch-r{right:26px;animation-delay:.45s;}
+.sh-flame-a{animation:shFlame1 .32s ease-in-out infinite;transform-origin:11px 22px;}
+.sh-flame-b{animation:shFlame2 .27s ease-in-out infinite;animation-delay:.1s;transform-origin:11px 22px;}
+
+/* Smoke */
+.sh-smoke{
+  position:absolute;width:4px;height:7px;
+  background:rgba(180,160,120,.28);border-radius:50%;
+  animation:shSmoke 1.3s ease-out infinite;
+}
+
+/* Ambient torch glow */
+.sh-glow-l,.sh-glow-r{
+  position:absolute;top:0;width:130px;height:130px;pointer-events:none;z-index:1;
+}
+.sh-glow-l{left:0;background:radial-gradient(ellipse at 25px 35px,rgba(255,140,0,.07),transparent 70%);}
+.sh-glow-r{right:0;background:radial-gradient(ellipse at 105px 35px,rgba(255,140,0,.07),transparent 70%);}
+
+/* Bats */
+.sh-bat{position:absolute;pointer-events:none;z-index:5;}
+.sh-bat-1{top:28px;animation:shBat1 13s linear infinite;}
+.sh-bat-2{top:55px;animation:shBat2 19s linear infinite;animation-delay:-7s;}
+.sh-bat-3{top:38px;animation:shBat3 16s linear infinite;animation-delay:-4s;}
+
+/* Corner ornaments */
+.sh-corner{position:absolute;width:42px;height:42px;z-index:4;animation:shCorner 4s ease-in-out infinite;}
+.sh-corner-tl{top:5px;left:5px;}
+.sh-corner-tr{top:5px;right:5px;transform:scaleX(-1);}
+.sh-corner-bl{bottom:3px;left:5px;transform:scaleY(-1);animation-delay:1s;}
+.sh-corner-br{bottom:3px;right:5px;transform:scale(-1,-1);animation-delay:2s;}
+
+/* Cobwebs */
+.sh-web{position:absolute;top:0;width:72px;height:72px;opacity:.22;z-index:3;pointer-events:none;}
+.sh-web-tl{left:0;}
+.sh-web-tr{right:0;transform:scaleX(-1);}
+
+/* Skulls */
+.sh-skull{
+  position:absolute;bottom:16px;font-size:20px;z-index:4;
+  animation:shSkull 3.5s ease-in-out infinite;
+  filter:grayscale(20%) brightness(.65);
+}
+.sh-skull-l{left:68px;animation-delay:.6s;}
+.sh-skull-r{right:68px;animation-delay:1.4s;}
+
+/* Central text — above all decorations */
+.site-header .sub{position:relative;z-index:6;font-size:11px;letter-spacing:.4em;color:var(--gold);text-transform:uppercase;margin-bottom:6px;opacity:.8;}
+.site-header h1{position:relative;z-index:6;font-family:'Cinzel Decorative',serif;font-size:clamp(18px,5vw,36px);color:var(--gold3);animation:shGlowPulse 3s ease-in-out infinite;line-height:1.15;margin-bottom:4px;}
+.site-header .tagline{position:relative;z-index:6;font-style:italic;font-size:14px;color:var(--text2);margin-bottom:14px;}
+.orn{position:relative;z-index:6;display:flex;align-items:center;gap:10px;margin:4px 0;}.orn::before,.orn::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.25;}
 /* ── HERO STATUS — Câmara de Obsidiana ──────────────────────────────────── */
 .hero-status{
   background:
