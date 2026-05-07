@@ -1,0 +1,578 @@
+// engine.js — Game state, save/load, combat, habits, quests, XP, events
+// ────────────────────────────────────────────────────────────
+"use strict";
+
+const WS=()=>{const d=new Date();const day=d.getDay();const diff=d.getDate()-day+(day===0?-6:1);const m=new Date(d);m.setDate(diff);return m.toDateString();};
+const DEF=()=>({
+  lv:1,xp:0,totXp:0,hp:100,mhp:100,gold:0,totGo:0,cr:0,totCr:0,
+  streak:0,cStr:0,daysA:0,kills:0,evC:0,evHist:[],
+  xpTd:0,goTd:0,dnTd:0,bdTd:0,lastDay:null,hist:[],phist:[],bkHist:[],
+  aQ:[],badLog:{},avData:null,
+  attrs:{
+    vit:{nm:'Vitalidade',ic:'💪',v:10,sk:0,cl:'#e74c3c'},
+    men:{nm:'Mente',ic:'🧠',v:10,sk:0,cl:'#3498db'},
+    dis:{nm:'Disciplina',ic:'🔱',v:10,sk:0,cl:'#9b59b6'},
+    ene:{nm:'Energia',ic:'⚡',v:10,sk:0,cl:'#f39c12'},
+    sab:{nm:'Sabedoria',ic:'📖',v:10,sk:0,cl:'#1abc9c'},
+    car:{nm:'Carisma',ic:'🌟',v:10,sk:0,cl:'#e67e22'},
+  },
+  habits:[
+    {id:'h1',nm:'Treino / Academia',ic:'🏋️',xb:50,gb:30,at:'vit',dn:false,sk:0,td:0},
+    {id:'h2',nm:'Meditação',ic:'🧘',xb:30,gb:18,at:'men',dn:false,sk:0,td:0},
+    {id:'h3',nm:'Journaling / Diário',ic:'📓',xb:25,gb:15,at:'sab',dn:false,sk:0,td:0},
+    {id:'h4',nm:'Dormir 7h+',ic:'😴',xb:35,gb:20,at:'vit',dn:false,sk:0,td:0},
+    {id:'h5',nm:'Beber 3L de água',ic:'💧',xb:20,gb:12,at:'ene',dn:false,sk:0,td:0},
+    {id:'h6',nm:'Seguir a Dieta',ic:'🥗',xb:30,gb:18,at:'vit',dn:false,sk:0,td:0},
+    {id:'h7',nm:'Mobilidade / Alongamento',ic:'🤸',xb:25,gb:15,at:'vit',dn:false,sk:0,td:0},
+    {id:'h8',nm:'Leitura 30min',ic:'📚',xb:25,gb:15,at:'sab',dn:false,sk:0,td:0},
+  ],
+  eq:{weapon:null,armor:null,offhand:null,head:null,feet:null,legs:null,hands:null},
+  owned:[],
+  boss:{idx:0,hp:500,mhp:500,ws:WS(),def:false},
+  activeEv:null,
+  tavHist:[],
+  playerClass:null,
+  activeDots:[],
+  classLockedAt:null,
+  bardBuff:null,
+  potions:{transform:0},
+  guildRank:{},
+  activeGuild:null, // id of active guild
+  profile:{name:'Herói',age:'',sex:'',weight:'',height:''},
+});
+
+let S=(()=>{
+  try{const s=localStorage.getItem('lrpg6');if(s){const p=JSON.parse(s);const d=DEF();for(const k in d)if(!(k in p))p[k]=d[k];if(!p.classLockedAt)p.classLockedAt=null;if(!p.bardBuff)p.bardBuff=null;if(!p.potions)p.potions={transform:0};if(!p.guildRank)p.guildRank={};if(!p.activeGuild&&p.activeGuild!==null)p.activeGuild=null;if(!p.profile)p.profile={name:'Herói',age:'',sex:'',weight:'',height:''};return p;}}catch(e){}
+  return DEF();
+})();
+let uAch=JSON.parse(localStorage.getItem('lrpgAch5')||'[]');
+let smF='all',shF='all';
+
+// ── SAVE: localStorage + nuvem (Firebase quando logado) ───────────
+const save=()=>{
+  localStorage.setItem('lrpg6', JSON.stringify(S));
+  if(window.cloudSave) window.cloudSave(S, uAch);
+};
+
+// ── SAVE CONQUISTAS: persiste uAch local + nuvem ──────────────────
+const saveAch=()=>{
+  localStorage.setItem('lrpgAch5', JSON.stringify(uAch));
+  if(window.cloudSave) window.cloudSave(S, uAch);
+};
+
+// =============== EQUIPMENT HELPERS ===============
+const eqPow=(s=S)=>{let p=0;for(const sl in s.eq){const e=EDB.find(x=>x.id===s.eq[sl]);if(e)p+=e.pw;}return p;};
+const eqAtk=(s=S)=>{let a=0;for(const sl in s.eq){const e=EDB.find(x=>x.id===s.eq[sl]);if(e)a+=e.atk;}return a;};
+const eqDef=(s=S)=>{let d=0;for(const sl in s.eq){const e=EDB.find(x=>x.id===s.eq[sl]);if(e)d+=e.def;}return d;};
+const iImg=(eq,cls='')=>{if(!eq)return'<span style="font-size:20px;opacity:.3">?</span>';const src=IMGS[eq.ik];return src?`<img src="${src}" class="${cls}" style="width:100%;height:100%;object-fit:contain;image-rendering:crisp-edges;filter:drop-shadow(0 2px 6px rgba(0,0,0,.8))" alt="${eq.nm}">`:'<span style="font-size:20px;opacity:.4">⚔️</span>';};
+
+function equipItem(id){
+  // Guard: cannot equip item not in inventory
+  if(!S.owned.includes(id)){
+    notify('🎒','Não no inventário','Você precisa adquirir o item antes de equipá-lo.','nr');
+    return;
+  }
+  const eq=EDB.find(e=>e.id===id);if(!eq)return;
+  if(!S.owned.includes(id)){notify('⚠️','Não possui','Forje no Ferreiro!','nr');return;}
+  S.eq[eq.slot]=id;save();renderEqPage();renderStrip();renderAll();
+  notify('⚔️','Equipado!',`${eq.nm} equipado! +${eq.pw}% poder`,'ng');
+}
+function buyEquip(id){
+  const eq=EDB.find(e=>e.id===id);if(!eq)return;
+  if(eq.isCrafted){notify('⚗️','Forja Exclusiva','Este item só pode ser criado na Mesa de Combinação (aba Crafting).','nc');return;}
+  if(S.owned.includes(id)){notify('💎','Já possui','Este item já foi forjado!','ng');return;}
+  if(isInventoryFull()){notify('🎒','Inventário Cheio!',`Máx. ${INV_MAX} itens. Venda algo na Taberna!`,'nr');return;}
+  if(S.cr<eq.price){notify('💎','Cristais insuf.',`Precisa de ${eq.price} 💎. Você tem ${S.cr}.`,'nc');return;}
+  S.cr-=eq.price;
+  S.owned.push(id);
+  // Do NOT auto-equip — player must choose to equip from inventory
+  save();renderAll();checkAch();
+  notify('💎','Adquirido!',`${eq.nm} adicionado ao inventário! (${getInventoryUsed()}/${INV_MAX} slots)`,'nc');
+}
+
+// =============== BOSS ===============
+const getBoss=()=>BOSSES[S.boss.idx];
+function checkBW(){if(S.boss.ws!==WS()){const ni=(S.boss.idx+1)%BOSSES.length;const b=BOSSES[ni];S.boss={idx:ni,hp:b.mh,mhp:b.mh,ws:WS(),def:false};save();notify('🐉','Novo Boss!',b.nm,'nr');}}
+// ══ LORE DOS BOSSES ══════════════════════════════════════════════════
+const BOSS_LORE=[
+  {lore:'Nas profundezas da Caverna do Amanhã, este ser ancestral aguarda. Alimentado por cada tarefa adiada e sonho engavetado, seu corpo cresce a cada hora desperdiçada. Sua respiração libera névoa do esquecimento — o veneno que apaga ambições e entorpece a vontade dos fracos.',weakness:'Ação imediata e consistência diária'},
+  {lore:'Nascido nas trevas da zona de conforto, o Demônio da Preguiça suga a energia vital de todos ao redor. Cada hora no sofá o alimenta; cada esforço resistido o fortalece. Suas correntes são invisíveis, mas prendem com força de ferro. Apenas o fogo da disciplina pode dissolver suas sombras pegajosas.',weakness:'Movimento constante e hábitos matinais'},
+  {lore:'Ela não tem forma definida — muda de rosto a cada instante, refletindo seus próprios medos. A Sombra da Ansiedade habita o espaço entre o que é e o que poderia ser ruim. Alimenta-se da ruminação e cresce no silêncio da noite. Só a presença plena e a gratidão pelo momento atual podem enfraquecê-la.',weakness:'Meditação, respiração e ação presente'},
+  {lore:'Construído tijolo a tijolo por anos de maus hábitos repetidos, o Golem é a manifestação física de rotinas destrutivas cristalizadas. Cada pedra de seu corpo é um vício não combatido. Lento mas imensamente resistente — ele não cede facilmente. A única forma de destruí-lo é partir as correntes hábito por hábito.',weakness:'Consistência de 21 dias e substituição de hábitos'},
+  {lore:'Imortal por definição — o Lich do Passado não pode ser morto pelo tempo, pois ele próprio controla o tempo. Coleciona memórias dolorosas e erros cometidos como troféus em sua torre. Enquanto você olhar para trás com arrependimento, ele se alimentará. Apenas o perdão a si mesmo pode quebrar o feitiço eterno.',weakness:'Autoaceitação e foco no crescimento futuro'},
+  {lore:'Sete cabeças — sete formas de distração. Redes sociais, notificações, conteúdo infinito e o canto sedutor do multitasking. Cortar uma cabeça faz crescerem duas. A Hidra da Distração só morre quando você mergulha em foco profundo e deliberado, ignorando o coro de suas vozes hipnóticas.',weakness:'Foco único e bloqueio total de distrações'},
+];
+// ── EFFECT RESOLVER ──────────────────────────────────────────────────────────
+function resolveEffects(baseDmg, src){
+  if(S.boss.def) return;
+  // Collect all fx from equipped items
+  const effects = [];
+  for(const sl in S.eq){
+    const id = S.eq[sl]; if(!id) continue;
+    const eq = EDB.find(e=>e.id===id); if(!eq||!eq.fx) continue;
+    effects.push(eq.fx);
+  }
+  effects.forEach(fx=>{
+    if(Math.random() > fx.chance) return;
+    let bonus = 0;
+    let label = `${fx.emoji} ${fx.label}`;
+    switch(fx.type){
+      case 'double_strike':
+        bonus = Math.floor(baseDmg * (fx.dmgMult||1.0));
+        S.boss.hp = Math.max(0, S.boss.hp - bonus);
+        bLog(`<span style="color:${fx.color}">${label}: golpe extra +${bonus} dano!</span>`);
+        break;
+      case 'multishot':
+        bonus = Math.floor(baseDmg * (fx.dmgMult||1.5));
+        S.boss.hp = Math.max(0, S.boss.hp - bonus);
+        bLog(`<span style="color:${fx.color}">${label}: salva extra +${bonus} dano!</span>`);
+        break;
+      case 'triple_element':
+        bonus = Math.floor(baseDmg * (fx.dmgMult||3.0)) + (fx.extraDmg||0);
+        S.boss.hp = Math.max(0, S.boss.hp - bonus);
+        bLog(`<span style="color:${fx.color}">${label}: 🔥🧊⚡ +${bonus} dano ELEMENTAL!</span>`);
+        break;
+      case 'bleed':
+        bonus = fx.extraDmg || Math.floor(baseDmg * 0.3);
+        S.boss.hp = Math.max(0, S.boss.hp - bonus);
+        bLog(`<span style="color:${fx.color}">${label}: +${bonus} dano${fx.dot?' (continua...)':', '}!</span>`);
+        if(fx.dot && fx.dotTurns) applyDotToState(fx.type, fx.label, fx.emoji, fx.color, Math.floor(bonus*0.5), fx.dotTurns);
+        break;
+      case 'fire':
+        bonus = fx.extraDmg || Math.floor(baseDmg * 0.4);
+        S.boss.hp = Math.max(0, S.boss.hp - bonus);
+        bLog(`<span style="color:${fx.color}">${label}: +${bonus} dano de fogo${fx.dot?' 🔥🔥':''}</span>`);
+        if(fx.dot && fx.dotTurns) applyDotToState(fx.type, fx.label, fx.emoji, fx.color, Math.floor(bonus*0.5), fx.dotTurns);
+        break;
+      case 'ice':
+        bonus = fx.extraDmg || Math.floor(baseDmg * 0.35);
+        S.boss.hp = Math.max(0, S.boss.hp - bonus);
+        bLog(`<span style="color:${fx.color}">${label}: +${bonus} dano — Boss congelado!</span>`);
+        break;
+      case 'lightning':
+        bonus = Math.floor(baseDmg * (fx.dmgMult||2.0));
+        S.boss.hp = Math.max(0, S.boss.hp - bonus);
+        bLog(`<span style="color:${fx.color}">${label}: +${bonus} dano em CADEIA!</span>`);
+        break;
+      case 'poison':
+        bonus = fx.extraDmg || Math.floor(baseDmg * 0.25);
+        S.boss.hp = Math.max(0, S.boss.hp - bonus);
+        bLog(`<span style="color:${fx.color}">${label}: +${bonus} dano${fx.dot?' (veneno ativo!)':''}</span>`);
+        if(fx.dot && fx.dotTurns) applyDotToState(fx.type, fx.label, fx.emoji, fx.color, Math.floor(bonus*0.4), fx.dotTurns);
+        break;
+      case 'shadow':
+        bonus = fx.extraDmg ? Math.floor(baseDmg*(fx.dmgMult||1)+fx.extraDmg) : Math.floor(baseDmg*(fx.dmgMult||2.2));
+        S.boss.hp = Math.max(0, S.boss.hp - bonus);
+        bLog(`<span style="color:${fx.color}">${label}: +${bonus} dano das trevas!</span>`);
+        break;
+      case 'holy':
+        bonus = Math.floor(baseDmg * (fx.dmgMult||1.9));
+        S.boss.hp = Math.max(0, S.boss.hp - bonus);
+        bLog(`<span style="color:${fx.color}">${label}: +${bonus} dano sagrado!</span>`);
+        break;
+      case 'lifesteal':
+        bonus = fx.extraDmg || Math.floor(baseDmg * 0.4);
+        S.boss.hp = Math.max(0, S.boss.hp - bonus);
+        const healed = Math.floor(bonus * 0.4);
+        S.hp = Math.min(S.mhp, S.hp + healed);
+        bLog(`<span style="color:${fx.color}">${label}: +${bonus} dano, +${healed} HP recuperado!</span>`);
+        break;
+      case 'stun':
+        bonus = Math.floor(baseDmg * (fx.dmgMult||1.5));
+        S.boss.hp = Math.max(0, S.boss.hp - bonus);
+        bLog(`<span style="color:${fx.color}">${label}: +${bonus} dano — Boss atordoado!</span>`);
+        break;
+      case 'earthquake':
+        bonus = fx.extraDmg ? Math.floor(baseDmg*(fx.dmgMult||1.5)+fx.extraDmg) : Math.floor(baseDmg*1.5);
+        S.boss.hp = Math.max(0, S.boss.hp - bonus);
+        bLog(`<span style="color:${fx.color}">${label}: +${bonus} dano de área!</span>`);
+        break;
+      case 'thorns':
+        bonus = fx.extraDmg || Math.floor(baseDmg * 0.2);
+        S.boss.hp = Math.max(0, S.boss.hp - bonus);
+        bLog(`<span style="color:${fx.color}">${label}: +${bonus} dano refletido!</span>`);
+        break;
+    }
+    S.boss.hp = Math.max(0, S.boss.hp);
+  });
+}
+
+function bossDmg(amt,src){
+  if(S.boss.def)return;const boss=getBoss();
+  const bm=(1+(eqPow()/100))*getClassDmgMult();const dmg=Math.max(1,Math.floor(amt*bm));
+  S.boss.hp=Math.max(0,S.boss.hp-dmg);
+  bLog(`<span class="ld">⚔ ${src}: ${dmg} dano (×${bm.toFixed(2)})!</span>`);
+  // Combat animation
+  animBossHit(dmg, false);
+  // Resolve special item effects
+  resolveEffects(dmg, src);
+  if(S.boss.hp<=0){animBossDeath();
+    S.boss.def=true;S.kills++;addXP(boss.xr);addGold(boss.gr);addCr(boss.cr);
+    // Grant boss reward item
+    let bRewardNm='';
+    if(boss.rewardItem){
+      const ri=EDB.find(e=>e.id===boss.rewardItem);
+      if(ri&&!S.owned.includes(ri.id)){
+        S.owned.push(ri.id);S.eq[ri.slot]=ri.id;bRewardNm=ri.nm;
+        bLog(`<span class="lw">🎁 ITEM LENDÁRIO: ${ri.nm} desbloqueado!</span>`);
+      }
+    }
+    S.bkHist.unshift({nm:boss.nm,em:boss.em,svk:boss.svk,dt:new Date().toLocaleDateString('pt-BR'),xp:boss.xr,go:boss.gr,cr:boss.cr,ri:bRewardNm});
+    bLog(`<span class="lw">🏆 BOSS DERROTADO! +${boss.xr}XP +${boss.gr}Gold +${boss.cr}💎!</span>`);
+    notify('🏆','Boss Derrotado!',`${boss.em} ${boss.nm}\n+${boss.xr}XP +${boss.gr}Gold +${boss.cr}💎${bRewardNm?'\n🎁 '+bRewardNm:''}!`,'ng');
+    checkAch();
+  }
+  save();renderBoss();renderMini();
+}
+function bossAtk(nm){
+  if(S.boss.def){bLog(`<span style="color:var(--text2)">Boss derrotado, mas ${nm} causou dano...</span>`);return;}
+  const boss=getBoss();const def=eqDef();
+  const rawD=Math.floor(boss.atk*0.5+Math.random()*boss.atk*0.5);
+  const dmg=Math.max(1,rawD-Math.floor(def*0.3));
+  // Paladin: HP below 30% triggers holy protection (cleric at 100 also)
+  const isProtected = (S.playerClass==='cleric' && getEvolvedClass()?.lv>=100) && S.hp-dmg<=0;
+  if(isProtected){ S.hp=1; bLog(`<span style="color:#f5e098">😇 Graça Eterna: morte evitada! (1 HP)</span>`); }
+  else S.hp=Math.max(0,S.hp-dmg);
+  bLog(`<span class="lb">👹 ${boss.nm}: ${dmg} dano (${nm})</span>`);
+  if(S.hp<=0) playerDeath();
+  else if(S.hp<=Math.floor(S.mhp*0.2)) notify('💀','Perigo!','HP crítico! Cuidado com os vícios!','nr');
+  save();renderBoss();renderStatus();
+}
+
+function playerDeath(){
+  // Lose all XP of current level
+  const lostXp = S.xp;
+  S.xp = 0;
+  S.hp = Math.floor(S.mhp * 0.3); // revive with 30% HP
+  // Abandon all active quests with penalty already paid via HP
+  S.aQ = [];
+  save(); renderAll();
+  setTimeout(()=>{
+    showMo('💀 Você Caiu em Batalha',null,
+      `<div style="text-align:center;padding:10px 0">
+        <div style="font-size:48px;margin-bottom:10px">💀</div>
+        <div style="font-family:'Cinzel Decorative',serif;font-size:16px;color:var(--red3);margin-bottom:6px">Derrota</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:12px">
+          Você perdeu toda a experiência do nível atual.<br>
+          <strong style="color:var(--red3)">−${lostXp} XP</strong> perdidos.<br>
+          Quests ativas foram abandonadas.<br>
+          Revivido com ${Math.floor(S.mhp*0.3)} HP.
+        </div>
+        <div style="font-size:11px;color:var(--text3);font-style:italic">"O que não te mata… te devolve ao início do nível."</div>
+      </div>`,
+      [{lb:'⚔ Levantar e Lutar',ac:'closeMo()',cl:'btn'}]
+    );
+  }, 300);
+}
+function bLog(h){const l=document.getElementById('b-log');if(!l)return;l.innerHTML+=h+'\n';l.scrollTop=l.scrollHeight;}
+
+// =============== EVENTS ===============
+let evTimer=null;
+function startEv(){checkEvExp();evTimer=setInterval(()=>{checkEvExp();if(!S.activeEv&&Math.random()<0.3)spawnEv();},10*60*1000);}
+function spawnEv(){
+  const pool=EVENTS_DB;const ev=pool[Math.floor(Math.random()*pool.length)];
+  const now=Date.now();
+  S.activeEv={eid:ev.id,hp:ev.mh,mhp:ev.mh,done:{},start:now,exp:now+(ev.hrs*3600000)};
+  save();renderEvBanner();renderEvPanel();renderTavern();renderDash();
+  notify('👹','Criatura!',`${ev.em} ${ev.cr} surgiu! Vá para Eventos!`,'ne');
+  const fl=document.createElement('div');fl.className='efl';document.body.appendChild(fl);setTimeout(()=>fl.remove(),700);
+  const tab=document.getElementById('tab-ev');if(tab){tab.style.color='var(--event2)';tab.style.borderBottomColor='var(--event)';}updateNavAlerts();
+}
+function forceEv(){spawnEv();}
+function checkEvExp(){
+  if(!S.activeEv)return;
+  if(Date.now()>S.activeEv.exp){
+    const ev=EVENTS_DB.find(e=>e.id===S.activeEv.eid);
+    if(ev){const gl=Math.max(1,Math.floor(S.gold*ev.pen.gp));S.gold=Math.max(0,S.gold-gl);S.hp=Math.max(1,S.hp-ev.pen.hp);
+      notify('💀','Evento Expirado!',`${ev.em} ${ev.cr} fugiu! -${gl}Gold -${ev.pen.hp}HP`,'nr');}
+    S.activeEv=null;save();renderEvBanner();renderEvPanel();renderDash();
+  }
+}
+function togEvTask(tid){
+  if(!S.activeEv)return;
+  const ev=EVENTS_DB.find(e=>e.id===S.activeEv.eid);if(!ev)return;
+  const task=ev.tasks.find(t=>t.id===tid);if(!task)return;
+  if(S.activeEv.done[tid]){delete S.activeEv.done[tid];S.activeEv.hp=Math.min(S.activeEv.mhp,S.activeEv.hp+task.dmg);eLog(`<span style="color:var(--text2)">↩ ${task.nm} desmarcado.</span>`);}
+  else{
+    S.activeEv.done[tid]=true;
+    const bm=1+(eqPow()/100);const dmg=Math.floor(task.dmg*bm);
+    S.activeEv.hp=Math.max(0,S.activeEv.hp-dmg);
+    eLog(`<span class="elh">⚔ ${task.ic} ${task.nm}: ${dmg} dano (×${bm.toFixed(2)})!</span>`);
+    if(S.activeEv.hp<=0){finishEv(ev);return;}
+  }
+  save();renderEvPanel();renderEvBanner();
+}
+function finishEv(ev){
+  addXP(ev.rew.xp);addGold(ev.rew.gold);addCr(ev.rew.crystal);S.evC++;
+  let itmNm='';
+  if(ev.rew.item){const itm=EDB.find(e=>e.id===ev.rew.item);if(itm&&!S.owned.includes(itm.id)){S.owned.push(itm.id);S.eq[itm.slot]=itm.id;itmNm=itm.nm;}}
+  S.evHist.unshift({nm:ev.cr,em:ev.em,dt:new Date().toLocaleDateString('pt-BR'),xp:ev.rew.xp,go:ev.rew.gold,cr:ev.rew.crystal,itm:itmNm});
+  eLog(`<span class="elw">🏆 ${ev.em} ${ev.cr} DERROTADA! +${ev.rew.xp}XP +${ev.rew.gold}Gold +${ev.rew.crystal}💎${itmNm?' +'+itmNm:''}!</span>`);
+  S.activeEv=null;save();checkAch();renderAll();
+  notify('🏆','Criatura Derrotada!',`${ev.em} ${ev.cr}\n+${ev.rew.xp}XP +${ev.rew.gold}Gold +${ev.rew.crystal}💎${itmNm?'\n🎁 '+itmNm:''}!`,'ng');
+}
+function eLog(h){const l=document.getElementById('ev-log');if(l){l.innerHTML+=h+'\n';l.scrollTop=l.scrollHeight;}}
+
+// =============== XP/GOLD/CR ===============
+const XPL=lv=>Math.floor(100*Math.pow(1.4,lv-1));
+const getMult=()=>{const base=S.streak>=30?2:S.streak>=7?1.5:S.streak>=3?1.2:1;return base+getClassStreakBonus();};
+function addXP(n){
+  const g=Math.floor(n*getMult()*getClassXpMult()*getGuildXpBonus());S.xp+=g;S.totXp+=g;S.xpTd+=g;
+  let lv=false;
+  while(S.xp>=XPL(S.lv)){S.xp-=XPL(S.lv);S.lv++;lv=true;S.mhp+=10;S.hp=Math.min(S.hp+20,S.mhp);}
+  if(lv){
+    // Check evolution milestones
+    const evolved = getEvolvedClass();
+    const tree = S.playerClass ? CLASS_EVOLUTIONS[S.playerClass] : null;
+    if(tree){
+      const milestone = tree.find(stage=>stage.lv===S.lv);
+      if(milestone){
+        setTimeout(()=>{
+          showMo(
+            `${milestone.icon} EVOLUÇÃO DE CLASSE!`,
+            null,
+            `<div style="text-align:center;padding:10px 0">
+              <div style="font-size:48px;margin-bottom:8px">${milestone.icon}</div>
+              <div style="font-family:'Cinzel Decorative',serif;font-size:18px;color:${milestone.color};margin-bottom:4px">${milestone.name}</div>
+              <div style="font-size:12px;color:var(--text2);margin-bottom:14px;font-style:italic">Nível ${milestone.lv} alcançado!</div>
+              <div style="background:rgba(0,0,0,.4);border:1px solid ${milestone.color}40;border-radius:8px;padding:12px">
+                <div style="font-family:'Cinzel',serif;font-size:11px;color:${milestone.color};margin-bottom:4px">${milestone.skill.icon} ${milestone.skill.name}</div>
+                <div style="font-size:11px;color:var(--text2);line-height:1.6">${milestone.skill.desc}</div>
+              </div>
+            </div>`,
+            [{lb:'🎉 Aceitar Evolução!',ac:'closeMo()',cl:'btn'}]
+          );
+        },600);
+        return g;
+      }
+    }
+    notify('🏆','LEVEL UP!',`Nível ${S.lv}!`,'ng');
+  }
+  return g;
+}
+function addGold(n){const g=Math.floor(n*getMult()*getClassGoldMult()*getGuildGoldBonus());S.gold+=g;S.totGo+=g;S.goTd+=g;return g;}
+function addCr(n){const g=Math.floor(n*getClassCrMult());S.cr+=g;S.totCr+=g;return g;}
+
+// =============== HABITS ===============
+function togH(id){
+  const h=S.habits.find(x=>x.id===id);if(!h)return;
+  // Block unavailable habit types
+  if(!h.dn && !isHabitAvailable(h)){
+    const msg=h.tp==='unique'?'Esta missão única já foi completada!':h.tp==='weekly'?'Esta missão semanal já foi completada esta semana!':'';
+    if(msg){ notify('⚠️','Indisponível',msg,'nc'); return; }
+  }
+  const m=getMult();
+  if(h.dn){h.dn=false;const xr=Math.floor(h.xb*m),gr=Math.floor(h.gb*m);S.xp=Math.max(0,S.xp-xr);S.totXp=Math.max(0,S.totXp-xr);S.xpTd=Math.max(0,S.xpTd-xr);S.gold=Math.max(0,S.gold-gr);S.totGo=Math.max(0,S.totGo-gr);S.goTd=Math.max(0,S.goTd-gr);S.dnTd=Math.max(0,S.dnTd-1);}
+  else{
+    h.dn=true;h.td++;S.dnTd++;
+    if(h.tp==='weekly') h.weekDone=WS();
+    if(h.tp==='unique') h.completed=true;
+    const xg=addXP(h.xb),gg=addGold(h.gb);S.attrs[h.at].v=Math.min(100,S.attrs[h.at].v+1);
+    const bAtk=Math.floor(S.attrs.dis.v*.4+S.attrs.ene.v*.3+S.lv*2);
+    const archerBonus=(S.playerClass==='archer'?S.attrs.ene.v:0)*0.5;
+    const dmg=Math.floor((bAtk*0.6+S.attrs[h.at].v*0.5+S.lv*1.5+archerBonus)*getClassDmgMult());
+    // Process DoTs BEFORE this hit
+    processDots();
+    bossDmg(dmg,h.nm);
+
+    // ── Special class abilities on mission completion ──
+    const evo = getEvolvedClass();
+    if(evo && S.playerClass){
+      // CLERIC: heal on Wisdom/Mind missions
+      if(S.playerClass==='cleric'){
+        const healAttrs = ['sab','men','car'];
+        if(healAttrs.includes(h.at)){
+          const heal = evo.lv>=100?15:evo.lv>=50?10:8;
+          S.hp=Math.min(S.mhp,S.hp+heal);
+          bLog(`<span style="color:#f5e098">✝️ Bênção Divina: +${heal} HP restaurado!</span>`);
+        }
+      }
+      // DRUID: HP recovery on any attr
+      if(S.playerClass==='druid' && evo.lv>=1){
+        S.hp=Math.min(S.mhp,S.hp+5);
+      }
+      // PALADIN: low HP = more dmg (logged via resolveEffects mult)
+      // BARD: stacking song buff (tracked via S.bardBuff)
+      if(S.playerClass==='bard'){
+        if(!S.bardBuff) S.bardBuff={count:0,day:new Date().toDateString()};
+        if(S.bardBuff.day!==new Date().toDateString()){S.bardBuff={count:0,day:new Date().toDateString()};}
+        S.bardBuff.count=Math.min(S.bardBuff.count+1,10);
+        if(S.bardBuff.count>=3 && evo.lv>=25){
+          addXP(10); // Trovador bonus
+        }
+      }
+      // ROGUE: 30% furtive crit doubles dano (tracked in resolveEffects already via shadow)
+    }
+
+    notify('⚡','Missão!',`${h.ic} ${h.nm}\n+${xg}XP +${gg}Gold`,'ng');checkAch();
+  }
+  save();renderAll();
+}
+function togBad(id){
+  const bh=BAD_H.find(x=>x.id===id);if(!bh)return;
+  const el=document.getElementById('bh-'+id);
+  if(el&&el.classList.contains('pun')){el.classList.remove('pun');const c=el.querySelector('.hchk');if(c)c.innerHTML='';return;}
+  const gl=Math.max(1,Math.floor(S.gold*bh.gp));S.gold=Math.max(0,S.gold-gl);S.hp=Math.max(1,S.hp-bh.hp);S.cStr=0;S.bdTd++;S.badLog[id]=(S.badLog[id]||0)+1;
+  bossAtk(bh.nm);const fl=document.createElement('div');fl.className='pfl';document.body.appendChild(fl);setTimeout(()=>fl.remove(),600);
+  if(el){el.classList.add('pun');const c=el.querySelector('.hchk');if(c)c.innerHTML='✕';}
+  notify('💀','Vício!',`${bh.ic} ${bh.nm}\n-${gl}Gold -${bh.hp}HP`,'nr');
+  save();renderStatus();renderDash();renderBoss();renderMini();
+}
+function addHabit(){
+  const nm=document.getElementById('nh-nm').value.trim();if(!nm)return;
+  const xb=parseInt(document.getElementById('nh-xp').value)||20;const gb=parseInt(document.getElementById('nh-gd').value)||10;
+  const at=document.getElementById('nh-at').value;const ic=document.getElementById('nh-ic').value||'⚡';
+  const tp=document.getElementById('nh-tp')?document.getElementById('nh-tp').value:'daily';
+  S.habits.push({id:'c'+Date.now(),nm,ic,xb,gb,at,dn:false,sk:0,td:0,tp});
+  document.getElementById('nh-nm').value='';save();renderHabits();
+}
+
+// =============== NEW DAY ===============
+function confDay(){showMo('🌅 Novo Dia?','Registrar progresso, aplicar streak e resetar missões.',null,[{lb:'Cancelar',ac:'closeMo()'},{lb:'Sim!',ac:'newDay()',cl:'btn'}]);}
+function newDay(){
+  closeMo();const today=new Date().toDateString();const done=S.habits.filter(h=>h.dn).length;
+  S.hist.push({day:today,xp:S.xpTd,go:S.goTd,dn:done,tot:S.habits.length});if(S.hist.length>60)S.hist.shift();
+  if(done>0){S.streak++;S.daysA++;S.cStr++;
+    if(S.streak%7===0){for(const k in S.attrs)S.attrs[k].v=Math.min(100,S.attrs[k].v+5);notify('✨','Streak!','7 dias! +5 atribs!','ng');}
+    S.habits.forEach(h=>{if(h.dn){h.sk++;S.attrs[h.at].sk++;}else if(h.tp!=='unique'&&h.tp!=='weekly') h.sk=0;if(h.tp!=='unique'&&h.tp!=='weekly') h.dn=false; else if(h.tp==='daily') h.dn=false;});}
+  else{S.streak=0;S.cStr=0;S.habits.forEach(h=>{h.dn=false;h.sk=0;});}
+  S.xpTd=0;S.goTd=0;S.dnTd=0;S.bdTd=0;S.badLog={};S.lastDay=today;
+  checkBW();checkAch();save();renderAll();
+  if(Math.random()<0.4&&!S.activeEv)setTimeout(spawnEv,2000);
+  notify('🌅','Novo Dia!','A jornada continua!','ng');
+}
+
+// =============== SHOP ===============
+function buyShop(id){
+  const item=SHOP_ITEMS.find(x=>x.id===id);if(!item)return;
+  if(S.gold<item.pr){notify('🪙','Sem gold!',`Precisa de ${item.pr}.`,'nr');return;}
+  S.gold-=item.pr;S.phist.unshift({nm:item.nm,ik:item.ik,em:item.em||'🛒',pr:item.pr,dt:new Date().toLocaleDateString('pt-BR')});
+  if(item.ef==='heal30'){S.hp=Math.min(S.mhp,S.hp+30);notify('🧪','Curado!','+30 HP!','ng');}
+  else if(item.ef==='healFull'){S.hp=S.mhp;notify('⚗️','HP Total!','Completamente restaurado!','ng');}
+  else if(item.ef==='xp100'){addXP(100);notify('✨','XP!','+100 XP!','ng');}
+  else if(item.ef==='attrB'){for(const k in S.attrs)S.attrs[k].v=Math.min(100,S.attrs[k].v+2);notify('🎓','Upgrade!','+2 todos atribs!','ng');}
+  else notify('🛒','Comprado!',`${item.nm}!`,'ng');
+  checkAch();save();renderAll();
+}
+
+// =============== QUESTS ===============
+function genQ(){
+  const pool=[...QUEST_POOL].sort(()=>Math.random()-.5).slice(0,10);
+  const c=document.getElementById('q-list');if(!c)return;
+  const rm={epic:'ÉPICA',rare:'RARA',common:'COMUM'};const rcl={epic:'qe',rare:'qr',common:'qco'};
+  c.innerHTML=pool.map(q=>`<div class="qc ${rcl[q.r]}"><div class="qt">${q.ti}</div><div class="qd">${q.ds}</div>
+  <div class="qf"><span class="qry r-${q.r}">⬥ ${rm[q.r]}</span>
+  <div class="qrw"><span class="qx">+${q.xp}XP</span><span class="qg">+${q.go}🪙</span><span class="qcr">+${q.cr}💎</span>
+  <button class="btn bsm" onclick="accQ(${JSON.stringify(q).split('"').join("'")})">Aceitar</button></div></div></div>`).join('');
+}
+function accQ(q){
+  if(S.aQ.find(a=>a.ti===q.ti)){notify('⚠️','Já ativa!','','ng');return;}
+  if(S.aQ.length>=10){notify('⚠️','Limite','Máx 10 quests ativas.','nc');return;}
+  // Attach penalty: common=10%, rare=15%, epic=20%
+  const penMap={common:10,rare:15,epic:20};
+  S.aQ.push({...q,acc:new Date().toLocaleDateString('pt-BR'),pen:penMap[q.r]||15});
+  save();renderActiveQ();
+  notify('🗺️','Quest Aceita!',`"${q.ti}" — cuidado, falhar custa HP!`,'ng');
+}
+function doneQ(i){
+  const q=S.aQ[i];
+  addXP(q.xp);addGold(q.go);addCr(q.cr);
+  S.aQ.splice(i,1);
+  notify('🏆','Quest Concluída!',`+${q.xp}XP +${q.go}🪙 +${q.cr}💎`,'ng');
+  checkAch();save();renderAll();
+}
+function failQ(i){
+  const q=S.aQ[i];
+  const pen=q.pen||15; // % of max HP as penalty
+  const dmg=Math.max(5,Math.floor(S.mhp*(pen/100)));
+  showMo('⚠ Abandonar Quest?',null,
+    `<div style="text-align:center;padding:8px 0">
+      <div style="font-size:36px;margin-bottom:8px">💔</div>
+      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--red3);margin-bottom:8px">${q.ti}</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.7">
+        Abandonar esta quest terá consequências.<br>
+        Penalidade: <strong style="color:var(--red3)">−${dmg} HP</strong> (${pen}% do HP máximo).
+      </div>
+      <div style="margin-top:10px;font-size:10px;color:var(--text3);font-style:italic">"A falta de disciplina tem seu preço."</div>
+    </div>`,
+    [
+      {lb:'Cancelar',ac:'closeMo()'},
+      {lb:`💔 Abandonar (−${dmg} HP)`,ac:`applyFailQ(${i})`,cl:'btn bred'}
+    ]
+  );
+}
+function applyFailQ(i){
+  closeMo();
+  const q=S.aQ[i];
+  const pen=q.pen||15;
+  const dmg=Math.max(5,Math.floor(S.mhp*(pen/100)));
+  const shadowMult=getGuildViceDmgMult();
+  const finalDmg=Math.max(1,Math.floor(dmg*shadowMult));
+  S.hp=Math.max(0,S.hp-finalDmg);
+  if(shadowMult<1) bLog(`<span style="color:#7f8c8d">🌑 Sombras: dano reduzido ${dmg}→${finalDmg}</span>`);
+  animBossAttack();
+  S.aQ.splice(i,1);
+  notify('💔','Quest Abandonada',`Penalidade: −${dmg} HP por falta de disciplina.`,'nr');
+  if(S.hp<=0) playerDeath();
+  save();renderAll();
+}
+function renderActiveQ(){
+  const c=document.getElementById('q-act');if(!c)return;
+  if(!S.aQ.length){c.innerHTML='<div style="font-size:12px;color:var(--text2);font-style:italic;padding:8px 0">Nenhuma quest ativa. Vá à aba Quests para aceitar!</div>';return;}
+  const rcl={epic:'qe',rare:'qr',common:'qco'};
+  c.innerHTML=S.aQ.map((q,i)=>{
+    const pen=q.pen||15;
+    const dmg=Math.max(5,Math.floor(S.mhp*(pen/100)));
+    return `<div class="qc ${rcl[q.r]}">
+      <div class="qt">${q.ti}</div>
+      <div class="qd">${q.ds}</div>
+      <div style="margin:4px 0 6px">
+        <span style="font-size:9px;font-family:'Cinzel',serif;background:rgba(192,57,43,.15);border:1px solid rgba(192,57,43,.3);color:var(--red3);border-radius:8px;padding:1px 7px">⚠ Falhar: −${dmg} HP (${pen}%)</span>
+      </div>
+      <div class="qf">
+        <span style="font-size:10px;color:var(--text3)">Aceita: ${q.acc}</span>
+        <div class="qrw">
+          <span class="qx">+${q.xp}XP</span><span class="qg">+${q.go}🪙</span><span class="qcr">+${q.cr}💎</span>
+          <button class="btn bsm" onclick="doneQ(${i})" style="background:rgba(39,174,96,.1);border-color:rgba(39,174,96,.5);color:var(--green3)">✓ Concluir</button>
+          <button class="btn bsm bred" onclick="failQ(${i})" style="font-size:8px">✕ Falhar</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// =============== ACHIEVEMENTS ===============
+function checkAch(){
+  ACHS.forEach(a=>{
+    if(!uAch.includes(a.id)&&a.ck(S)){
+      uAch.push(a.id);
+      saveAch();
+      triggerAchPopup(a);  // animated popup instead of simple notify
+    }
+  });
+}
+
+// =============== AVATAR ===============
+function handleAv(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{S.avData=ev.target.result;save();applyAv(ev.target.result);notify('📷','Foto!','','ng');};r.readAsDataURL(f);}
+function applyAv(d){
+  const img=document.getElementById('av-img');const ph=document.getElementById('av-ph');const ed=document.getElementById('av-ed');
+  const ci=document.getElementById('ch-img');const ce=document.getElementById('ch-em');
+  if(d){if(img){img.src=d;img.style.display='block';}if(ph)ph.style.display='none';if(ed)ed.style.display='flex';if(ci){ci.src=d;ci.style.display='block';}if(ce)ce.style.display='none';}
+}
+
+// =============== RADAR ===============
+function drawRadar(){
+  const svg=document.getElementById('radar');if(!svg)return;
+  const cx=130,cy=130,r=86;const attrs=Object.values(S.attrs);const n=attrs.length;
+  const pts=attrs.map((a,i)=>{const ag=(Math.PI*2*i/n)-Math.PI/2;const p=a.v/100;return{x:cx+r*p*Math.cos(ag),y:cy+r*p*Math.sin(ag),lx:cx+(r+21)*Math.cos(ag),ly:cy+(r+21)*Math.sin(ag),a};});
+  let html='';
+  [.2,.4,.6,.8,1].forEach(p=>{const ps=attrs.map((_,i)=>{const ag=(Math.PI*2*i/n)-Math.PI/2;return`${cx+r*p*Math.cos(ag)},${cy+r*p*Math.sin(ag)}`;}).join(' ');html+=`<polygon points="${ps}" fill="none" stroke="rgba(201,168,76,0.1)" stroke-width="1"/>`;});
+  attrs.forEach((_,i)=>{const ag=(Math.PI*2*i/n)-Math.PI/2;html+=`<line x1="${cx}" y1="${cy}" x2="${cx+r*Math.cos(ag)}" y2="${cy+r*Math.sin(ag)}" stroke="rgba(201,168,76,0.1)" stroke-width="1"/>`;});
+  html+=`<polygon points="${pts.map(p=>`${p.x},${p.y}`).join(' ')}" fill="rgba(201,168,76,0.1)" stroke="rgba(201,168,76,0.5)" stroke-width="1.5"/>`;
+  pts.forEach(p=>{html+=`<circle cx="${p.x}" cy="${p.y}" r="3.5" fill="${p.a.cl}" stroke="var(--bg)" stroke-width="1.5"/>`;});
+  pts.forEach(p=>{html+=`<text x="${p.lx}" y="${p.ly}" text-anchor="middle" dominant-baseline="middle" font-size="11" fill="rgba(224,212,186,0.6)" font-family="Cinzel,serif">${p.a.ic}${p.a.v}</text>`;});
+  svg.innerHTML=html;
+}
+
+// =============== RENDER ===============
+// getTitle() defined above with class+bonus+base system

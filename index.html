@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cássio — O Guerreiro Visionário | Life RPG</title>
+<meta name="theme-color" content="#07060d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Life RPG">
+<meta name="description" content="Life RPG — Transforme seus hábitos em aventura épica">
+<link rel="manifest" id="pwa-manifest">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    #fb-login-bar{
+      position:fixed;bottom:0;left:0;right:0;z-index:9999;
+      background:linear-gradient(90deg,rgba(7,6,13,.97),rgba(13,11,26,.97));
+      border-top:1px solid rgba(201,168,76,.15);
+      padding:6px 16px;display:flex;align-items:center;justify-content:flex-end;
+      min-height:36px;backdrop-filter:blur(8px);
+    }
+  </style>
+</head>
+<body>
+<!-- Firebase login bar (fixed bottom) -->
+<div id="fb-login-bar">
+  <span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(200,188,160,.4)">&#9729; Carregando...</span>
+</div>
+<!-- Achievement Unlock Popup -->
+<div id="ach-popup">
+  <div id="ach-backdrop"></div>
+  <div id="ach-card">
+    <div id="ach-badge">✦ Conquista Desbloqueada ✦</div>
+    <div id="ach-icon-wrap"><span id="ach-icon">🏆</span></div>
+    <div id="ach-name">Nome da Conquista</div>
+    <div id="ach-desc">Descrição da conquista aqui.</div>
+  </div>
+</div>
+<!-- Global FX tooltip — position:fixed, managed by JS -->
+<div id="fx-global-tip">
+  <div class="fx-tip-name" id="fgt-name"></div>
+  <div class="fx-tip-desc" id="fgt-desc"></div>
+  <div class="fx-tip-chance" id="fgt-chance"></div>
+</div>
+<div class="mo" id="mo">
+  <div class="md">
+    <button class="mc" onclick="closeMo()">✕</button>
+    <div class="mt2" id="mo-t"></div>
+    <div id="mo-b"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px" id="mo-f"></div>
+  </div>
+</div>
+<div class="notif ng" id="notif">
+  <div class="ni" id="ni">⚡</div>
+  <div class="nt" id="nt2"></div>
+  <div class="nb" id="nb"></div>
+</div>
+<input type="file" id="av-in" accept="image/*" onchange="handleAv(event)">
+<input type="file" id="import-in" accept=".json,application/json" onchange="handleImport(event)" style="display:none">
+<div class="container">
+<div class="site-header">
+  <div class="sub">✦ Transforme Hábitos em Lenda ✦</div>
+  <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:6px">
+    <span style="color:var(--gold);opacity:.35;font-size:18px">⚔</span>
+    <span style="color:var(--gold);opacity:.2;font-size:11px">✦ ─────── ✦</span>
+    <span style="color:var(--gold);opacity:.35;font-size:18px">🛡</span>
+  </div>
+  <h1>Life RPG</h1>
+  <div class="orn"><span style="color:var(--gold);opacity:.5">✦ ❖ ✦</span></div>
+</div>
+<div class="hero-status mb12" id="hero-status-card">
+
+  <!-- TOP ROW: avatar · info · bars -->
+  <div class="hs-top">
+
+    <!-- Avatar column: ring on top, level badge below -->
+    <div class="av-wrap">
+      <div class="av-ring">
+        <div class="av-ph" id="av-ph" onclick="document.getElementById('av-in').click()">
+          <div class="av-ph-icon">⚔️</div>
+          <div class="av-ph-lbl">Foto</div>
+        </div>
+        <img id="av-img" class="av-img" style="display:none" src="" alt="">
+        <button class="av-ed" id="av-ed" style="display:none" onclick="document.getElementById('av-in').click()">✏️</button>
+      </div>
+      <!-- Level badge sits below avatar, fully visible -->
+      <div class="lv-orb">
+        <span class="lv-lbl">NÍV</span>
+        <span class="lv-num" id="hs-lv-orb">1</span>
+      </div>
+    </div>
+
+    <!-- Name, title, tags -->
+    <div class="hs-info">
+      <div class="hs-name" id="hs-hero-name">Herói</div>
+      <div class="hs-title" id="hs-title-lbl">Novato Determinado</div>
+      <div class="hs-tags">
+        <div class="hs-tag t-fire">🔥 <span id="hs-st">0</span>d streak</div>
+        <div class="hs-tag t-sword">⚔ <span id="hs-pw">+0%</span></div>
+        <div class="hs-tag t-crystal" id="hs-class-tag" style="display:none">🏅 —</div>
+      </div>
+    </div>
+
+    <!-- Bars (HP + XP) — redesigned -->
+    <div class="hs-bars-col">
+
+      <!-- HP Bar -->
+      <div class="bar-slot">
+        <div class="bar-header">
+          <div class="bar-icon-lbl" style="color:var(--red3)">
+            <span style="font-size:11px">❤️</span>
+            <span>Vida</span>
+          </div>
+          <span class="bar-value" id="hs-hp" style="color:var(--red3)">100/100</span>
+        </div>
+        <div class="bw" id="hs-hb-wrap">
+          <div class="bf bar-hp" id="hs-hb" style="width:100%">
+            <div class="bf-glow"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- XP Bar -->
+      <div class="bar-slot">
+        <div class="bar-header">
+          <div class="bar-icon-lbl" style="color:var(--gold2)">
+            <span style="font-size:11px">⚡</span>
+            <span>Experiência</span>
+          </div>
+          <span class="bar-value" id="hs-xp" style="color:var(--gold2)">0/100</span>
+        </div>
+        <div class="bw" id="hs-xb-wrap">
+          <div class="bf bar-xp" id="hs-xb" style="width:0%">
+            <div class="bf-glow"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- hidden legacy refs -->
+      <span id="hs-lv" style="display:none">1</span>
+    </div>
+  </div>
+
+  <!-- BOTTOM ROW: 4 resource stats -->
+  <div class="hs-bottom">
+    <div class="hs-stat-block">
+      <span class="hs-stat-icon">🪙</span>
+      <div>
+        <div class="hs-stat-val" id="hs-gl" style="color:var(--gold2)">0</div>
+        <div class="hs-stat-lbl">Ouro</div>
+      </div>
+    </div>
+    <div class="hs-stat-block">
+      <span class="hs-stat-icon">💎</span>
+      <div>
+        <div class="hs-stat-val" id="hs-cl" style="color:var(--crystal)">0</div>
+        <div class="hs-stat-lbl">Cristais</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- hidden compat IDs -->
+  <span id="hs-gb2" style="display:none">0</span>
+  <span id="hs-cb2" style="display:none">0</span>
+  <span id="hs-gb" style="display:none"></span>
+  <span id="hs-cb" style="display:none"></span>
+</div>
+<div class="boss-mini mb8">
+  <div id="bm-em" style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;flex-shrink:0">🐉</div>
+  <div class="bmi"><div class="bmn"><span id="bm-nm">Boss Semanal</span><span id="bm-hl">—</span></div><div class="bhw"><div class="bhf" id="bm-fl" style="width:100%"></div></div></div>
+  <button class="btn bsm bred" onclick="swT('boss')">⚔ Boss</button>
+  <div id="dot-display" style="width:100%;display:none;margin-top:4px"></div>
+</div>
+<div class="ev-banner mb8" id="ev-banner">
+  <div class="ev-em" id="ev-em">👹</div>
+  <div class="ev-inf"><div class="ev-ttl" id="ev-ttl">Criatura!</div><div class="ev-desc" id="ev-desc">Ameaça detectada...</div><div class="ev-tmr" id="ev-tmr">⏳</div></div>
+  <button class="btn bsm bev" onclick="swT('events')">⚔ Enfrentar</button>
+</div>
+<!-- HIDDEN legacy tab anchors for JS compat -->
+<div class="tabs-wrap" id="tabs-wrap-legacy" style="display:none">
+  <div class="tabs" id="tabs">
+    <div class="tab active" data-p="dash">Painel</div>
+    <div class="tab" data-p="char">Personagem</div>
+    <div class="tab" data-p="habits">Missões</div>
+    <div class="tab" data-p="dark">Vícios</div>
+    <div class="tab" data-p="boss">Boss</div>
+    <div class="tab" data-p="events" id="tab-ev">Eventos</div>
+    <div class="tab" data-p="smithy">Ferreiro</div>
+    <div class="tab" data-p="shop">Loja</div>
+    <div class="tab" data-p="quests">Quests</div>
+    <div class="tab" data-p="attrs">Atributos</div>
+    <div class="tab" data-p="prog">Progresso</div>
+    <div class="tab" data-p="tavern">Taberna</div>
+    <div class="tab" data-p="classe">Classe</div>
+    <div class="tab" data-p="crafting">Crafting</div>
+    <div class="tab" data-p="inventory">Inventário</div>
+    <div class="tab" data-p="profile">Perfil</div>
+    <div class="tab" data-p="calendar">Calendário</div>
+    <div class="tab" data-p="guilds">Guilda</div>
+  </div>
+</div>
+
+<!-- SUB-TAB PILL BAR (sticky, changes per category) -->
+<div class="subtab-wrap" id="subtab-wrap">
+  <div class="cat-label" id="cat-label-text">🏰 Visão Geral</div>
+  <div class="subtabs" id="subtabs"></div>
+</div>
+
+<!-- BOTTOM NAVIGATION -->
+<nav class="nav-bottom" id="nav-bottom">
+  <div class="nav-cat active" data-cat="main" onclick="switchCat('main')">
+    <div class="nav-badge"></div>
+    <span class="nav-cat-icon">🏰</span>
+    <span class="nav-cat-label">Painel</span>
+  </div>
+  <div class="nav-cat" data-cat="hero" onclick="switchCat('hero')">
+    <div class="nav-badge"></div>
+    <span class="nav-cat-icon">⚔️</span>
+    <span class="nav-cat-label">Herói</span>
+  </div>
+  <div class="nav-cat" data-cat="combat" onclick="switchCat('combat')">
+    <div class="nav-badge"></div>
+    <span class="nav-cat-icon">🐉</span>
+    <span class="nav-cat-label">Combate</span>
+  </div>
+  <div class="nav-cat" data-cat="forge" onclick="switchCat('forge')">
+    <div class="nav-badge"></div>
+    <span class="nav-cat-icon">🔨</span>
+    <span class="nav-cat-label">Arsenal</span>
+  </div>
+  <div class="nav-cat" data-cat="world" onclick="switchCat('world')">
+    <div class="nav-badge"></div>
+    <span class="nav-cat-icon">🗺️</span>
+    <span class="nav-cat-label">Mundo</span>
+  </div>
+</nav>
+
+<div class="panel active" id="panel-dash">
+  <div class="g2 mb12">
+    <div class="card"><div class="ct">⚔ Status</div>
+      <div style="font-family:'Cinzel Decorative',serif;font-size:14px;color:var(--gold3);margin-bottom:3px" id="d-ttl">Novato Determinado</div>
+      <div style="font-size:12px;color:var(--text2);font-style:italic;margin-bottom:9px" id="d-dsc">Toda jornada épica começa com um único passo.</div>
+      <div class="dv"></div>
+      <div class="flex fr wrap g8">
+        <div class="sp">⚡<strong id="d-xp">0</strong></div><div class="sp">🪙<strong id="d-go">0</strong></div>
+        <div class="sp">💎<strong id="d-cr">0</strong></div><div class="sp">🐉<strong id="d-ki">0</strong></div>
+      </div>
+    </div>
+    <div class="card"><div class="ct">🔥 Streak & Poder</div>
+      <div style="font-family:'Cinzel Decorative',serif;font-size:30px;color:var(--amber2);text-align:center" id="d-str">0</div>
+      <div style="text-align:center;font-size:10px;color:var(--text2);margin-bottom:7px">dias consecutivos</div>
+      <div class="dv"></div>
+      <div style="font-size:11px;color:var(--text2)">Mult:<strong style="color:var(--gold2)" id="d-ml">×1.0</strong> Poder:<strong style="color:var(--gold2)" id="d-pw">+0%</strong></div>
+    </div>
+  </div>
+  <div class="card mb12"><div class="ct">⚔ Equipamentos Ativos</div>
+    <div class="eq-strip" id="dash-strip"></div>
+    <button class="btn bsm" onclick="swT('char')" style="margin-top:4px">Gerenciar Equipamentos →</button>
+  </div>
+  <div class="card mb12"><div class="ct">📜 Missões de Hoje</div>
+    <div id="d-prev"></div>
+    <button class="btn bsm" onclick="swT('habits')" style="margin-top:7px">Ver todas →</button>
+  </div>
+  <div class="g3">
+    <div class="card"><div class="ct">💪 Top Atrib.</div><div id="d-ta" style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold2)">—</div><div id="d-tv" style="font-size:10px;color:var(--text2)"></div></div>
+    <div class="card" style="border-color:rgba(192,57,43,.3)"><div class="ct" style="color:var(--red3)">🐉 Boss</div><div id="d-bs" style="font-size:12px;color:var(--text2);font-style:italic">—</div></div>
+    <div class="card" style="border-color:rgba(255,107,53,.3)"><div class="ct" style="color:var(--event2)">👹 Evento</div><div id="d-ev" style="font-size:12px;color:var(--text2);font-style:italic">Nenhum ativo</div></div>
+  </div>
+</div>
+
+<div class="panel" id="panel-char">
+  <div class="card mb16"><div class="ct">🧙 Personagem & Equipamentos</div>
+    <div class="eq-panel" id="eq-panel">
+      <div class="eq-col" id="eq-left"></div>
+      <div class="eq-cen">
+        <div class="ch-port" id="ch-port"><span id="ch-em">🧙</span><img id="ch-img" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;" src="" alt=""></div>
+        <div><div class="ep-lbl">PODER TOTAL</div><div class="ep-val" id="ep-pw">+0%</div><div style="font-size:9px;color:var(--text2);text-align:center">bônus de dano</div></div>
+        <button class="btn bsm" onclick="document.getElementById('av-in').click()">📷 Foto</button>
+      </div>
+      <div class="eq-col" id="eq-right"></div>
+    </div>
+  </div>
+  <div class="card"><div class="ct">📊 Stats de Combate</div>
+    <div class="g3" style="gap:9px">
+      <div style="background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:6px;padding:11px;text-align:center">
+        <img id="atk-img" style="width:38px;height:38px;object-fit:contain;margin-bottom:3px" src="" alt="⚔">
+        <div style="font-family:'Cinzel',serif;font-size:9px;color:var(--red3);margin-bottom:2px">ATAQUE</div>
+        <div style="font-family:'Cinzel Decorative',serif;font-size:20px;color:var(--gold3)" id="cs-atk">—</div>
+      </div>
+      <div style="background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:6px;padding:11px;text-align:center">
+        <img id="def-img" style="width:38px;height:38px;object-fit:contain;margin-bottom:3px" src="" alt="🛡">
+        <div style="font-family:'Cinzel',serif;font-size:9px;color:var(--blue3);margin-bottom:2px">DEFESA</div>
+        <div style="font-family:'Cinzel Decorative',serif;font-size:20px;color:var(--gold3)" id="cs-def">—</div>
+      </div>
+      <div style="background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:6px;padding:11px;text-align:center">
+        <div style="font-size:22px;margin-bottom:3px">💥</div>
+        <div style="font-family:'Cinzel',serif;font-size:9px;color:var(--gold);margin-bottom:2px">PODER</div>
+        <div style="font-family:'Cinzel Decorative',serif;font-size:20px;color:var(--gold3)" id="cs-pw">+0%</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="panel-habits">
+  <div class="card mb12">
+    <div class="ct">📅 Missões — <span id="hb-dt" style="color:var(--text2);font-size:8px"></span></div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:10px;font-style:italic">Cada missão ataca o Boss. Streaks multiplicam tudo!</div>
+    <div id="hb-list"></div>
+    <div class="dv"></div>
+    <div class="flex fr jsb wrap g8">
+      <div><span class="sp">⚡<strong id="xp-td">0</strong></span><span class="sp">🪙<strong id="go-td">0</strong></span><span class="sp">✅<strong id="dn-ct">0</strong>/<strong id="tt-ct">0</strong></span></div>
+      <button class="btn bsm bred" onclick="confDay()">🌅 Novo Dia</button>
+    </div>
+  </div>
+  <div class="card"><div class="ct">➕ Adicionar Missão</div>
+    <div class="g2" style="gap:9px;margin-bottom:9px">
+      <div><label>Nome</label><input type="text" id="nh-nm" placeholder="Ex: Estudar inglês"></div>
+      <div><label>XP Base</label><input type="number" id="nh-xp" value="20" min="5" max="150"></div>
+      <div><label>Gold Base</label><input type="number" id="nh-gd" value="10" min="1" max="100"></div>
+      <div><label>Atributo</label><select id="nh-at"><option value="vit">💪 Vitalidade</option><option value="men">🧠 Mente</option><option value="dis">🔱 Disciplina</option><option value="ene">⚡ Energia</option><option value="sab">📖 Sabedoria</option><option value="car">🌟 Carisma</option></select></div>
+      <div><label>Ícone</label><input type="text" id="nh-ic" value="⚡" maxlength="2"></div>
+      <div><label>Tipo</label><select id="nh-tp"><option value="daily">📅 Diária (reseta todo dia)</option><option value="weekly">📆 Semanal (reseta na segunda)</option><option value="unique">⭐ Única (objetivo fixo)</option></select></div>
+    </div>
+    <button class="btn bsm" onclick="addHabit()">✦ Adicionar</button>
+  </div>
+</div>
+
+<div class="panel" id="panel-dark">
+  <div class="card" style="border-color:rgba(192,57,43,.4)">
+    <div class="ct" style="color:var(--red3)">💀 Grimório das Sombras</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:11px;font-style:italic">Cada vício drena ouro, reduz vida e alimenta o Boss.</div>
+    <div id="bh-list"></div>
+    <div class="dv"></div><div id="dk-st" style="font-size:11px;color:var(--text2)"></div>
+  </div>
+</div>
+
+<div class="panel" id="panel-boss">
+
+  <!-- ══ LORE DO BOSS ══════════════════════════════════════════════ -->
+  <div id="boss-lore-card" class="card mb12" style="border-color:rgba(192,57,43,.35);background:linear-gradient(160deg,rgba(10,4,8,.99),rgba(22,10,14,.99));position:relative;overflow:hidden;">
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(192,57,43,.7),transparent)"></div>
+    <div style="display:flex;align-items:flex-start;gap:12px">
+      <div id="boss-lore-em" style="flex-shrink:0;display:flex;align-items:center;justify-content:center;width:52px;height:52px">🐉</div>
+      <div style="flex:1">
+        <div style="font-family:'Cinzel Decorative',serif;font-size:13px;color:var(--red3);margin-bottom:2px;text-shadow:0 0 15px rgba(192,57,43,.5)" id="boss-lore-title">Dragão da Procrastinação</div>
+        <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:.1em;color:rgba(192,57,43,.6);text-transform:uppercase;margin-bottom:8px" id="boss-lore-sub">O Devorador de Sonhos</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.8;font-style:italic" id="boss-lore-text">Nas profundezas da Caverna do Amanhã, este ser ancestral aguarda. Alimentado por cada tarefa adiada e sonho engavetado, seu corpo cresce a cada hora desperdiçada. Dizem os anciões que apenas aqueles que agem no presente têm poder de feri-lo.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ARENA DE BATALHA ══════════════════════════════════════════ -->
+  <div class="card mb12 card-stone" style="border-color:rgba(192,57,43,.3);padding:0;overflow:hidden;">
+    <!-- Título da arena -->
+    <div style="text-align:center;padding:10px 14px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+      <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:.25em;color:rgba(192,57,43,.6);text-transform:uppercase;margin-bottom:2px">⚔ ARENA DA BATALHA ⚔</div>
+    </div>
+
+    <!-- ARENA: personagem vs boss -->
+    <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:0;min-height:200px">
+
+      <!-- HERÓI (esquerda) -->
+      <div id="hero-arena-side" style="padding:14px 10px 10px;display:flex;flex-direction:column;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(201,168,76,.04),transparent)">
+        <!-- Avatar do herói -->
+        <div style="position:relative">
+          <div id="hero-arena-avatar" style="width:72px;height:72px;border-radius:50%;border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:36px;background:linear-gradient(135deg,rgba(201,168,76,.1),rgba(0,0,0,.6));box-shadow:0 0 18px rgba(201,168,76,.35),inset 0 0 12px rgba(0,0,0,.5);overflow:hidden;">
+            <img id="hero-arena-img" src="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%">
+            <span id="hero-arena-em">🧙</span>
+          </div>
+          <div style="position:absolute;bottom:-3px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,rgba(8,6,16,.98),rgba(26,20,44,.98));border:1px solid rgba(201,168,76,.5);border-radius:12px;padding:1px 7px;white-space:nowrap;font-family:'Cinzel',serif;font-size:7px;color:var(--gold2)">LV <span id="hero-arena-lv">1</span></div>
+        </div>
+        <!-- Nome do herói -->
+        <div style="text-align:center">
+          <div style="font-family:'Cinzel Decorative',serif;font-size:10px;color:var(--gold3);line-height:1.2" id="hero-arena-name">Herói</div>
+          <div style="font-family:'Cinzel',serif;font-size:7px;letter-spacing:.08em;color:var(--text3);margin-top:1px" id="hero-arena-class">—</div>
+        </div>
+        <!-- Barra HP herói -->
+        <div style="width:100%">
+          <div style="display:flex;justify-content:space-between;font-family:'Cinzel',serif;font-size:7px;color:rgba(255,71,87,.7);margin-bottom:2px"><span>❤ HP</span><span id="hero-arena-hp">—</span></div>
+          <div style="height:8px;background:rgba(0,0,0,.5);border-radius:4px;overflow:hidden;border:1px solid rgba(192,57,43,.2)">
+            <div id="hero-arena-hb" style="height:100%;background:linear-gradient(90deg,#5c0a0a,#d63031,#ff4757);border-radius:3px;transition:width .6s;width:80%"></div>
+          </div>
+        </div>
+        <!-- Stats compactos do herói -->
+        <div style="width:100%;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.05);border-radius:6px;padding:7px 8px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+            <div style="font-family:'Cinzel',serif;font-size:8px;color:var(--text3)">⚔ ATK<br><span style="color:var(--red3);font-size:10px" id="hero-arena-atk">—</span></div>
+            <div style="font-family:'Cinzel',serif;font-size:8px;color:var(--text3)">🛡 DEF<br><span style="color:var(--blue3);font-size:10px" id="hero-arena-def">—</span></div>
+            <div style="font-family:'Cinzel',serif;font-size:8px;color:var(--text3)">💥 PWR<br><span style="color:var(--gold2);font-size:10px" id="hero-arena-pwr">—</span></div>
+            <div style="font-family:'Cinzel',serif;font-size:8px;color:var(--text3)">⚡ XP<br><span style="color:var(--gold2);font-size:10px" id="hero-arena-streak">×1.0</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CENTRO: VS + animação -->
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 6px;gap:6px;min-width:48px">
+        <div style="font-family:'Cinzel Decorative',serif;font-size:11px;color:rgba(192,57,43,.5);letter-spacing:.1em">VS</div>
+        <div id="battle-vs-fx" style="font-size:18px;opacity:.4">⚡</div>
+        <div id="dmg-float-area" style="position:relative;height:30px;width:80px"></div>
+      </div>
+
+      <!-- BOSS (direita) -->
+      <div style="padding:14px 10px 10px;display:flex;flex-direction:column;align-items:center;gap:8px;background:linear-gradient(225deg,rgba(192,57,43,.06),transparent)">
+        <!-- Sprite do boss -->
+        <div style="position:relative">
+          <div style="width:72px;height:72px;border-radius:50%;border:2px solid rgba(192,57,43,.7);display:flex;align-items:center;justify-content:center;font-size:42px;background:linear-gradient(135deg,rgba(192,57,43,.1),rgba(0,0,0,.6));box-shadow:0 0 18px rgba(192,57,43,.5),inset 0 0 12px rgba(0,0,0,.5)">
+            <div id="b-sp" style="display:flex;align-items:center;justify-content:center;width:80px;height:80px">🐉</div>
+          </div>
+          <div id="boss-dead-badge" style="display:none;position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;font-size:22px">☠️</div>
+        </div>
+        <!-- Nome do boss -->
+        <div style="text-align:center">
+          <div style="font-family:'Cinzel Decorative',serif;font-size:10px;color:var(--red3);line-height:1.2" id="b-nm">Boss</div>
+          <div style="font-family:'Cinzel',serif;font-size:7px;letter-spacing:.08em;color:var(--text3);margin-top:1px" id="b-tt">—</div>
+        </div>
+        <!-- Barra HP boss -->
+        <div style="width:100%">
+          <div style="display:flex;justify-content:space-between;font-family:'Cinzel',serif;font-size:7px;color:rgba(192,57,43,.7);margin-bottom:2px"><span>💀 HP</span><span id="b-hl">—</span></div>
+          <div class="bHW" style="border-radius:4px;height:8px"><div class="bHF" id="b-hf" style="width:100%;border-radius:3px"></div></div>
+        </div>
+        <!-- Stats do boss -->
+        <div style="width:100%;background:rgba(0,0,0,.35);border:1px solid rgba(192,57,43,.1);border-radius:6px;padding:7px 8px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+            <div style="font-family:'Cinzel',serif;font-size:8px;color:var(--text3)">⚔ ATK<br><span style="color:var(--red3);font-size:10px" id="boss-arena-atk">—</span></div>
+            <div style="font-family:'Cinzel',serif;font-size:8px;color:var(--text3)">❤ HP<br><span style="color:var(--red3);font-size:10px" id="boss-arena-maxhp">—</span></div>
+            <div style="font-family:'Cinzel',serif;font-size:8px;color:var(--text3)">🏆 XP<br><span style="color:var(--gold2);font-size:10px" id="boss-arena-xp">—</span></div>
+            <div style="font-family:'Cinzel',serif;font-size:8px;color:var(--text3)">💎 Drops<br><span style="color:var(--crystal);font-size:10px" id="boss-arena-cr">—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timer e log abaixo da arena -->
+    <div style="padding:0 14px 4px;text-align:center;font-family:'Cinzel',serif;font-size:9px;color:var(--text3);border-top:1px solid rgba(255,255,255,.03)" id="b-tmr"></div>
+  </div>
+
+  <!-- ══ RECOMPENSAS DO BOSS ════════════════════════════════════════ -->
+  <div id="boss-rewards-card" class="card mb12" style="border-color:rgba(201,168,76,.25)">
+    <div class="ct no-icon" style="color:var(--gold2)">🏆 Recompensas por Vitória</div>
+    <div id="boss-rewards-content" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px"></div>
+    <div id="boss-reward-item-preview" style="display:none;background:rgba(0,0,0,.4);border:1px solid rgba(201,168,76,.2);border-radius:6px;padding:10px 12px">
+      <div style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:.1em;color:var(--gold);text-transform:uppercase;margin-bottom:5px">🎁 Item Lendário Exclusivo</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div id="boss-ri-icon" style="font-size:26px">⚔</div>
+        <div>
+          <div style="font-family:'Cinzel Decorative',serif;font-size:11px;color:var(--gold3)" id="boss-ri-name">—</div>
+          <div style="font-size:10px;color:var(--text2);margin-top:2px" id="boss-ri-desc">—</div>
+          <div id="boss-ri-fx" style="margin-top:3px;font-size:9px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ HISTÓRICO DE DANOS + MECÂNICA ═══════════════════════════════ -->
+  <div class="g2 mb12">
+    <div class="card"><div class="ct">⚔ Mecânica</div><div style="font-size:12px;color:var(--text2);line-height:1.9">🟢 Missão = dano no Boss<br>🔴 Vício = Boss ataca<br>💎 Vitória = XP+Gold+Cristais<br>📅 Novo Boss toda <strong style="color:var(--gold2)">segunda</strong></div></div>
+    <div class="card"><div class="ct">🗡 Seus Stats</div><div style="font-size:12px;line-height:2;color:var(--text2)">ATK:<strong id="b-at" style="color:var(--red3)">—</strong> DEF:<strong id="b-df" style="color:var(--blue3)">—</strong><br>Poder:<strong id="b-pw2" style="color:var(--gold2)">+0%</strong> HP:<strong id="b-mh" style="color:var(--red3)">—</strong></div></div>
+  </div>
+
+  <!-- ══ LOG DE COMBATE ═══════════════════════════════════════════════ -->
+  <div class="card mb12" style="border-color:rgba(0,0,0,.5)">
+    <div class="ct">📜 Log de Batalha</div>
+    <div class="blog" id="b-log">O Boss aguarda... Complete missões para atacá-lo!</div>
+  </div>
+
+  <div class="card"><div class="ct">🏆 Bosses Derrotados</div><div id="b-hist"></div></div>
+</div>
+
+<div class="panel" id="panel-events">
+  <div id="ev-area">
+    <div class="card" style="text-align:center;padding:36px 20px">
+      <div style="font-size:44px;margin-bottom:11px">🌙</div>
+      <div style="font-family:'Cinzel Decorative',serif;font-size:15px;color:var(--gold3);margin-bottom:7px">Mundo Tranquilo</div>
+      <div style="font-size:13px;color:var(--text2);font-style:italic;margin-bottom:14px">Nenhuma criatura à vista. Continue suas missões...</div>
+      <button class="btn bsm bev" onclick="forceEv()">⚄ Invocar Evento (Teste)</button>
+    </div>
+  </div>
+  <div class="card" style="margin-top:12px"><div class="ct">📜 Eventos Completados</div><div id="ev-hist"></div></div>
+</div>
+
+<div class="panel" id="panel-smithy">
+  <div class="card mb12" style="border-color:rgba(0,212,255,.25)">
+    <div class="ct" style="color:var(--crystal)">🔨 Ferreiro de Mithril</div>
+    <div class="flex fr jsb aic wrap g8 mb12">
+      <div style="font-size:12px;color:var(--text2);font-style:italic">Forje equipamentos com cristais ganhos em Quests e Bosses.</div>
+      <div class="cbox cc" style="padding:4px 10px"><span style="font-size:14px">💎</span><div><div class="cv cy" id="sm-cr">0</div><div class="cl">CRISTAIS</div></div></div>
+    </div>
+    <div class="sf" id="sm-flt">
+      <button class="sf-btn active" data-sc="all">Todos</button>
+      <button class="sf-btn" data-sc="weapon">⚔ Armas</button>
+      <button class="sf-btn" data-sc="armor">🛡 Armaduras</button>
+      <button class="sf-btn" data-sc="head">⛑ Cabeça</button>
+      <button class="sf-btn" data-sc="feet">👢 Pés</button>
+      <button class="sf-btn" data-sc="hands">🧤 Mãos</button>
+      <button class="sf-btn" data-sc="legs">🩲 Pernas</button>
+      <button class="sf-btn" data-sc="boss">🐉 Boss</button>
+    </div>
+    <div class="sm-grid" id="sm-grid"></div>
+  </div>
+  <div class="card"><div class="ct">📦 Adquiridos</div><div id="sm-own"></div></div>
+</div>
+
+<div class="panel" id="panel-shop">
+  <div style="display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,rgba(201,168,76,.07),rgba(24,22,39,.9));border:1px solid var(--border2);border-radius:8px;padding:12px 16px;margin-bottom:12px;">
+    <div><div style="font-family:'Cinzel Decorative',serif;font-size:16px;color:var(--gold3)">🏪 Mercado do Herói</div><div style="font-size:11px;color:var(--text2);font-style:italic">Recompensas do mundo real</div></div>
+    <div style="font-family:'Cinzel Decorative',serif;font-size:18px;color:var(--gold2)">🪙<span id="sh-gl">0</span></div>
+  </div>
+  <div class="flex fr wrap g8 mb12" id="sh-flt">
+    <button class="sf-btn active" data-sc2="all">Todos</button>
+    <button class="sf-btn" data-sc2="consumable">🧪</button>
+    <button class="sf-btn" data-sc2="food">🍕 Comida</button>
+    <button class="sf-btn" data-sc2="entertainment">🎮 Lazer</button>
+    <button class="sf-btn" data-sc2="gear">👟</button>
+    <button class="sf-btn" data-sc2="culture">📚</button>
+  </div>
+  <div class="sh-grid" id="sh-grid"></div>
+  <div class="dv"></div>
+  <div class="card" style="margin-top:10px"><div class="ct">📜 Histórico</div><div id="sh-hist"></div></div>
+</div>
+
+<div class="panel" id="panel-quests">
+  <div class="card mb12">
+    <div class="ct">🗺 Taverna das Quests</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:10px;font-style:italic">Quests concedem XP, Gold e 💎 Cristais.</div>
+    <button class="btn bsm" onclick="genQ()" style="margin-bottom:11px">⚄ Novas Quests</button>
+    <div id="q-list"></div>
+  </div>
+  <div class="card"><div class="ct">✅ Ativas</div><div id="q-act"></div></div>
+</div>
+
+<div class="panel" id="panel-attrs">
+  <div class="g2 mb12">
+    <div class="card"><div class="ct">⚔ Atributos</div><div id="at-list"></div></div>
+    <div class="card"><div class="ct">🕸 Teia de Poder</div><div style="display:flex;justify-content:center"><svg id="radar" viewBox="0 0 260 260" width="225" height="225"></svg></div></div>
+  </div>
+</div>
+
+<!-- GUILD PANEL -->
+<div class="panel" id="panel-guilds">
+  <div class="card mb12">
+    <div class="ct">🏰 Guildas de Hábitos</div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:14px;font-style:italic">Cada Guilda agrupa hábitos por tema e oferece bônus especiais quando você atinge o domínio.</div>
+    <div id="guild-active-banner" style="margin-bottom:12px"></div>
+    <div id="guild-list"></div>
+  </div>
+  <div class="card">
+    <div class="ct">📊 Progresso das Guildas</div>
+    <div id="guild-progress"></div>
+  </div>
+</div>
+
+<div class="panel" id="panel-prog">
+  <div class="card mb12">
+    <div class="ct">📈 Histórico de XP</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <div style="font-size:11px;color:var(--text2);font-style:italic;flex:1">XP ganho por dia nos últimos 30 dias</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn bsm" onclick="setXpRange(7)"  id="xp-btn-7">7d</button>
+        <button class="btn bsm" onclick="setXpRange(14)" id="xp-btn-14">14d</button>
+        <button class="btn bsm" onclick="setXpRange(30)" id="xp-btn-30">30d</button>
+      </div>
+    </div>
+    <div id="xp-ch" style="width:100%;min-height:140px;"></div>
+    <div id="xp-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px"></div>
+  </div>
+  <div class="g2 mb12">
+    <div class="card"><div class="ct">🏆 Conquistas</div><div id="ac-list"></div></div>
+    <div class="card"><div class="ct">📊 Taxa por Missão</div><div id="cm-ch"></div></div>
+  </div>
+  <div class="card mb12" id="tav-potion-card">
+  <div class="ct">⚗️ Loja da Taberna</div>
+  <div id="tav-potion"></div>
+</div>
+<div class="card" id="backup-card">
+    <div class="ct">💾 Grimório do Progresso</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:14px;font-style:italic">Preserve sua jornada — exporte e importe seu save entre versões do aplicativo.</div>
+
+    <!-- EXPORT -->
+    <div style="background:rgba(201,168,76,.04);border:1px solid rgba(201,168,76,.15);border-radius:4px;padding:12px 14px;margin-bottom:10px;">
+      <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:.14em;color:var(--gold);text-transform:uppercase;margin-bottom:6px;">📤 Exportar Save</div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:9px;line-height:1.6;">Gera um arquivo <strong style="color:var(--text)">.json</strong> com todo o seu progresso: nível, equipamentos, missões, histórico e conquistas.</div>
+      <button class="btn bsm" onclick="expData()">📤 Baixar Backup</button>
+    </div>
+
+    <!-- IMPORT -->
+    <div style="background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.15);border-radius:4px;padding:12px 14px;margin-bottom:10px;" id="import-zone">
+      <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:.14em;color:var(--crystal);text-transform:uppercase;margin-bottom:6px;">📥 Importar Backup</div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:9px;line-height:1.6;">Carregue um arquivo de backup previamente exportado. <strong style="color:var(--gold2)">Seu progresso atual será substituído</strong> pelo save importado.</div>
+
+      <!-- Drag & Drop zone -->
+      <div id="drop-zone"
+        onclick="document.getElementById('import-in').click()"
+        ondragover="event.preventDefault();this.classList.add('dz-hover')"
+        ondragleave="this.classList.remove('dz-hover')"
+        ondrop="handleDrop(event)"
+        style="border:2px dashed rgba(0,212,255,.25);border-radius:4px;padding:18px 12px;text-align:center;cursor:pointer;transition:all .25s;margin-bottom:9px;">
+        <div style="font-size:24px;margin-bottom:5px;">📂</div>
+        <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:.1em;color:var(--crystal2);margin-bottom:3px;">CLIQUE OU ARRASTE O ARQUIVO</div>
+        <div style="font-size:10px;color:var(--text3)">Aceita arquivos .json exportados pelo Life RPG</div>
+      </div>
+
+      <!-- Preview do save detectado -->
+      <div id="import-preview" style="display:none;background:rgba(0,0,0,.4);border:1px solid rgba(0,212,255,.2);border-radius:4px;padding:10px 12px;margin-bottom:9px;">
+        <div style="font-family:'Cinzel',serif;font-size:9px;color:var(--crystal);letter-spacing:.1em;margin-bottom:7px;">📋 SAVE DETECTADO</div>
+        <div id="import-preview-body" style="font-size:11px;color:var(--text2);line-height:1.8;"></div>
+        <div style="display:flex;gap:8px;margin-top:9px;flex-wrap:wrap;">
+          <button class="btn bsm bcr" onclick="confirmImport()">✅ Confirmar Importação</button>
+          <button class="btn bsm" onclick="cancelImport()">✕ Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESET -->
+    <div style="background:rgba(192,57,43,.04);border:1px solid rgba(192,57,43,.15);border-radius:4px;padding:10px 14px;">
+      <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:.14em;color:var(--red3);text-transform:uppercase;margin-bottom:6px;">⚠ Zona de Perigo</div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:9px;line-height:1.6;">Apaga <strong style="color:var(--red3)">todo</strong> o progresso permanentemente. Esta ação não pode ser desfeita.</div>
+      <button class="btn bsm bred" onclick="confReset()">🗑 Resetar Tudo</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- CLASSE PANEL -->
+<div class="panel" id="panel-classe">
+  <div class="card mb12">
+    <div class="ct">🧙 Escolha sua Classe</div>
+    <div id="class-current" style="margin-bottom:12px"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;flex-wrap:wrap">
+      <div style="font-size:11px;color:var(--text2);font-style:italic">Clique em qualquer classe para ver atributos e todas as evoluções.</div>
+      <div style="display:flex;align-items:center;gap:6px;background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.2);border-radius:20px;padding:3px 10px;flex-shrink:0">
+        <span style="font-size:13px">⚗️</span>
+        <span id="potion-count" style="font-family:'Cinzel',serif;font-size:10px;color:var(--crystal)">0 poção</span>
+        <button class="btn bsm bcr" onclick="buyClassPotion()" style="font-size:8px;padding:2px 8px">Comprar</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;max-width:100%" id="class-grid"></div>
+  </div>
+  <div class="card">
+    <div class="ct">📜 Habilidades Passivas</div>
+    <div id="class-passives"></div>
+  </div>
+</div>
+
+<!-- PROFILE PANEL -->
+<div class="panel" id="panel-profile">
+  <div class="card mb12">
+    <div class="ct">👤 Dados do Herói</div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:16px;font-style:italic">Preencha seus dados pessoais. O nome aparecerá em toda a aplicação.</div>
+
+    <!-- Avatar grande centralizado -->
+    <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:20px">
+      <div style="position:relative;width:120px;height:120px;margin-bottom:10px">
+        <div class="av-ph" id="prof-av-ph" onclick="document.getElementById('av-in').click()" style="width:120px;height:120px;border-radius:50%;border:3px dashed rgba(201,168,76,.4);background:linear-gradient(135deg,rgba(0,0,0,.5),rgba(20,14,32,.7));display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .25s;gap:6px;">
+          <div style="font-size:40px;line-height:1">⚔️</div>
+          <div style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:.1em;color:var(--text3)">CLIQUE PARA FOTO</div>
+        </div>
+        <img id="prof-av-img" style="display:none;position:absolute;inset:0;width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);box-shadow:0 0 24px rgba(201,168,76,.5)" src="" alt="">
+      </div>
+      <div style="font-size:11px;color:var(--text3);font-style:italic">Foto de perfil do personagem</div>
+    </div>
+
+    <!-- Form fields -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div>
+        <label style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:.12em;color:var(--gold);text-transform:uppercase;display:block;margin-bottom:5px">⚔ Nome do Herói</label>
+        <input type="text" id="prof-name" placeholder="Como você quer ser chamado?" maxlength="30"
+          style="background:rgba(0,0,0,.5);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:4px;font-family:'Crimson Pro',serif;font-size:14px;width:100%;box-sizing:border-box;outline:none;transition:border-color .2s"
+          onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"
+          oninput="previewProfileName(this.value)">
+        <div style="font-size:10px;color:var(--text3);margin-top:3px">Este nome aparecerá no topo da aplicação.</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;display:block;margin-bottom:5px">🎂 Idade</label>
+          <input type="number" id="prof-age" placeholder="Anos" min="1" max="120"
+            style="background:rgba(0,0,0,.5);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:4px;font-family:'Crimson Pro',serif;font-size:14px;width:100%;box-sizing:border-box;outline:none"
+            onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'">
+        </div>
+        <div>
+          <label style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;display:block;margin-bottom:5px">⚧ Sexo</label>
+          <select id="prof-sex"
+            style="background:rgba(0,0,0,.5);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:4px;font-family:'Crimson Pro',serif;font-size:14px;width:100%;box-sizing:border-box;outline:none">
+            <option value="">Prefiro não dizer</option>
+            <option value="Masculino">Masculino</option>
+            <option value="Feminino">Feminino</option>
+            <option value="Não-binário">Não-binário</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;display:block;margin-bottom:5px">⚖ Peso (kg)</label>
+          <input type="number" id="prof-weight" placeholder="kg" min="1" max="500" step="0.1"
+            style="background:rgba(0,0,0,.5);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:4px;font-family:'Crimson Pro',serif;font-size:14px;width:100%;box-sizing:border-box;outline:none"
+            onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'">
+        </div>
+        <div>
+          <label style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;display:block;margin-bottom:5px">📏 Altura (cm)</label>
+          <input type="number" id="prof-height" placeholder="cm" min="50" max="300"
+            style="background:rgba(0,0,0,.5);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:4px;font-family:'Crimson Pro',serif;font-size:14px;width:100%;box-sizing:border-box;outline:none"
+            onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'">
+        </div>
+      </div>
+    </div>
+
+    <button class="btn" onclick="saveProfile()" style="width:100%;margin-top:18px;padding:10px">⚔ Salvar Dados do Herói</button>
+  </div>
+
+  <div class="card">
+    <div class="ct">📋 Resumo</div>
+    <div id="profile-summary"></div>
+  </div>
+</div>
+
+<!-- CALENDAR PANEL -->
+<div class="panel" id="panel-calendar">
+  <div class="card mb12">
+    <div class="ct">📅 Calendário de Hábitos</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="btn bsm" onclick="calNav(-1)">‹</button>
+        <span id="cal-month-label" style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold2);min-width:130px;text-align:center"></span>
+        <button class="btn bsm" onclick="calNav(1)">›</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text3)">
+        <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2)"></span>0
+        <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:rgba(201,168,76,.3)"></span>1-2
+        <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:rgba(201,168,76,.6)"></span>3-4
+        <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#c9a84c"></span>5+
+      </div>
+    </div>
+    <!-- Day labels -->
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px">
+      <div style="text-align:center;font-family:'Cinzel',serif;font-size:8px;color:var(--text3)">D</div>
+      <div style="text-align:center;font-family:'Cinzel',serif;font-size:8px;color:var(--text3)">S</div>
+      <div style="text-align:center;font-family:'Cinzel',serif;font-size:8px;color:var(--text3)">T</div>
+      <div style="text-align:center;font-family:'Cinzel',serif;font-size:8px;color:var(--text3)">Q</div>
+      <div style="text-align:center;font-family:'Cinzel',serif;font-size:8px;color:var(--text3)">Q</div>
+      <div style="text-align:center;font-family:'Cinzel',serif;font-size:8px;color:var(--text3)">S</div>
+      <div style="text-align:center;font-family:'Cinzel',serif;font-size:8px;color:var(--text3)">S</div>
+    </div>
+    <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;"></div>
+    <div id="cal-detail" style="margin-top:10px;display:none;background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-size:11px;color:var(--text2)"></div>
+  </div>
+  <div class="card mb12">
+    <div class="ct">📊 Estatísticas do Mês</div>
+    <div id="cal-stats" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+  </div>
+  <div class="card">
+    <div class="ct">🔥 Hábitos em Destaque</div>
+    <div id="cal-habits-rank" style="font-size:11px;color:var(--text2)"></div>
+  </div>
+</div>
+
+<!-- CRAFTING PANEL -->
+<div class="panel" id="panel-crafting">
+  <div class="craft-panel-wrap">
+  <div class="card mb12">
+    <div class="ct">⚗️ Mesa de Combinação</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:14px;font-style:italic">Combine dois itens do seu inventário para criar um equipamento único e mais poderoso.</div>
+    <div class="craft-ingredients">
+      <div class="craft-slot" id="craft-slot-a" onclick="openCraftSlot('a')">
+        <div id="craft-slot-a-content"><span style="font-size:24px;opacity:.3">➕</span></div>
+        <div class="craft-slot-lbl">Item A</div>
+      </div>
+      <div class="craft-arrow">+</div>
+      <div class="craft-slot" id="craft-slot-b" onclick="openCraftSlot('b')">
+        <div id="craft-slot-b-content"><span style="font-size:24px;opacity:.3">➕</span></div>
+        <div class="craft-slot-lbl">Item B</div>
+      </div>
+      <div class="craft-arrow">→</div>
+      <div class="craft-result" id="craft-result">
+        <span style="font-size:28px;opacity:.2">⚔️</span>
+        <div style="font-size:10px;color:var(--text3);margin-top:4px">Resultado</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn bsm bcr" id="craft-btn" onclick="doCraft()" disabled style="opacity:.4">⚗️ Combinar</button>
+      <button class="btn bsm" onclick="clearCraft()">✕ Limpar</button>
+    </div>
+    <div id="craft-msg" style="margin-top:8px;font-size:11px;color:var(--text2);font-style:italic"></div>
+  </div>
+  <div class="card">
+    <div class="ct">📜 Receitas Conhecidas</div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:10px">Combine itens de mesma raridade ou use receitas especiais abaixo. Itens equipados não podem ser usados.</div>
+    <div id="recipe-list"></div>
+  </div>
+  </div><!-- /craft-panel-wrap -->
+</div>
+
+<!-- INVENTORY PANEL -->
+<div class="panel" id="panel-inventory">
+  <div class="panel-constrained">
+    <div class="card mb12">
+      <div class="ct">🎒 Inventário</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="inv-counter">Slots: <span id="inv-used">0</span>/<span id="inv-max">10</span></div>
+        <div style="font-size:10px;color:var(--text2);font-style:italic">Clique num item para detalhes</div>
+      </div>
+      <div class="inv-grid" id="inv-grid"></div>
+      <!-- Item detail — full width, shows large image -->
+      <div class="inv-detail-panel" id="inv-detail">
+        <div class="inv-item-hero">
+          <div class="inv-item-img-wrap" id="inv-detail-img-wrap">
+            <span style="font-size:40px;opacity:.2">⚔️</span>
+          </div>
+          <div id="inv-detail-body"></div>
+        </div>
+        <div id="inv-detail-actions"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct">📊 Resumo de Poder</div>
+      <div id="inv-power-summary"></div>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="panel-tavern">
+  <div class="tav-panel-wrap">
+  <div class="tav-header">
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <div>
+        <div class="tav-title">🍺 Taberna do Grumpy</div>
+        <div class="tav-sub">O taberneiro mais difícil de todos os reinos</div>
+      </div>
+      <div class="tav-balance" style="margin-left:auto">
+        <span style="font-size:15px">🪙</span>
+        <div><div class="tav-gold-val" id="tav-gold">0</div><div style="font-size:8px;color:var(--text2);font-family:'Cinzel',serif">OURO</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="g2 mb12">
+    <div class="card">
+      <span class="tav-npc">🧙‍♂️</span>
+      <div class="tav-speech" id="tav-speech">"Hmph... outro aventureiro tentando me enganar. Tudo bem, deixa ver o que você trouxe. Não espere preços justos — sou um homem de negócios, não um filantropo!"</div>
+    </div>
+    <div class="card">
+      <div class="ct">📋 Regras da Taberna</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.9">
+        🪙 Venda itens por ouro imediato<br>
+        📉 Preço = <strong style="color:var(--gold2)">25% do valor</strong> em cristais<br>
+        ⚔️ Itens equipados <strong style="color:var(--red3)">não podem ser vendidos</strong><br>
+        🎁 Recompensas de Boss <strong style="color:var(--red3)">são intransferíveis</strong><br>
+        💰 Items gratuitos valem <strong style="color:var(--gold2)">5 gold</strong>
+      </div>
+    </div>
+  </div>
+  <div class="card mb12">
+    <div class="ct">🗡️ Inventário Vendável</div>
+    <div id="tav-inv-list"></div>
+  </div>
+  <div class="card">
+    <div class="ct">📜 Vendas Realizadas</div>
+    <div id="tav-hist-list"><div style="font-size:12px;color:var(--text2);font-style:italic">Nenhuma venda ainda.</div></div>
+  </div>
+</div>
+
+
+  <!-- Scripts: load order matters (data → engine → render → ui → classes → anim) -->
+  <script src="js/data.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/classes.js"></script>
+  <script src="js/anim.js"></script>
+  <!-- Firebase: carregado por último como módulo ES (não bloqueia o jogo) -->
+  <script type="module" src="js/firebase.js"></script>
+</body>
+</html>
