@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cássio — O Guerreiro Visionário | Life RPG</title>
+<title>Life RPG</title>
 <meta name="theme-color" content="#07060d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -14,15 +14,16 @@
   <link rel="stylesheet" href="css/style.css">
   <style>
     #fb-login-bar{
-      position:fixed;bottom:0;left:0;right:0;z-index:9999;
+      position:fixed;top:0;left:0;right:0;z-index:9999;
       background:linear-gradient(90deg,rgba(7,6,13,.97),rgba(13,11,26,.97));
-      border-top:1px solid rgba(201,168,76,.15);
-      padding:6px 16px;display:flex;align-items:center;justify-content:flex-end;
-      min-height:36px;backdrop-filter:blur(8px);
+      border-bottom:1px solid rgba(201,168,76,.15);
+      border-top:none;
+      padding:5px 16px;display:flex;align-items:center;justify-content:flex-end;
+      min-height:34px;backdrop-filter:blur(8px);
     }
   </style>
 </head>
-<body>
+<body style="padding-top:34px">
 <!-- Firebase login bar (fixed bottom) -->
 <div id="fb-login-bar">
   <span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(200,188,160,.4)">&#9729; Carregando...</span>
@@ -71,76 +72,84 @@
 </div>
 <div class="hero-status mb12" id="hero-status-card">
 
-  <!-- TOP ROW: avatar · info · bars -->
+  <!-- TOP ROW: avatar+info | then bars below -->
   <div class="hs-top">
 
-    <!-- Avatar column: ring on top, level badge below -->
-    <div class="av-wrap">
-      <div class="av-ring">
-        <div class="av-ph" id="av-ph" onclick="document.getElementById('av-in').click()">
-          <div class="av-ph-icon">⚔️</div>
-          <div class="av-ph-lbl">Foto</div>
-        </div>
-        <img id="av-img" class="av-img" style="display:none" src="" alt="">
-        <button class="av-ed" id="av-ed" style="display:none" onclick="document.getElementById('av-in').click()">✏️</button>
-      </div>
-      <!-- Level badge sits below avatar, fully visible -->
-      <div class="lv-orb">
-        <span class="lv-lbl">NÍV</span>
-        <span class="lv-num" id="hs-lv-orb">1</span>
-      </div>
-    </div>
+    <!-- Row 1: avatar + name/tags -->
+    <div class="hs-top-row1">
 
-    <!-- Name, title, tags -->
-    <div class="hs-info">
-      <div class="hs-name" id="hs-hero-name">Herói</div>
-      <div class="hs-title" id="hs-title-lbl">Novato Determinado</div>
-      <div class="hs-tags">
-        <div class="hs-tag t-fire">🔥 <span id="hs-st">0</span>d streak</div>
-        <div class="hs-tag t-sword">⚔ <span id="hs-pw">+0%</span></div>
-        <div class="hs-tag t-crystal" id="hs-class-tag" style="display:none">🏅 —</div>
-      </div>
-    </div>
-
-    <!-- Bars (HP + XP) — redesigned -->
-    <div class="hs-bars-col">
-
-      <!-- HP Bar -->
-      <div class="bar-slot">
-        <div class="bar-header">
-          <div class="bar-icon-lbl" style="color:var(--red3)">
-            <span style="font-size:11px">❤️</span>
-            <span>Vida</span>
+      <!-- Avatar column: ring on top, level badge below -->
+      <div class="av-wrap">
+        <div class="av-ring">
+          <div class="av-ph" id="av-ph" onclick="document.getElementById('av-in').click()">
+            <div class="av-ph-icon">⚔️</div>
+            <div class="av-ph-lbl">Foto</div>
           </div>
-          <span class="bar-value" id="hs-hp" style="color:var(--red3)">100/100</span>
+          <img id="av-img" class="av-img" style="display:none" src="" alt="">
+          <button class="av-ed" id="av-ed" style="display:none" onclick="document.getElementById('av-in').click()">✏️</button>
         </div>
-        <div class="bw" id="hs-hb-wrap">
-          <div class="bf bar-hp" id="hs-hb" style="width:100%">
-            <div class="bf-glow"></div>
-          </div>
+        <!-- Level badge sits below avatar, fully visible -->
+        <div class="lv-orb">
+          <span class="lv-lbl">NÍV</span>
+          <span class="lv-num" id="hs-lv-orb">1</span>
         </div>
       </div>
 
-      <!-- XP Bar -->
-      <div class="bar-slot">
-        <div class="bar-header">
-          <div class="bar-icon-lbl" style="color:var(--gold2)">
-            <span style="font-size:11px">⚡</span>
-            <span>Experiência</span>
-          </div>
-          <span class="bar-value" id="hs-xp" style="color:var(--gold2)">0/100</span>
+      <!-- Name, title, tags -->
+      <div class="hs-info">
+        <div class="hs-name" id="hs-hero-name">Herói</div>
+        <div class="hs-title" id="hs-title-lbl">Novato Determinado</div>
+        <div class="hs-tags">
+          <div class="hs-tag t-fire">🔥 <span id="hs-st">0</span>d streak</div>
+          <div class="hs-tag t-sword">⚔ <span id="hs-pw">+0%</span></div>
+          <div class="hs-tag t-crystal" id="hs-class-tag" style="display:none">🏅 —</div>
         </div>
-        <div class="bw" id="hs-xb-wrap">
-          <div class="bf bar-xp" id="hs-xb" style="width:0%">
-            <div class="bf-glow"></div>
+      </div>
+
+    </div><!-- /hs-top-row1 -->
+
+    <!-- Row 2: Bars (HP + XP) — full width -->
+    <div class="hs-top-row2">
+      <div class="hs-bars-col">
+
+        <!-- HP Bar -->
+        <div class="bar-slot">
+          <div class="bar-header">
+            <div class="bar-icon-lbl" style="color:var(--red3)">
+              <span style="font-size:11px">❤️</span>
+              <span>Vida</span>
+            </div>
+            <span class="bar-value" id="hs-hp" style="color:var(--red3)">100/100</span>
+          </div>
+          <div class="bw" id="hs-hb-wrap">
+            <div class="bf bar-hp" id="hs-hb" style="width:100%">
+              <div class="bf-glow"></div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- hidden legacy refs -->
-      <span id="hs-lv" style="display:none">1</span>
-    </div>
-  </div>
+        <!-- XP Bar -->
+        <div class="bar-slot">
+          <div class="bar-header">
+            <div class="bar-icon-lbl" style="color:var(--gold2)">
+              <span style="font-size:11px">⚡</span>
+              <span>Experiência</span>
+            </div>
+            <span class="bar-value" id="hs-xp" style="color:var(--gold2)">0/100</span>
+          </div>
+          <div class="bw" id="hs-xb-wrap">
+            <div class="bf bar-xp" id="hs-xb" style="width:0%">
+              <div class="bf-glow"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- hidden legacy refs -->
+        <span id="hs-lv" style="display:none">1</span>
+      </div>
+    </div><!-- /hs-top-row2 -->
+
+  </div><!-- /hs-top -->
 
   <!-- BOTTOM ROW: 4 resource stats -->
   <div class="hs-bottom">

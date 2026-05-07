@@ -319,8 +319,10 @@ const getMult=()=>{const base=S.streak>=30?2:S.streak>=7?1.5:S.streak>=3?1.2:1;r
 function addXP(n){
   const g=Math.floor(n*getMult()*getClassXpMult()*getGuildXpBonus());S.xp+=g;S.totXp+=g;S.xpTd+=g;
   let lv=false;
-  while(S.xp>=XPL(S.lv)){S.xp-=XPL(S.lv);S.lv++;lv=true;S.mhp+=10;S.hp=Math.min(S.hp+20,S.mhp);}
+  while(S.xp>=XPL(S.lv)){S.xp-=XPL(S.lv);S.lv++;lv=true;S.mhp+=10;S.hp=S.mhp;}
   if(lv){
+    bLog(`<span style="color:var(--gold3)">✨ LEVEL UP! Nível ${S.lv} — HP completamente restaurado! (${S.mhp}/${S.mhp})</span>`);
+    notify('🏆','LEVEL UP!',`Nível ${S.lv}! ❤️ HP totalmente restaurado!`,'ng');
     // Check evolution milestones
     const evolved = getEvolvedClass();
     const tree = S.playerClass ? CLASS_EVOLUTIONS[S.playerClass] : null;
