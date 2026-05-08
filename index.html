@@ -24,6 +24,89 @@
   </style>
 </head>
 <body style="padding-top:34px">
+
+<!-- ── Floresta Amaldiçoada: árvores + névoa + vagalumes ── -->
+<div id="forest-bg" style="position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden">
+
+  <!-- Árvores mortas SVG — camada de fundo (distantes) -->
+  <svg style="position:absolute;bottom:0;left:0;width:100%;height:45vh" viewBox="0 0 1400 400" preserveAspectRatio="xMidYMax meet">
+    <!-- árvores distantes, mais finas e opacas -->
+    <g opacity=".35" fill="#060d04">
+      <path d="M80,400 L80,180 Q88,160 94,130 Q100,160 106,180 L106,400Z"/>
+      <path d="M94,180 L80,155 M94,200 L110,168 M94,220 L76,198"/>
+      <path d="M200,400 L200,210 Q206,195 210,175 Q214,195 218,210 L218,400Z"/>
+      <path d="M210,210 L196,188 M210,230 L222,200"/>
+      <path d="M380,400 L380,160 Q390,135 397,100 Q404,135 411,160 L411,400Z"/>
+      <path d="M397,160 L378,130 M397,185 L416,148 M397,210 L373,185"/>
+      <path d="M600,400 L600,190 Q607,172 612,148 Q617,172 622,190 L622,400Z"/>
+      <path d="M612,190 L596,162 M612,215 L628,178"/>
+      <path d="M820,400 L820,170 Q829,148 835,118 Q841,148 847,170 L847,400Z"/>
+      <path d="M835,170 L816,140 M835,195 L854,155 M835,220 L812,195"/>
+      <path d="M1050,400 L1050,185 Q1058,165 1063,138 Q1068,165 1073,185 L1073,400Z"/>
+      <path d="M1063,185 L1047,158 M1063,210 L1079,172"/>
+      <path d="M1280,400 L1280,175 Q1288,152 1294,120 Q1300,152 1306,175 L1306,400Z"/>
+      <path d="M1294,175 L1276,145 M1294,200 L1312,162 M1294,225 L1271,200"/>
+    </g>
+  </svg>
+
+  <!-- Árvores SVG — camada frontal (mais próximas, mais escuras) -->
+  <svg style="position:absolute;bottom:0;left:0;width:100%;height:55vh" viewBox="0 0 1400 500" preserveAspectRatio="xMidYMax meet">
+    <g fill="#030804">
+      <!-- tronco esquerdo grande -->
+      <path d="M0,500 L0,280 Q12,240 22,180 Q30,220 35,260 L50,260 L50,500Z"/>
+      <path d="M22,280 L-10,240 M22,310 L-15,275 M22,260 L45,220 M22,330 L48,290" stroke="#030804" stroke-width="8" fill="none"/>
+      <!-- tronco esq-centro -->
+      <path d="M130,500 L130,200 Q142,165 152,120 Q162,165 170,200 L180,200 L180,500Z"/>
+      <path d="M152,200 L125,162 M152,230 L178,188 M152,260 L120,230 M152,175 L172,148" stroke="#030804" stroke-width="10" fill="none"/>
+      <!-- tronco centro-esq -->
+      <path d="M350,500 L350,240 Q360,210 368,175 Q376,210 382,240 L390,240 L390,500Z"/>
+      <path d="M368,240 L345,205 M368,268 L392,225 M368,215 L388,188" stroke="#030804" stroke-width="9" fill="none"/>
+      <!-- tronco centro -->
+      <path d="M680,500 L680,210 Q694,170 705,125 Q716,170 724,210 L736,210 L736,500Z"/>
+      <path d="M705,210 L678,170 M705,240 L732,195 M705,270 L672,240 M705,185 L728,155" stroke="#030804" stroke-width="12" fill="none"/>
+      <!-- tronco centro-dir -->
+      <path d="M960,500 L960,225 Q972,190 980,155 Q988,190 995,225 L1005,225 L1005,500Z"/>
+      <path d="M980,225 L956,190 M980,255 L1006,210 M980,200 L1002,170" stroke="#030804" stroke-width="10" fill="none"/>
+      <!-- tronco dir-centro -->
+      <path d="M1180,500 L1180,215 Q1190,182 1198,148 Q1206,182 1212,215 L1222,215 L1222,500Z"/>
+      <path d="M1198,215 L1172,178 M1198,245 L1224,200 M1198,190 L1218,162" stroke="#030804" stroke-width="9" fill="none"/>
+      <!-- tronco dir -->
+      <path d="M1370,500 L1370,250 Q1380,218 1386,185 Q1392,218 1397,250 L1400,250 L1400,500Z"/>
+      <path d="M1386,250 L1364,215 M1386,278 L1400,240 M1386,225 L1400,200" stroke="#030804" stroke-width="8" fill="none"/>
+      <!-- chão / terra escura -->
+      <ellipse cx="700" cy="500" rx="720" ry="18" opacity=".8"/>
+    </g>
+  </svg>
+
+  <!-- Névoa roxa rasteira -->
+  <div style="position:absolute;bottom:0;left:-10%;right:-10%;height:28%;
+    background:linear-gradient(0deg,rgba(45,8,70,.55) 0%,rgba(30,5,50,.3) 40%,transparent 100%);
+    animation:mistDrift 20s ease-in-out infinite"></div>
+
+  <!-- Névoa verde/esmeralda (gases do pântano) -->
+  <div style="position:absolute;bottom:0;left:-5%;right:-5%;height:18%;
+    background:linear-gradient(0deg,rgba(10,45,8,.5) 0%,rgba(8,35,5,.2) 50%,transparent 100%);
+    animation:mistDrift2 25s ease-in-out infinite"></div>
+
+  <!-- Névoa média flutuante -->
+  <div style="position:absolute;bottom:15%;left:-15%;width:55%;height:20%;
+    background:radial-gradient(ellipse at 50% 100%,rgba(50,8,80,.3),transparent 70%);
+    animation:mistDrift 14s ease-in-out infinite;animation-delay:-5s"></div>
+  <div style="position:absolute;bottom:12%;right:-15%;width:55%;height:20%;
+    background:radial-gradient(ellipse at 50% 100%,rgba(50,8,80,.25),transparent 70%);
+    animation:mistDrift2 17s ease-in-out infinite;animation-delay:-8s"></div>
+
+  <!-- Vagalumes -->
+  <div class="ff" style="bottom:30%;left:12%;animation:fireflyFloat 4.5s ease-in-out infinite"></div>
+  <div class="ff" style="bottom:38%;left:24%;animation:fireflyFloat2 6.2s ease-in-out infinite;animation-delay:-2s"></div>
+  <div class="ff ff-amber" style="bottom:25%;left:38%;animation:fireflyFloat 5.8s ease-in-out infinite;animation-delay:-1.5s"></div>
+  <div class="ff" style="bottom:42%;left:55%;animation:fireflyFloat2 4.8s ease-in-out infinite;animation-delay:-3s"></div>
+  <div class="ff ff-amber" style="bottom:28%;left:67%;animation:fireflyFloat 7s ease-in-out infinite;animation-delay:-0.8s"></div>
+  <div class="ff" style="bottom:35%;left:78%;animation:fireflyFloat2 5.2s ease-in-out infinite;animation-delay:-4s"></div>
+  <div class="ff" style="bottom:20%;left:88%;animation:fireflyFloat 6s ease-in-out infinite;animation-delay:-2.5s"></div>
+  <div class="ff ff-amber" style="bottom:45%;left:92%;animation:fireflyFloat2 4.2s ease-in-out infinite;animation-delay:-1s"></div>
+  <div class="ff" style="bottom:33%;left:6%;animation:fireflyFloat2 7.5s ease-in-out infinite;animation-delay:-3.5s"></div>
+</div>
 <!-- Firebase login bar (fixed bottom) -->
 <div id="fb-login-bar">
   <span style="font-family:'Cinzel',serif;font-size:9px;color:rgba(200,188,160,.4)">&#9729; Carregando...</span>
