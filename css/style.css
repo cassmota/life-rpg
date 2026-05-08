@@ -100,7 +100,7 @@ html::before{
   top:clamp(40px,8vh,80px);
   left:50%;transform:translateX(-50%);
   width:clamp(40px,5vw,64px);height:clamp(40px,5vw,64px);
-  border-radius:50%;z-index:1;pointer-events:none;
+  border-radius:50%;z-index:0;pointer-events:none;
   background:radial-gradient(circle at 38% 38%,#c0392b 0%,#922b21 40%,#641e16 80%,#4a1010 100%);
   animation:bloodMoonPulse 5s ease-in-out infinite;
 }
@@ -169,7 +169,7 @@ html::after{
 }
 
 /* ── Container acima de tudo ── */
-.container{max-width:1200px;margin:0 auto;padding:0 16px 96px;position:relative;z-index:2;}
+.container{max-width:1200px;margin:0 auto;padding:0 16px 96px;position:relative;z-index:10;}
 /* ══════════════════════════════════════════════════════════════
    SITE HEADER — Dark Fantasy Dungeon
    ══════════════════════════════════════════════════════════════ */
