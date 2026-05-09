@@ -1899,9 +1899,8 @@ input[type="file"]{display:none;}
 .sk-graph-wrap{
   position:relative;
   width:100%;
-  aspect-ratio:3/4;
-  min-height:320px;
-  max-height:480px;
+  height:360px;
+  max-height:55vh;
   margin:0 auto;
 }
 
@@ -2090,7 +2089,7 @@ input[type="file"]{display:none;}
 
 /* ── MOBILE ADJUSTMENTS ─────────────────────────────────────── */
 @media(max-width:400px){
-  .sk-graph-wrap{ min-height:280px; }
+  .sk-graph-wrap{ height:300px; max-height:50vh; }
   .sk-node-inner{ border-radius:8px; }
   .sk-icon{ font-size:14px; }
   .sk-name{ font-size:5px; }
