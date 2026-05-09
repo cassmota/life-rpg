@@ -2162,7 +2162,7 @@ function renderCalendar(){
   let cells = '';
   // Empty cells before month start
   for(let i=0; i<firstDay; i++){
-    cells += `<div style="aspect-ratio:1;border-radius:3px;background:rgba(0,0,0,.2)"></div>`;
+    cells += `<div style="height:32px;border-radius:3px;background:rgba(0,0,0,.2)"></div>`;
   }
   // Day cells
   let totalDone=0, activeDays=0, maxDay=0, bestDay='';
@@ -2183,17 +2183,16 @@ function renderCalendar(){
 
     if(isToday) border='outline:2px solid var(--crystal);outline-offset:1px;';
 
-    const isPast = key < today;
     const isFuture = key > today;
 
     cells += `<div
       onclick="showCalDay('${key}',${count})"
       title="${d} ${CAL_MONTHS[calMonth]}${count>0?' · '+count+' missões':''}"
-      style="aspect-ratio:1;border-radius:3px;background:${bg};${border}cursor:${count>0||isToday?'pointer':'default'};
-             opacity:${isFuture?.3:1};transition:transform .1s;position:relative"
-      onmouseover="if(${count}>0||${isToday})this.style.transform='scale(1.15)'"
+      style="height:32px;border-radius:3px;background:${bg};${border}cursor:${count>0||isToday?'pointer':'default'};
+             opacity:${isFuture?.3:1};transition:transform .1s;position:relative;display:flex;align-items:center;justify-content:center;"
+      onmouseover="if(${count}>0||${isToday})this.style.transform='scale(1.1)'"
       onmouseout="this.style.transform='scale(1)'"
-    >${isToday?`<div style="position:absolute;bottom:1px;right:1px;width:4px;height:4px;border-radius:50%;background:var(--crystal)"></div>`:''}</div>`;
+    ><span style="font-size:9px;color:${count>0?'rgba(0,0,0,.6)':'rgba(255,255,255,.2)'};font-family:monospace;user-select:none">${d}</span>${isToday?`<div style="position:absolute;bottom:2px;right:2px;width:4px;height:4px;border-radius:50%;background:var(--crystal)"></div>`:''}</div>`;
   }
   grid.innerHTML = cells;
 
