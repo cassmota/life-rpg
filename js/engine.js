@@ -411,6 +411,8 @@ function togH(id){
     }
 
     notify('⚡','Missão!',`${h.ic} ${h.nm}\n+${xg}XP +${gg}Gold`,'ng');checkAch();
+    // Check if any active quest is auto-triggered by this habit completion
+    if(typeof checkQuestTriggers==='function') checkQuestTriggers();
   }
   save();renderAll();
 }
@@ -456,6 +458,8 @@ function newDay(){
     S.habits.forEach(h=>{if(h.dn){h.sk++;S.attrs[h.at].sk++;}else if(h.tp!=='unique'&&h.tp!=='weekly') h.sk=0;if(h.tp!=='unique'&&h.tp!=='weekly') h.dn=false; else if(h.tp==='daily') h.dn=false;});}
   else{S.streak=0;S.cStr=0;S.habits.forEach(h=>{h.dn=false;h.sk=0;});}
   S.xpTd=0;S.goTd=0;S.dnTd=0;S.bdTd=0;S.badLog={};S.lastDay=today;
+  // Check quest triggers after streaks are updated
+  if(typeof checkQuestTriggers==='function') checkQuestTriggers();
   checkBW();checkAch();save();renderAll();
   if(Math.random()<0.4&&!S.activeEv)setTimeout(spawnEv,2000);
   notify('🌅','Novo Dia!','A jornada continua!','ng');
@@ -479,10 +483,20 @@ function genQ(){
   const pool=[...QUEST_POOL].sort(()=>Math.random()-.5).slice(0,10);
   const c=document.getElementById('q-list');if(!c)return;
   const rm={epic:'ÉPICA',rare:'RARA',common:'COMUM'};const rcl={epic:'qe',rare:'qr',common:'qco'};
-  c.innerHTML=pool.map(q=>`<div class="qc ${rcl[q.r]}"><div class="qt">${q.ti}</div><div class="qd">${q.ds}</div>
-  <div class="qf"><span class="qry r-${q.r}">⬥ ${rm[q.r]}</span>
-  <div class="qrw"><span class="qx">+${q.xp}XP</span><span class="qg">+${q.go}🪙</span><span class="qcr">+${q.cr}💎</span>
-  <button class="btn bsm" onclick="accQ(${JSON.stringify(q).split('"').join("'")})">Aceitar</button></div></div></div>`).join('');
+  c.innerHTML=pool.map(q=>{
+    const trig=QUEST_TRIGGERS[q.ti];
+    const trigBadge=trig
+      ? `<div style="margin:4px 0;display:inline-flex;align-items:center;gap:4px;background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.25);border-radius:10px;padding:2px 8px">
+           <span style="font-size:9px">🎯</span>
+           <span style="font-family:'Cinzel',serif;font-size:8px;color:var(--gold2)">Auto-conclusão por hábito</span>
+         </div><br>`
+      : '';
+    return `<div class="qc ${rcl[q.r]}"><div class="qt">${q.ti}</div><div class="qd">${q.ds}</div>
+    ${trigBadge}
+    <div class="qf"><span class="qry r-${q.r}">⬥ ${rm[q.r]}</span>
+    <div class="qrw"><span class="qx">+${q.xp}XP</span><span class="qg">+${q.go}🪙</span><span class="qcr">+${q.cr}💎</span>
+    <button class="btn bsm" onclick="accQ(${JSON.stringify(q).split('"').join("'")})">Aceitar</button></div></div></div>`;
+  }).join('');
 }
 function accQ(q){
   if(S.aQ.find(a=>a.ti===q.ti)){notify('⚠️','Já ativa!','','ng');return;}
@@ -542,9 +556,50 @@ function renderActiveQ(){
   c.innerHTML=S.aQ.map((q,i)=>{
     const pen=q.pen||15;
     const dmg=Math.max(5,Math.floor(S.mhp*(pen/100)));
+
+    // Build trigger progress bar if quest has a trigger
+    let trigHtml='';
+    const trig=QUEST_TRIGGERS[q.ti];
+    if(trig){
+      let cur=0, max=trig.target||1, label='', icon='🎯';
+      if(trig.type==='streak'){
+        const h=(S.habits||[]).find(h=>h.nm===trig.habit);
+        cur=h?Math.min(h.sk||0,max):0;
+        label=`${trig.habit}: ${cur}/${max} dias streak`;icon='🔥';
+      } else if(trig.type==='total'){
+        const h=(S.habits||[]).find(h=>h.nm===trig.habit);
+        cur=h?Math.min(h.td||0,max):0;
+        label=`${trig.habit}: ${cur}/${max} completadas`;icon='✅';
+      } else if(trig.type==='level'){
+        cur=Math.min(S.lv,max);
+        label=`Nível ${cur}/${max}`;icon='⭐';
+      } else if(trig.type==='all_today'){
+        const total=(S.habits||[]).filter(h=>!h.tp||h.tp==='daily').length;
+        cur=(S.habits||[]).filter(h=>h.dn).length;max=total;
+        label=`Hoje: ${cur}/${total} missões concluídas`;icon='🌟';
+      } else if(trig.type==='streak_any'){
+        cur=Math.min(Math.max(...(S.habits||[]).map(h=>h.sk||0),0),max);
+        label=`Melhor streak: ${cur}/${max} dias`;icon='🔥';
+      }
+      const pct=max>0?Math.min(100,Math.round(cur/max*100)):0;
+      const done=cur>=max;
+      trigHtml=`
+        <div style="margin:5px 0 4px;background:rgba(0,0,0,.4);border:1px solid ${done?'rgba(39,174,96,.4)':'rgba(201,168,76,.15)'};border-radius:6px;padding:6px 8px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:9px;font-family:'Cinzel',serif;color:${done?'var(--green3)':'var(--gold2)'};">${icon} Auto-conclusão: ${label}</span>
+            <span style="font-size:9px;color:${done?'var(--green3)':'var(--text3)'};">${pct}%</span>
+          </div>
+          <div style="height:4px;background:rgba(0,0,0,.5);border-radius:2px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${done?'var(--green3)':'var(--gold2)'};border-radius:2px;transition:width .4s"></div>
+          </div>
+          ${done?'<div style="font-size:9px;color:var(--green3);margin-top:3px;font-style:italic">✓ Condição atingida — recompensa sendo processada...</div>':''}
+        </div>`;
+    }
+
     return `<div class="qc ${rcl[q.r]}">
       <div class="qt">${q.ti}</div>
       <div class="qd">${q.ds}</div>
+      ${trigHtml}
       <div style="margin:4px 0 6px">
         <span style="font-size:9px;font-family:'Cinzel',serif;background:rgba(192,57,43,.15);border:1px solid rgba(192,57,43,.3);color:var(--red3);border-radius:8px;padding:1px 7px">⚠ Falhar: −${dmg} HP (${pen}%)</span>
       </div>
@@ -552,7 +607,7 @@ function renderActiveQ(){
         <span style="font-size:10px;color:var(--text3)">Aceita: ${q.acc}</span>
         <div class="qrw">
           <span class="qx">+${q.xp}XP</span><span class="qg">+${q.go}🪙</span><span class="qcr">+${q.cr}💎</span>
-          <button class="btn bsm" onclick="doneQ(${i})" style="background:rgba(39,174,96,.1);border-color:rgba(39,174,96,.5);color:var(--green3)">✓ Concluir</button>
+          ${!trig?`<button class="btn bsm" onclick="doneQ(${i})" style="background:rgba(39,174,96,.1);border-color:rgba(39,174,96,.5);color:var(--green3)">✓ Concluir</button>`:'<span style="font-size:9px;color:var(--text3);font-style:italic">Auto</span>'}
           <button class="btn bsm bred" onclick="failQ(${i})" style="font-size:8px">✕ Falhar</button>
         </div>
       </div>
@@ -560,7 +615,121 @@ function renderActiveQ(){
   }).join('');
 }
 
-// =============== ACHIEVEMENTS ===============
+// ═══════════════════════════════════════════════════════════════
+// HABIT → QUEST TRIGGER SYSTEM
+// Cada entrada mapeia um quest title → condição automática de conclusão.
+// type: 'streak'  → hábito com streak >= target dias consecutivos
+//       'total'   → hábito concluído >= target vezes no total (h.td)
+//       'days'    → dias ativos no S.hist com aquele hábito concluído
+//       'level'   → jogador no nível >= target
+//       'streak_any' → qualquer hábito com streak >= target
+//       'all_today'  → todos hábitos concluídos no mesmo dia (via dnTd)
+// ═══════════════════════════════════════════════════════════════
+const QUEST_TRIGGERS = {
+  // ── ÁGUA ─────────────────────────────────────────────────────
+  'Aquário Vivo':          { habit:'Beber 3L de água',     type:'streak',  target:10  },
+  'Fonte Imortal':         { habit:'Beber 3L de água',     type:'streak',  target:30  },
+  'Hidratação Sagrada':    { habit:'Beber 3L de água',     type:'total',   target:50  },
+
+  // ── TREINO ───────────────────────────────────────────────────
+  'Corpo de Ferro':        { habit:'Treino / Academia',    type:'streak',  target:7   },
+  'Atleta Forjado':        { habit:'Treino / Academia',    type:'streak',  target:21  },
+  'Guerreiro Lendário':    { habit:'Treino / Academia',    type:'total',   target:100 },
+  'Força Bruta':           { habit:'Treino / Academia',    type:'streak',  target:14  },
+
+  // ── SONO ─────────────────────────────────────────────────────
+  'Guardião do Sono':      { habit:'Dormir 7h+',           type:'streak',  target:7   },
+  'Sono Reparador':        { habit:'Dormir 7h+',           type:'streak',  target:14  },
+  'Mestre do Descanso':    { habit:'Dormir 7h+',           type:'total',   target:30  },
+
+  // ── MEDITAÇÃO ────────────────────────────────────────────────
+  'Mente Cristalina':      { habit:'Meditação',            type:'streak',  target:7   },
+  'Monge Interno':         { habit:'Meditação',            type:'streak',  target:21  },
+  'Vazio Sagrado':         { habit:'Meditação',            type:'total',   target:50  },
+  'Paz Profunda':          { habit:'Meditação',            type:'streak',  target:14  },
+
+  // ── DIETA ────────────────────────────────────────────────────
+  'Alquimista da Nutrição':{ habit:'Seguir a Dieta',       type:'streak',  target:7   },
+  'Templo do Corpo':       { habit:'Seguir a Dieta',       type:'streak',  target:21  },
+  'Corpo Sagrado':         { habit:'Seguir a Dieta',       type:'total',   target:60  },
+  'Disciplina Alimentar':  { habit:'Seguir a Dieta',       type:'streak',  target:14  },
+
+  // ── LEITURA ──────────────────────────────────────────────────
+  'Devorador de Livros':   { habit:'Leitura 30min',        type:'streak',  target:10  },
+  'Sábio do Norte':        { habit:'Leitura 30min',        type:'streak',  target:21  },
+  'Biblioteca Viva':       { habit:'Leitura 30min',        type:'total',   target:50  },
+
+  // ── DIÁRIO / JOURNALING ───────────────────────────────────────
+  'Crônicas do Herói':     { habit:'Journaling / Diário',  type:'streak',  target:7   },
+  'Memórias Eternas':      { habit:'Journaling / Diário',  type:'streak',  target:30  },
+  'Escriba Imortal':       { habit:'Journaling / Diário',  type:'total',   target:50  },
+
+  // ── MOBILIDADE ───────────────────────────────────────────────
+  'Corpo Fluído':          { habit:'Mobilidade / Alongamento', type:'streak', target:7 },
+  'Serpente de Jade':      { habit:'Mobilidade / Alongamento', type:'streak', target:21},
+
+  // ── MULTI-HÁBITO / NÍVEL ─────────────────────────────────────
+  'Renascimento':          { type:'level',      target:10  },
+  'Ascensão do Herói':     { type:'level',      target:25  },
+  'Herói Transcendente':   { type:'level',      target:50  },
+  'Dia Perfeito':          { type:'all_today',  target:1   },
+  'Semana Impecável':      { type:'streak_any', target:7   },
+  'Mestre da Consistência':{ type:'streak_any', target:30  },
+};
+
+// ── CHECK IF A SINGLE QUEST IS TRIGGERED ────────────────────────
+function isQuestTriggered(q){
+  const trig = QUEST_TRIGGERS[q.ti];
+  if(!trig) return false;
+
+  if(trig.type === 'streak'){
+    const h = (S.habits||[]).find(h=>h.nm===trig.habit);
+    return h && (h.sk||0) >= trig.target;
+  }
+  if(trig.type === 'total'){
+    const h = (S.habits||[]).find(h=>h.nm===trig.habit);
+    return h && (h.td||0) >= trig.target;
+  }
+  if(trig.type === 'level'){
+    return (S.lv||1) >= trig.target;
+  }
+  if(trig.type === 'all_today'){
+    const total = (S.habits||[]).filter(h=>!h.tp||h.tp==='daily').length;
+    const done  = (S.habits||[]).filter(h=>h.dn).length;
+    return total > 0 && done >= total;
+  }
+  if(trig.type === 'streak_any'){
+    return (S.habits||[]).some(h=>(h.sk||0) >= trig.target);
+  }
+  return false;
+}
+
+// ── AUTO-COMPLETE TRIGGERED QUESTS ─────────────────────────────
+function checkQuestTriggers(){
+  const triggered = (S.aQ||[]).filter(q => isQuestTriggered(q));
+  if(!triggered.length) return;
+
+  triggered.forEach(q => {
+    const idx = S.aQ.indexOf(q);
+    if(idx === -1) return;
+    // Grant rewards
+    addXP(q.xp);
+    addGold(q.go);
+    addCr(q.cr);
+    S.aQ.splice(idx, 1);
+
+    // Special celebratory notification for auto-completed quests
+    notify('🏆', 'Quest Automática!',
+      `"${q.ti}" — concluída pelos seus hábitos! +${q.xp}XP +${q.go}🪙 +${q.cr}💎`, 'ng');
+    bLog(`<span style="color:var(--gold3)">🏆 Quest automática: <em>${q.ti}</em> — concluída pelo hábito! +${q.xp}XP +${q.go}🪙 +${q.cr}💎</span>`);
+  });
+
+  if(triggered.length) { checkAch(); save(); renderAll(); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// END HABIT → QUEST TRIGGER SYSTEM
+// ═══════════════════════════════════════════════════════════════
 function checkAch(){
   ACHS.forEach(a=>{
     if(!uAch.includes(a.id)&&a.ck(S)){
