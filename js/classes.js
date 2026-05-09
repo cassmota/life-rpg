@@ -2107,14 +2107,35 @@ function calNav(dir){
 }
 
 function getCalData(){
-  // Build a map: 'YYYY-MM-DD' → { count, missions: [] }
+  // Build a map: 'YYYY-MM-DD' → { count, xp, gold }
   const map = {};
-  (S.hist||[]).forEach(day=>{
-    if(!day.date) return;
-    const key = day.date.substring(0,10);
-    map[key] = { count: day.done||0, xp: day.xp||0, gold: day.gold||0 };
+  (S.hist||[]).forEach(entry=>{
+    let key = null;
+
+    // New format: entry.date = 'YYYY-MM-DD'
+    if(entry.date){
+      key = entry.date.substring(0,10);
+    }
+    // Legacy format: entry.day = 'Fri May 08 2026' (toDateString)
+    else if(entry.day){
+      const d = new Date(entry.day);
+      if(!isNaN(d)){
+        const y = d.getFullYear();
+        const m = String(d.getMonth()+1).padStart(2,'0');
+        const dd = String(d.getDate()).padStart(2,'0');
+        key = `${y}-${m}-${dd}`;
+      }
+    }
+
+    if(!key) return;
+
+    // Support both old field names (dn/go) and new ones (done/gold)
+    const count = entry.done ?? entry.dn ?? 0;
+    const gold  = entry.gold ?? entry.go ?? 0;
+    map[key] = { count, xp: entry.xp||0, gold };
   });
-  // Also check today from current habits
+
+  // Also reflect today's in-progress missions
   const today = new Date().toISOString().substring(0,10);
   const doneToday = (S.habits||[]).filter(h=>h.dn).length;
   if(doneToday > 0){

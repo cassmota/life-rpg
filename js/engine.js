@@ -436,8 +436,21 @@ function addHabit(){
 // =============== NEW DAY ===============
 function confDay(){showMo('🌅 Novo Dia?','Registrar progresso, aplicar streak e resetar missões.',null,[{lb:'Cancelar',ac:'closeMo()'},{lb:'Sim!',ac:'newDay()',cl:'btn'}]);}
 function newDay(){
-  closeMo();const today=new Date().toDateString();const done=S.habits.filter(h=>h.dn).length;
-  S.hist.push({day:today,xp:S.xpTd,go:S.goTd,dn:done,tot:S.habits.length});if(S.hist.length>60)S.hist.shift();
+  closeMo();
+  const today=new Date().toDateString();
+  const todayISO=new Date().toISOString().substring(0,10);
+  const done=S.habits.filter(h=>h.dn).length;
+  S.hist.push({
+    day:today,
+    date:todayISO,
+    xp:S.xpTd,
+    gold:S.goTd,
+    go:S.goTd,
+    done:done,
+    dn:done,
+    tot:S.habits.length
+  });
+  if(S.hist.length>60)S.hist.shift();
   if(done>0){S.streak++;S.daysA++;S.cStr++;
     if(S.streak%7===0){for(const k in S.attrs)S.attrs[k].v=Math.min(100,S.attrs[k].v+5);notify('✨','Streak!','7 dias! +5 atribs!','ng');}
     S.habits.forEach(h=>{if(h.dn){h.sk++;S.attrs[h.at].sk++;}else if(h.tp!=='unique'&&h.tp!=='weekly') h.sk=0;if(h.tp!=='unique'&&h.tp!=='weekly') h.dn=false; else if(h.tp==='daily') h.dn=false;});}
