@@ -1890,4 +1890,211 @@ input[type="file"]{display:none;}
   font-family:'Cinzel',serif;font-size:9px;
   letter-spacing:.1em;margin-top:6px;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   SKILL TREE SYSTEM — Dark Fantasy RPG Style
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Wrapper com linhas SVG + grid sobrepostos */
+.sk-graph-wrap{
+  position:relative;
+  width:100%;
+  aspect-ratio:3/4;
+  min-height:320px;
+  max-height:480px;
+  margin:0 auto;
+}
+
+/* SVG das linhas de conexão — posicionado atrás dos nós */
+.sk-lines{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  z-index:0;
+}
+
+/* Grid 3×4 dos nós */
+.sk-grid{
+  position:absolute;
+  inset:0;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  grid-template-rows:repeat(4,1fr);
+  gap:8px;
+  padding:8px;
+  z-index:1;
+}
+
+/* ── NÓ BASE ────────────────────────────────────────────────── */
+.sk-node{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:default;
+}
+
+/* Inner card */
+.sk-node-inner{
+  width:100%;
+  max-width:80px;
+  aspect-ratio:1;
+  border-radius:10px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  padding:4px;
+  position:relative;
+  transition:all .25s cubic-bezier(.16,1,.3,1);
+  border:2px solid;
+  backdrop-filter:blur(4px);
+}
+
+/* ── ESTADO: BLOQUEADO ─────────────────────────────────────── */
+.sk-locked .sk-node-inner{
+  background:rgba(0,0,0,.55);
+  border-color:rgba(255,255,255,.07);
+  filter:saturate(0) brightness(.6);
+}
+.sk-locked{cursor:not-allowed;}
+
+/* ── ESTADO: DISPONÍVEL (pode desbloquear) ─────────────────── */
+@keyframes skAvailPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,0);}
+  50%{box-shadow:0 0 14px 3px rgba(201,168,76,.35);}
+}
+.sk-available .sk-node-inner{
+  background:rgba(201,168,76,.08);
+  border-color:rgba(201,168,76,.5);
+  cursor:pointer;
+  animation:skAvailPulse 2s ease-in-out infinite;
+}
+.sk-available:hover .sk-node-inner{
+  background:rgba(201,168,76,.16);
+  border-color:rgba(201,168,76,.85);
+  transform:scale(1.08);
+  box-shadow:0 0 18px rgba(201,168,76,.4);
+}
+
+/* ── ESTADO: DESBLOQUEADO ──────────────────────────────────── */
+@keyframes skUnlockedGlow{
+  0%,100%{box-shadow:0 0 8px rgba(var(--sk-glow-rgb),.4),0 0 20px rgba(var(--sk-glow-rgb),.15);}
+  50%{box-shadow:0 0 14px rgba(var(--sk-glow-rgb),.65),0 0 32px rgba(var(--sk-glow-rgb),.25);}
+}
+.sk-unlocked .sk-node-inner{
+  background:color-mix(in srgb, var(--cls-color,#c9a84c) 12%, rgba(0,0,0,.6));
+  border-color:var(--cls-color,#c9a84c);
+  box-shadow:0 0 10px color-mix(in srgb, var(--cls-color,#c9a84c) 50%, transparent),
+             inset 0 1px 0 rgba(255,255,255,.1);
+}
+
+/* ── ÍCONE, NOME, CUSTO ──────────────────────────────────────── */
+.sk-icon{
+  font-size:clamp(16px,4vw,22px);
+  line-height:1;
+  filter:drop-shadow(0 1px 3px rgba(0,0,0,.8));
+}
+.sk-name{
+  font-family:'Cinzel',serif;
+  font-size:clamp(5px,1.4vw,8px);
+  letter-spacing:.04em;
+  color:var(--text2);
+  text-align:center;
+  line-height:1.2;
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.sk-unlocked .sk-name{ color:var(--cls-color,var(--gold2)); }
+.sk-available .sk-name{ color:var(--gold2); }
+
+.sk-cost{
+  font-family:'Cinzel',serif;
+  font-size:clamp(6px,1.5vw,9px);
+  color:var(--text3);
+  text-align:center;
+}
+.sk-available .sk-cost{ color:var(--gold3); font-weight:bold; }
+.sk-unlocked .sk-cost{ color:var(--green3); }
+
+/* ── CORNER ORNAMENT — desbloqueado ─────────────────────────── */
+.sk-unlocked .sk-node-inner::before{
+  content:'✦';
+  position:absolute;top:2px;right:4px;
+  font-size:6px;
+  color:var(--cls-color,#c9a84c);
+  opacity:.7;
+}
+
+/* ── TOOLTIP ──────────────────────────────────────────────────── */
+.sk-tooltip{
+  display:none;
+  position:absolute;
+  bottom:calc(100% + 10px);
+  left:50%;transform:translateX(-50%);
+  width:180px;max-width:60vw;
+  background:linear-gradient(135deg,rgba(10,8,20,.97),rgba(20,16,36,.97));
+  border:1px solid rgba(201,168,76,.4);
+  border-radius:8px;
+  padding:10px 12px;
+  z-index:200;
+  pointer-events:none;
+  box-shadow:0 8px 32px rgba(0,0,0,.8),0 0 12px rgba(201,168,76,.1);
+}
+.sk-tooltip::after{
+  content:'';
+  position:absolute;
+  top:100%;left:50%;transform:translateX(-50%);
+  border:6px solid transparent;
+  border-top-color:rgba(201,168,76,.4);
+}
+.sk-node:hover .sk-tooltip{ display:block; }
+/* Tooltip que sai embaixo da tela — mostrar acima */
+.sk-grid .sk-node:last-child .sk-tooltip,
+.sk-grid .sk-node:nth-last-child(-n+3) .sk-tooltip{
+  bottom:calc(100% + 10px);
+}
+
+.sk-tip-name{
+  font-family:'Cinzel',serif;font-size:11px;
+  color:var(--gold2);margin-bottom:4px;
+}
+.sk-tip-effect{
+  font-family:'Cinzel',serif;font-size:9px;
+  color:var(--crystal);margin-bottom:5px;
+  letter-spacing:.04em;
+}
+.sk-tip-desc{
+  font-size:10px;color:var(--text2);
+  line-height:1.5;margin-bottom:5px;
+}
+.sk-tip-cost{
+  font-family:'Cinzel',serif;font-size:9px;
+  letter-spacing:.06em;
+}
+
+/* ── BONUS TAGS (resumo de bônus ativos) ──────────────────── */
+.sk-bonus-tag{
+  font-family:'Cinzel',serif;font-size:9px;
+  background:rgba(0,0,0,.4);
+  border:1px solid currentColor;
+  border-radius:12px;
+  padding:2px 8px;
+  opacity:.85;
+}
+
+/* ── MOBILE ADJUSTMENTS ─────────────────────────────────────── */
+@media(max-width:400px){
+  .sk-graph-wrap{ min-height:280px; }
+  .sk-node-inner{ border-radius:8px; }
+  .sk-icon{ font-size:14px; }
+  .sk-name{ font-size:5px; }
+  .sk-cost{ font-size:6px; }
+  .sk-tooltip{ width:150px; font-size:9px; }
+}
 </style>

@@ -631,6 +631,391 @@ function renderDotDisplay(){
 }
 
 // ═══════════════════════════════════════════════════════════════
+// SKILL TREE SYSTEM
+// ═══════════════════════════════════════════════════════════════
+
+const SKILL_TREES = {
+  warrior: [
+    {id:'w1', name:'Pele de Ferro',    icon:'🛡️', row:0,col:1, cost:1, type:'passive', effect:'hp+20',     req:[],      desc:'+20 HP máximo permanente. A carne endurece como metal forjado.'},
+    {id:'w2', name:'Força Bruta',      icon:'💪', row:1,col:0, cost:1, type:'passive', effect:'dmg+10',    req:['w1'],  desc:'+10% dano base em todas as missões. Músculos esculpidos pela disciplina.'},
+    {id:'w3', name:'Resistência',      icon:'🏋️', row:1,col:2, cost:1, type:'passive', effect:'hp+15',     req:['w1'],  desc:'+15 HP máximo. O corpo treinado aguenta mais.'},
+    {id:'w4', name:'Golpe Preciso',    icon:'⚔️', row:2,col:0, cost:2, type:'passive', effect:'dmg+20',    req:['w2'],  desc:'+20% dano. Cada golpe calculado, nenhuma energia desperdiçada.'},
+    {id:'w5', name:'Muralha Viva',     icon:'🏰', row:2,col:1, cost:2, type:'passive', effect:'hp+30',     req:['w1','w3'], desc:'+30 HP máximo. Você é o último bastião entre os aliados e o caos.'},
+    {id:'w6', name:'Carga Brutal',     icon:'🐂', row:2,col:2, cost:2, type:'passive', effect:'dmg+15',    req:['w3'],  desc:'+15% dano. A carga inicial esmaga qualquer defesa.'},
+    {id:'w7', name:'Fúria de Batalha', icon:'🔥', row:3,col:0, cost:3, type:'passive', effect:'dmg+30',    req:['w4'],  desc:'+30% dano. A raiva canalizada se torna a arma mais afiada.'},
+    {id:'w8', name:'Coração de Aço',   icon:'🖤', row:3,col:1, cost:3, type:'passive', effect:'hp+50',     req:['w5'],  desc:'+50 HP máximo. Forjado nas piores batalhas, invulnerável à fraqueza.'},
+    {id:'w9', name:'Lâmina Última',    icon:'💀', row:3,col:2, cost:3, type:'passive', effect:'dmg+25xp+10',req:['w6','w7'], desc:'+25% dano e +10% XP. O guerreiro lendário aprende com cada combate.'},
+  ],
+  mage: [
+    {id:'m1', name:'Mente Aguçada',    icon:'🧠', row:0,col:1, cost:1, type:'passive', effect:'xp+15',     req:[],      desc:'+15% XP de todas as fontes. A mente treinada absorve o conhecimento.'},
+    {id:'m2', name:'Cristalomancia',   icon:'💎', row:1,col:0, cost:1, type:'passive', effect:'cr+15',     req:['m1'],  desc:'+15% cristais de todas as fontes. Transforma conhecimento em poder.'},
+    {id:'m3', name:'Foco Arcano',      icon:'🔮', row:1,col:2, cost:1, type:'passive', effect:'xp+20',     req:['m1'],  desc:'+20% XP. A concentração máxima acelera o aprendizado.'},
+    {id:'m4', name:'Amplificação',     icon:'⚡', row:2,col:0, cost:2, type:'passive', effect:'xp+25cr+20',req:['m2'],  desc:'+25% XP e +20% cristais. O feiticeiro que amplifica transcende limites.'},
+    {id:'m5', name:'Transmutação',     icon:'⚗️', row:2,col:1, cost:2, type:'passive', effect:'cr+30',     req:['m2','m3'], desc:'+30% cristais. Converte qualquer esforço em recursos arcanos.'},
+    {id:'m6', name:'Tempestade Arcana',icon:'🌩️', row:2,col:2, cost:2, type:'passive', effect:'xp+30',     req:['m3'],  desc:'+30% XP. A tempestade de magia acelera toda evolução.'},
+    {id:'m7', name:'Onisciência',      icon:'🌌', row:3,col:0, cost:3, type:'passive', effect:'xp+40',     req:['m4'],  desc:'+40% XP total. O Deus Arcano vê além dos véus da realidade.'},
+    {id:'m8', name:'Nexo de Cristal',  icon:'✨', row:3,col:1, cost:3, type:'passive', effect:'cr+40',     req:['m5'],  desc:'+40% cristais. O cristal pulsa em harmonia com a sua essência.'},
+    {id:'m9', name:'Transcendência',   icon:'🌟', row:3,col:2, cost:3, type:'passive', effect:'xp+30cr+30',req:['m6','m7'], desc:'+30% XP e +30% cristais. A transcendência une magia e conhecimento.'},
+  ],
+  archer: [
+    {id:'a1', name:'Olho de Falcão',   icon:'🦅', row:0,col:1, cost:1, type:'passive', effect:'gold+20',   req:[],      desc:'+20% ouro. A visão aguçada enxerga oportunidades onde outros veem nada.'},
+    {id:'a2', name:'Flecha Certeira',  icon:'🎯', row:1,col:0, cost:1, type:'passive', effect:'dmg+15',    req:['a1'],  desc:'+15% dano. Cada flecha disparada é uma certeza, não uma tentativa.'},
+    {id:'a3', name:'Caçador Nato',     icon:'🌲', row:1,col:2, cost:1, type:'passive', effect:'gold+25',   req:['a1'],  desc:'+25% ouro. A floresta revela seus segredos para o caçador paciente.'},
+    {id:'a4', name:'Ataque Duplo',     icon:'🏹', row:2,col:0, cost:2, type:'passive', effect:'dmg+25',    req:['a2'],  desc:'+25% dano. Dois disparos onde um bastaria — eficiência pura.'},
+    {id:'a5', name:'Comércio da Selva',icon:'🪙', row:2,col:1, cost:2, type:'passive', effect:'gold+35',   req:['a2','a3'], desc:'+35% ouro. A caçadora sabe o valor de cada presa abatida.'},
+    {id:'a6', name:'Flechas Venenosas',icon:'☠️', row:2,col:2, cost:2, type:'passive', effect:'dmg+20gold+20',req:['a3'], desc:'+20% dano e +20% ouro. Veneno e fortuna caminham lado a lado.'},
+    {id:'a7', name:'Precisão Lendária',icon:'⭐', row:3,col:0, cost:3, type:'passive', effect:'dmg+35',    req:['a4'],  desc:'+35% dano. A precisão que transcende a física — impossível falhar.'},
+    {id:'a8', name:'Riqueza da Floresta',icon:'🌿',row:3,col:1,cost:3, type:'passive', effect:'gold+50',   req:['a5'],  desc:'+50% ouro. A floresta guarda suas riquezas apenas para os dignos.'},
+    {id:'a9', name:'Lenda das Flechas', icon:'🌟',row:3,col:2,cost:3, type:'passive', effect:'dmg+25gold+30',req:['a6','a7'], desc:'+25% dano e +30% ouro. Nome gravado em toda árvore da floresta eterna.'},
+  ],
+  bard: [
+    {id:'b1', name:'Melodia Básica',   icon:'🎵', row:0,col:1, cost:1, type:'passive', effect:'xp+10gold+10',req:[],   desc:'+10% XP e +10% ouro. A primeira nota de uma sinfonia épica.'},
+    {id:'b2', name:'Canção de Força',  icon:'🎸', row:1,col:0, cost:1, type:'passive', effect:'dmg+15',    req:['b1'],  desc:'+15% dano. A canção de batalha infla o espírito guerreiro.'},
+    {id:'b3', name:'Balada do Ouro',   icon:'🪙', row:1,col:2, cost:1, type:'passive', effect:'gold+20',   req:['b1'],  desc:'+20% ouro. Quem paga o bardo, paga o melhor.'},
+    {id:'b4', name:'Hino de Batalha',  icon:'🏆', row:2,col:0, cost:2, type:'passive', effect:'dmg+20xp+15',req:['b2'], desc:'+20% dano e +15% XP. A música amplifica cada golpe e cada lição.'},
+    {id:'b5', name:'Sinfonia Arcana',  icon:'🎺', row:2,col:1, cost:2, type:'passive', effect:'xp+20gold+20',req:['b2','b3'], desc:'+20% XP e +20% ouro. A harmonia perfeita entre aprendizado e recompensa.'},
+    {id:'b6', name:'Balada da Riqueza',icon:'💰', row:2,col:2, cost:2, type:'passive', effect:'gold+30',   req:['b3'],  desc:'+30% ouro. A canção que abre carteiras e cofres.'},
+    {id:'b7', name:'Épico Imortal',    icon:'👑', row:3,col:0, cost:3, type:'passive', effect:'dmg+25xp+20',req:['b4'], desc:'+25% dano e +20% XP. Lendas não se criam — se vivem.'},
+    {id:'b8', name:'Cosmos Sonoro',    icon:'🌌', row:3,col:1, cost:3, type:'passive', effect:'xp+30gold+30',req:['b5'], desc:'+30% XP e +30% ouro. A sinfonia que ressoa por todos os planos.'},
+    {id:'b9', name:'Canto do Fim',     icon:'🌟', row:3,col:2, cost:3, type:'passive', effect:'dmg+20gold+40',req:['b6','b7'], desc:'+20% dano e +40% ouro. O último canto — o mais belo de todos.'},
+  ],
+  cleric: [
+    {id:'c1', name:'Fé Inabalável',    icon:'✝️', row:0,col:1, cost:1, type:'passive', effect:'hp+25',     req:[],      desc:'+25 HP máximo. A fé é o escudo mais resistente que existe.'},
+    {id:'c2', name:'Cura Menor',       icon:'💊', row:1,col:0, cost:1, type:'passive', effect:'hp+20xp+10',req:['c1'],  desc:'+20 HP máximo e +10% XP. Sanar o corpo também educa o espírito.'},
+    {id:'c3', name:'Bênção Divina',    icon:'🙏', row:1,col:2, cost:1, type:'passive', effect:'xp+20',     req:['c1'],  desc:'+20% XP. A bênção divina acelera todo aprendizado sagrado.'},
+    {id:'c4', name:'Cura Maior',       icon:'💫', row:2,col:0, cost:2, type:'passive', effect:'hp+40',     req:['c2'],  desc:'+40 HP máximo. As mãos do curador tocam e a ferida some.'},
+    {id:'c5', name:'Graça Sagrada',    icon:'😇', row:2,col:1, cost:2, type:'passive', effect:'hp+30xp+20',req:['c2','c3'], desc:'+30 HP e +20% XP. A graça divina nutre corpo e mente.'},
+    {id:'c6', name:'Sabedoria Eterna', icon:'📖', row:2,col:2, cost:2, type:'passive', effect:'xp+30',     req:['c3'],  desc:'+30% XP. A sabedoria acumulada por séculos de devoção.'},
+    {id:'c7', name:'Ressurreição',     icon:'⛪', row:3,col:0, cost:3, type:'passive', effect:'hp+60',     req:['c4'],  desc:'+60 HP máximo. O poder de se levantar infinitas vezes.'},
+    {id:'c8', name:'Arcanjo',          icon:'🌟', row:3,col:1, cost:3, type:'passive', effect:'hp+40xp+30',req:['c5'],  desc:'+40 HP e +30% XP. Transcendeu a humanidade. Serve à luz eterna.'},
+    {id:'c9', name:'Toque Divino',     icon:'✨', row:3,col:2, cost:3, type:'passive', effect:'xp+40hp+20',req:['c6','c7'], desc:'+40% XP e +20 HP. Cada toque sana, cada palavra instrui.'},
+  ],
+  druid: [
+    {id:'d1', name:'Sintonia Natural', icon:'🌱', row:0,col:1, cost:1, type:'passive', effect:'hp+15dmg+10',req:[],     desc:'+15 HP e +10% dano. A natureza fortalece quem a respeita.'},
+    {id:'d2', name:'Raízes Profundas', icon:'🌳', row:1,col:0, cost:1, type:'passive', effect:'hp+20',     req:['d1'],  desc:'+20 HP máximo. Enraizado como uma árvore milenar.'},
+    {id:'d3', name:'Ventos da Floresta',icon:'🍃',row:1,col:2, cost:1, type:'passive', effect:'dmg+15',    req:['d1'],  desc:'+15% dano. Os ventos carregam a força de todas as criaturas.'},
+    {id:'d4', name:'Pele de Urso',     icon:'🐻', row:2,col:0, cost:2, type:'passive', effect:'hp+35',     req:['d2'],  desc:'+35 HP máximo. Proteção da fera mais resistente da floresta.'},
+    {id:'d5', name:'Equilíbrio',       icon:'☯️', row:2,col:1, cost:2, type:'passive', effect:'hp+20dmg+20',req:['d2','d3'], desc:'+20 HP e +20% dano. O equilíbrio entre defensiva e ataque.'},
+    {id:'d6', name:'Forma Animal',     icon:'🐺', row:2,col:2, cost:2, type:'passive', effect:'dmg+30',    req:['d3'],  desc:'+30% dano. A forma animal libera o instinto mais puro.'},
+    {id:'d7', name:'Espírito Ancestral',icon:'🌏',row:3,col:0, cost:3, type:'passive', effect:'hp+50',     req:['d4'],  desc:'+50 HP máximo. Guiado pelos espíritos de todos os druidas anteriores.'},
+    {id:'d8', name:'Ciclo Eterno',     icon:'♻️', row:3,col:1, cost:3, type:'passive', effect:'hp+30dmg+25',req:['d5'], desc:'+30 HP e +25% dano. A vida sempre retorna. Sempre cresce.'},
+    {id:'d9', name:'Voz da Terra',     icon:'🌍', row:3,col:2, cost:3, type:'passive', effect:'dmg+40',    req:['d6','d7'], desc:'+40% dano. A terra inteira fala através do druida lendário.'},
+  ],
+  paladin: [
+    {id:'p1', name:'Juramento Sagrado',icon:'⚔️', row:0,col:1, cost:1, type:'passive', effect:'dmg+15',   req:[],      desc:'+15% dano. O juramento pronunciado diante da luz nunca quebra.'},
+    {id:'p2', name:'Aura de Retidão',  icon:'🌟', row:1,col:0, cost:1, type:'passive', effect:'dmg+10hp+15',req:['p1'], desc:'+10% dano e +15 HP. A aura sagrada afasta o mal e fortalece o corpo.'},
+    {id:'p3', name:'Golpe Sagrado',    icon:'✨', row:1,col:2, cost:1, type:'passive', effect:'dmg+20',    req:['p1'],  desc:'+20% dano. A luz divina amplifica cada golpe.'},
+    {id:'p4', name:'Martírio',         icon:'💪', row:2,col:0, cost:2, type:'passive', effect:'dmg+25hp+20',req:['p2'], desc:'+25% dano e +20 HP. A dor vivida torna mais forte o coração.'},
+    {id:'p5', name:'Escudo da Fé',     icon:'🛡️', row:2,col:1, cost:2, type:'passive', effect:'hp+40dmg+15',req:['p2','p3'], desc:'+40 HP e +15% dano. O escudo que bloqueia o mal em todas as formas.'},
+    {id:'p6', name:'Julgamento',       icon:'⚖️', row:2,col:2, cost:2, type:'passive', effect:'dmg+30',    req:['p3'],  desc:'+30% dano. O julgamento divino não perdoa a fraqueza.'},
+    {id:'p7', name:'Lâmina da Luz',    icon:'☀️', row:3,col:0, cost:3, type:'passive', effect:'dmg+35hp+25',req:['p4'], desc:'+35% dano e +25 HP. A lâmina que carrega a luz de mil sóis.'},
+    {id:'p8', name:'Santo Imortal',    icon:'😇', row:3,col:1, cost:3, type:'passive', effect:'hp+60dmg+20',req:['p5'], desc:'+60 HP e +20% dano. Santificado pela luz — imortal na missão.'},
+    {id:'p9', name:'Lâmina da Eternidade',icon:'🌌',row:3,col:2,cost:3,type:'passive', effect:'dmg+40',   req:['p6','p7'], desc:'+40% dano. A eternidade forjada em metal e fé inabalável.'},
+  ],
+  rogue: [
+    {id:'r1', name:'Sombra',           icon:'🌑', row:0,col:1, cost:1, type:'passive', effect:'dmg+15gold+15',req:[],  desc:'+15% dano e +15% ouro. Na sombra, ninguém vê o que você leva.'},
+    {id:'r2', name:'Ataque Furtivo',   icon:'🗡️', row:1,col:0, cost:1, type:'passive', effect:'dmg+20',    req:['r1'],  desc:'+20% dano. O golpe que o inimigo nunca viu chegar.'},
+    {id:'r3', name:'Dedos Ágeis',      icon:'👐', row:1,col:2, cost:1, type:'passive', effect:'gold+25',   req:['r1'],  desc:'+25% ouro. Dedos treinados encontram o valor em qualquer bolso.'},
+    {id:'r4', name:'Veneno Letal',     icon:'☠️', row:2,col:0, cost:2, type:'passive', effect:'dmg+30',    req:['r2'],  desc:'+30% dano. O veneno que nenhum antídoto reverte.'},
+    {id:'r5', name:'Ladrão Mestre',    icon:'🎭', row:2,col:1, cost:2, type:'passive', effect:'dmg+20gold+25',req:['r2','r3'], desc:'+20% dano e +25% ouro. Arte e crime fundidos em perfeição.'},
+    {id:'r6', name:'Invisibilidade',   icon:'👻', row:2,col:2, cost:2, type:'passive', effect:'gold+35',   req:['r3'],  desc:'+35% ouro. O que não existe não pode ser capturado.'},
+    {id:'r7', name:'Morte Silenciosa', icon:'⚰️', row:3,col:0, cost:3, type:'passive', effect:'dmg+40',    req:['r4'],  desc:'+40% dano. O golpe que ninguém ouviu. Ninguém sobreviveu para contar.'},
+    {id:'r8', name:'Phantom',          icon:'💀', row:3,col:1, cost:3, type:'passive', effect:'dmg+25gold+35',req:['r5'], desc:'+25% dano e +35% ouro. O phantom é lenda — e lendas são ricas.'},
+    {id:'r9', name:'Riqueza das Sombras',icon:'🌟',row:3,col:2,cost:3, type:'passive', effect:'gold+50',  req:['r6','r7'], desc:'+50% ouro. As sombras guardam riquezas que a luz nunca verá.'},
+  ],
+  witch: [
+    {id:'wt1', name:'Maldição Menor',  icon:'🌙', row:0,col:1, cost:1, type:'passive', effect:'xp+15cr+10',req:[],     desc:'+15% XP e +10% cristais. O primeiro feitiço sussurrado ao vento.'},
+    {id:'wt2', name:'Pacto das Sombras',icon:'🕸️',row:1,col:0, cost:1, type:'passive', effect:'cr+20',    req:['wt1'], desc:'+20% cristais. Acordos feitos nas trevas rendem mais que quaisquer outros.'},
+    {id:'wt3', name:'Poção de Poder',  icon:'⚗️', row:1,col:2, cost:1, type:'passive', effect:'xp+20',    req:['wt1'], desc:'+20% XP. A poção que acelera o processo de aprendizado sombrio.'},
+    {id:'wt4', name:'Bruxaria Avançada',icon:'🔯',row:2,col:0, cost:2, type:'passive', effect:'cr+30xp+15',req:['wt2'],desc:'+30% cristais e +15% XP. Magia além do que os livros ensinam.'},
+    {id:'wt5', name:'Olho do Caos',    icon:'👁️', row:2,col:1, cost:2, type:'passive', effect:'xp+25cr+20',req:['wt2','wt3'],desc:'+25% XP e +20% cristais. Ver o caos é controlá-lo.'},
+    {id:'wt6', name:'Maldição Encadeada',icon:'⛓️',row:2,col:2,cost:2, type:'passive', effect:'xp+30',    req:['wt3'], desc:'+30% XP. A maldição que se expande e cobre tudo ao redor.'},
+    {id:'wt7', name:'Bruxa Primordial',icon:'👁️‍🗨️',row:3,col:0,cost:3,type:'passive', effect:'cr+45',     req:['wt4'], desc:'+45% cristais. Poder anterior a toda civilização, anterior ao próprio tempo.'},
+    {id:'wt8', name:'Caos Encarnado',  icon:'🌌', row:3,col:1, cost:3, type:'passive', effect:'xp+35cr+25',req:['wt5'],desc:'+35% XP e +25% cristais. O caos em forma pura, canalizado pela bruxa.'},
+    {id:'wt9', name:'Pacto Eterno',    icon:'🌟', row:3,col:2, cost:3, type:'passive', effect:'cr+40xp+20',req:['wt6','wt7'],desc:'+40% cristais e +20% XP. O pacto que dura além da morte.'},
+  ],
+  amazon: [
+    {id:'az1', name:'Grito de Batalha',icon:'⚡', row:0,col:1, cost:1, type:'passive', effect:'dmg+15',   req:[],      desc:'+15% dano. O grito que paralisa inimigos e libera aliados.'},
+    {id:'az2', name:'Instinto de Caça',icon:'🦅', row:1,col:0, cost:1, type:'passive', effect:'dmg+20gold+10',req:['az1'],desc:'+20% dano e +10% ouro. O predador que nunca perde sua presa.'},
+    {id:'az3', name:'Fúria Tribal',    icon:'🔥', row:1,col:2, cost:1, type:'passive', effect:'dmg+15hp+15',req:['az1'],desc:'+15% dano e +15 HP. A fúria da tribo correndo nas veias.'},
+    {id:'az4', name:'Guerreira da Tribo',icon:'🌺',row:2,col:0,cost:2, type:'passive', effect:'dmg+30',    req:['az2'], desc:'+30% dano. Campeã incontestável da tribo, em batalha e além.'},
+    {id:'az5', name:'Domínio do Campo',icon:'🌪️', row:2,col:1, cost:2, type:'passive', effect:'dmg+20hp+25',req:['az2','az3'],desc:'+20% dano e +25 HP. A amazona que controla todo campo de batalha.'},
+    {id:'az6', name:'Flechas de Sangue',icon:'🩸',row:2,col:2, cost:2, type:'passive', effect:'dmg+25gold+20',req:['az3'],desc:'+25% dano e +20% ouro. Cada flecha imbuída com sangue da vitória.'},
+    {id:'az7', name:'Rainha das Feras',icon:'🐯', row:3,col:0, cost:3, type:'passive', effect:'dmg+40',    req:['az4'], desc:'+40% dano. As feras da floresta se curvam diante de sua força.'},
+    {id:'az8', name:'Tempestade Imortal',icon:'⚡🌩️',row:3,col:1,cost:3,type:'passive',effect:'dmg+30hp+40',req:['az5'],desc:'+30% dano e +40 HP. Imune à fraqueza, imune ao fracasso.'},
+    {id:'az9', name:'Lenda Amazona',   icon:'👸', row:3,col:2, cost:3, type:'passive', effect:'dmg+35gold+35',req:['az6','az7'],desc:'+35% dano e +35% ouro. Canções cantadas por mil gerações sobre sua glória.'},
+  ],
+  vampire: [
+    {id:'v1', name:'Sedução Sombria',  icon:'🩸', row:0,col:1, cost:1, type:'passive', effect:'dmg+15cr+10',req:[],    desc:'+15% dano e +10% cristais. O olhar que hipnotiza antes do bote.'},
+    {id:'v2', name:'Drenagem Vital',   icon:'🧛‍♀️',row:1,col:0, cost:1, type:'passive', effect:'hp+20dmg+10',req:['v1'], desc:'+20 HP e +10% dano. A vida do inimigo se torna sua força.'},
+    {id:'v3', name:'Toque da Morte',   icon:'💀', row:1,col:2, cost:1, type:'passive', effect:'dmg+20cr+15',req:['v1'],  desc:'+20% dano e +15% cristais. O toque que extrai mais que vida.'},
+    {id:'v4', name:'Festim Eterno',    icon:'🍷', row:2,col:0, cost:2, type:'passive', effect:'hp+35dmg+15',req:['v2'],  desc:'+35 HP e +15% dano. A vampira que bebe de fontes infinitas.'},
+    {id:'v5', name:'Banquete das Sombras',icon:'🌑',row:2,col:1,cost:2, type:'passive', effect:'dmg+25cr+20',req:['v2','v3'],desc:'+25% dano e +20% cristais. O banquete que dura a eternidade.'},
+    {id:'v6', name:'Praga de Morcegos',icon:'🦇', row:2,col:2, cost:2, type:'passive', effect:'cr+30dmg+15',req:['v3'],  desc:'+30% cristais e +15% dano. Os morcegos servem sua rainha lealmente.'},
+    {id:'v7', name:'Imortalidade',     icon:'♾️', row:3,col:0, cost:3, type:'passive', effect:'hp+60',     req:['v4'],  desc:'+60 HP máximo. A imortalidade vampírica manifestada em carne viva.'},
+    {id:'v8', name:'Ancestral',        icon:'🧛‍♀️🌌',row:3,col:1,cost:3,type:'passive', effect:'dmg+35cr+25',req:['v5'],  desc:'+35% dano e +25% cristais. A vampira mais antiga. A mais poderosa.'},
+    {id:'v9', name:'Sangue Eterno',    icon:'🌟', row:3,col:2, cost:3, type:'passive', effect:'cr+40hp+30',req:['v6','v7'],desc:'+40% cristais e +30 HP. O sangue que flui para sempre, eternamente.'},
+  ],
+  priestess: [
+    {id:'pr1', name:'Graça Sagrada',   icon:'🌸', row:0,col:1, cost:1, type:'passive', effect:'hp+20xp+10',req:[],     desc:'+20 HP e +10% XP. A graça da deusa flui sobre a sacerdotisa devota.'},
+    {id:'pr2', name:'Círculo de Cura', icon:'💗', row:1,col:0, cost:1, type:'passive', effect:'hp+25',     req:['pr1'], desc:'+25 HP máximo. O círculo sagrado que sana todas as feridas.'},
+    {id:'pr3', name:'Sabedoria Divina',icon:'☀️', row:1,col:2, cost:1, type:'passive', effect:'xp+20cr+10',req:['pr1'], desc:'+20% XP e +10% cristais. A divindade compartilha seus segredos.'},
+    {id:'pr4', name:'Bênção Total',    icon:'✨', row:2,col:0, cost:2, type:'passive', effect:'hp+40',     req:['pr2'], desc:'+40 HP máximo. A bênção mais completa que a deusa concede.'},
+    {id:'pr5', name:'Orácula',         icon:'🔮', row:2,col:1, cost:2, type:'passive', effect:'hp+25xp+20',req:['pr2','pr3'],desc:'+25 HP e +20% XP. A visão divina guia cada passo com certeza.'},
+    {id:'pr6', name:'Visão Etérea',    icon:'👁️', row:2,col:2, cost:2, type:'passive', effect:'xp+30cr+20',req:['pr3'], desc:'+30% XP e +20% cristais. Enxerga além do véu da realidade.'},
+    {id:'pr7', name:'Deusa do Templo', icon:'👑', row:3,col:0, cost:3, type:'passive', effect:'hp+60',     req:['pr4'], desc:'+60 HP máximo. A deusa desceu ao plano mortal. O templo inteiro treme.'},
+    {id:'pr8', name:'Transcendência',  icon:'🌌', row:3,col:1, cost:3, type:'passive', effect:'hp+40xp+30',req:['pr5'], desc:'+40 HP e +30% XP. Além da mortalidade. Além de qualquer limitação.'},
+    {id:'pr9', name:'Luz Eterna',      icon:'🌟', row:3,col:2, cost:3, type:'passive', effect:'xp+40cr+30',req:['pr6','pr7'],desc:'+40% XP e +30% cristais. A luz que nunca se apaga, que nunca abandona.'},
+  ],
+  barbarian: [
+    {id:'ba1', name:'Fúria Primária',  icon:'💢', row:0,col:1, cost:1, type:'passive', effect:'dmg+20',   req:[],      desc:'+20% dano. A raiva pura, sem filtro, sem controle, sem limite.'},
+    {id:'ba2', name:'Sede de Sangue',  icon:'🩸', row:1,col:0, cost:1, type:'passive', effect:'dmg+25hp+10',req:['ba1'],desc:'+25% dano e +10 HP. Quanto mais sangue, mais forte o bárbaro fica.'},
+    {id:'ba3', name:'Corpo Brutesco',  icon:'💪', row:1,col:2, cost:1, type:'passive', effect:'hp+25dmg+10',req:['ba1'],desc:'+25 HP e +10% dano. Um corpo forjado em sofrimento e superação.'},
+    {id:'ba4', name:'Berserker',       icon:'🔥', row:2,col:0, cost:2, type:'passive', effect:'dmg+35',    req:['ba2'], desc:'+35% dano. O berserker que não para mesmo após a vitória.'},
+    {id:'ba5', name:'Campeão Bárbaro', icon:'⚡', row:2,col:1, cost:2, type:'passive', effect:'dmg+25hp+30',req:['ba2','ba3'],desc:'+25% dano e +30 HP. Campeão de todas as tribos, temido por todos.'},
+    {id:'ba6', name:'Montanha Viva',   icon:'🏔️', row:2,col:2, cost:2, type:'passive', effect:'hp+40',     req:['ba3'], desc:'+40 HP máximo. Inabalável como uma montanha. Imovível.'},
+    {id:'ba7', name:'Senhor da Guerra',icon:'💀', row:3,col:0, cost:3, type:'passive', effect:'dmg+45',    req:['ba4'], desc:'+45% dano. O senhor da guerra que consome tudo em seu caminho.'},
+    {id:'ba8', name:'Titã',            icon:'⚡💀',row:3,col:1, cost:3, type:'passive', effect:'dmg+35hp+45',req:['ba5'],desc:'+35% dano e +45 HP. O titã que faz a terra tremer com cada passo.'},
+    {id:'ba9', name:'Apocalipse',      icon:'🌋', row:3,col:2, cost:3, type:'passive', effect:'dmg+50',    req:['ba6','ba7'],desc:'+50% dano. O fim de tudo, personificado em puro furor bárbaro.'},
+  ],
+};
+
+// ── SKILL TREE PREFIX MAP ─────────────────────────────────────────
+const SKILL_CLASS_MAP = {
+  warrior:'w', mage:'m', archer:'a', bard:'b', cleric:'c', druid:'d',
+  paladin:'p', rogue:'r', witch:'wt', amazon:'az', vampire:'v',
+  priestess:'pr', barbarian:'ba'
+};
+
+// ── GET SKILLS FOR CURRENT CLASS ─────────────────────────────────
+function getClassSkillTree(){
+  const cls = S.playerClass;
+  if(!cls || !SKILL_TREES[cls]) return [];
+  return SKILL_TREES[cls];
+}
+
+// ── CHECK IF SKILL IS UNLOCKABLE ──────────────────────────────────
+function canUnlockSkill(skill){
+  if(!skill) return false;
+  if((S.skillsUnlocked||[]).includes(skill.id)) return false; // already unlocked
+  if((S.skillPts||0) < skill.cost) return false; // not enough points
+  // Check all prerequisites are unlocked
+  return skill.req.every(rid => (S.skillsUnlocked||[]).includes(rid));
+}
+
+// ── UNLOCK A SKILL ────────────────────────────────────────────────
+function unlockSkill(skillId){
+  const tree = getClassSkillTree();
+  const skill = tree.find(s=>s.id===skillId);
+  if(!skill){ notify('⚠️','Erro','Habilidade não encontrada.','nr'); return; }
+  if((S.skillsUnlocked||[]).includes(skillId)){ notify('✨','Já desbloqueada!','Você já possui esta habilidade.','ng'); return; }
+  if((S.skillPts||0) < skill.cost){ notify('⚠️','Pontos insuficientes',`Precisa de ${skill.cost} ponto${skill.cost>1?'s':''}.`,'nr'); return; }
+  if(!skill.req.every(rid=>(S.skillsUnlocked||[]).includes(rid))){ notify('🔒','Bloqueada','Desbloqueie as habilidades anteriores primeiro.','nc'); return; }
+
+  S.skillPts -= skill.cost;
+  S.skillsUnlocked.push(skillId);
+  applySkillEffect(skill);
+  save();
+  renderSkillTree();
+  renderStatus();
+  notify('✨','Habilidade Desbloqueada!',`${skill.icon} ${skill.name}! ${_skillEffectLabel(skill.effect)}`,'ng');
+}
+
+// ── APPLY SKILL PASSIVE EFFECT ────────────────────────────────────
+function applySkillEffect(skill){
+  const e = skill.effect;
+  const parts = e.match(/([a-z]+)\+(\d+)/g)||[];
+  parts.forEach(part=>{
+    const [,type,val] = part.match(/([a-z]+)\+(\d+)/);
+    const n = parseInt(val);
+    if(type==='hp'){ S.mhp+=n; S.hp=Math.min(S.hp+n, S.mhp); }
+    if(type==='dmg'){ /* applied via getSkillDmgBonus() */ }
+    if(type==='xp'){  /* applied via getSkillXpBonus() */ }
+    if(type==='gold'){ /* applied via getSkillGoldBonus() */ }
+    if(type==='cr'){   /* applied via getSkillCrBonus() */ }
+  });
+}
+
+// ── RECALCULATE SKILL HP BONUS (on load) ─────────────────────────
+function recalcSkillHpBonus(){
+  // Re-apply HP bonuses from unlocked skills (additive, stored in S.mhp)
+  // Only add the difference if not already applied
+  const tree = getClassSkillTree();
+  // We don't re-apply on every load — HP bonus is stored in S.mhp already
+}
+
+// ── SKILL BONUS GETTERS ───────────────────────────────────────────
+function getSkillDmgBonus(){
+  const tree = getClassSkillTree();
+  let bonus = 0;
+  (S.skillsUnlocked||[]).forEach(id=>{
+    const sk = tree.find(s=>s.id===id);
+    if(!sk) return;
+    const m = sk.effect.match(/dmg\+(\d+)/);
+    if(m) bonus += parseInt(m[1]);
+  });
+  return 1 + bonus/100;
+}
+function getSkillXpBonus(){
+  const tree = getClassSkillTree();
+  let bonus = 0;
+  (S.skillsUnlocked||[]).forEach(id=>{
+    const sk = tree.find(s=>s.id===id);
+    if(!sk) return;
+    const m = sk.effect.match(/xp\+(\d+)/);
+    if(m) bonus += parseInt(m[1]);
+  });
+  return 1 + bonus/100;
+}
+function getSkillGoldBonus(){
+  const tree = getClassSkillTree();
+  let bonus = 0;
+  (S.skillsUnlocked||[]).forEach(id=>{
+    const sk = tree.find(s=>s.id===id);
+    if(!sk) return;
+    const m = sk.effect.match(/gold\+(\d+)/);
+    if(m) bonus += parseInt(m[1]);
+  });
+  return 1 + bonus/100;
+}
+function getSkillCrBonus(){
+  const tree = getClassSkillTree();
+  let bonus = 0;
+  (S.skillsUnlocked||[]).forEach(id=>{
+    const sk = tree.find(s=>s.id===id);
+    if(!sk) return;
+    const m = sk.effect.match(/cr\+(\d+)/);
+    if(m) bonus += parseInt(m[1]);
+  });
+  return 1 + bonus/100;
+}
+
+// ── SKILL EFFECT LABEL HELPER ─────────────────────────────────────
+function _skillEffectLabel(effect){
+  const parts = effect.match(/([a-z]+)\+(\d+)/g)||[];
+  return parts.map(p=>{
+    const [,t,v] = p.match(/([a-z]+)\+(\d+)/);
+    const labels={hp:`+${v} HP`,dmg:`+${v}% DMG`,xp:`+${v}% XP`,gold:`+${v}% Gold`,cr:`+${v}% CR`};
+    return labels[t]||p;
+  }).join(' · ');
+}
+
+// ── RENDER SKILL TREE ─────────────────────────────────────────────
+function renderSkillTree(){
+  const cont = document.getElementById('skill-tree-cont');
+  const badge = document.getElementById('sk-pts-badge');
+  if(badge) badge.textContent = S.skillPts||0;
+  if(!cont) return;
+
+  const cls = S.playerClass;
+  if(!cls){
+    cont.innerHTML=`<div style="text-align:center;padding:30px 0">
+      <div style="font-size:36px;margin-bottom:8px">🔒</div>
+      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--text3)">Selecione uma classe para acessar a Skill Tree</div>
+    </div>`;
+    return;
+  }
+
+  const tree = SKILL_TREES[cls];
+  if(!tree){ cont.innerHTML='<div style="color:var(--text2);padding:10px">Skill tree não disponível para esta classe.</div>'; return; }
+
+  const clsData = getClass();
+  const clsColor = clsData?.color || '#c9a84c';
+
+  // Count total dmg/xp/gold/cr bonuses from unlocked skills
+  const totDmg  = Math.round((getSkillDmgBonus()-1)*100);
+  const totXp   = Math.round((getSkillXpBonus()-1)*100);
+  const totGold = Math.round((getSkillGoldBonus()-1)*100);
+  const totCr   = Math.round((getSkillCrBonus()-1)*100);
+  const hpBonus = (S.skillsUnlocked||[]).reduce((sum,id)=>{
+    const sk=tree.find(s=>s.id===id);if(!sk)return sum;
+    const m=sk.effect.match(/hp\+(\d+)/);return sum+(m?parseInt(m[1]):0);
+  },0);
+
+  const ROWS = 4, COLS = 3;
+  // Map skills to grid positions
+  const grid = {};
+  tree.forEach(sk=>{ grid[`${sk.row}_${sk.col}`]=sk; });
+
+  // Build SVG connection lines
+  let svgLines='';
+  tree.forEach(sk=>{
+    sk.req.forEach(rid=>{
+      const rs = tree.find(s=>s.id===rid);
+      if(!rs) return;
+      // Cell center: col*33% + 16.5%, row*25% + 12.5%
+      const x1 = (rs.col/2)*100 + 50; // percent
+      const y1 = (rs.row/3)*100 + (100/6);
+      const x2 = (sk.col/2)*100 + 50;
+      const y2 = (sk.row/3)*100 + (100/6);
+      const unlocked = (S.skillsUnlocked||[]).includes(sk.id) && (S.skillsUnlocked||[]).includes(rid);
+      const available = (S.skillsUnlocked||[]).includes(rid);
+      const lineColor = unlocked ? clsColor : available ? 'rgba(201,168,76,.35)' : 'rgba(255,255,255,.08)';
+      svgLines+=`<line x1="${x1}%" y1="${y1}%" x2="${x2}%" y2="${y2}%" stroke="${lineColor}" stroke-width="${unlocked?2.5:1.5}" stroke-dasharray="${unlocked?'none':'5,4'}" style="transition:stroke .4s"/>`;
+    });
+  });
+
+  // Build node cells
+  const cells = [];
+  for(let row=0; row<ROWS; row++){
+    for(let col=0; col<COLS; col++){
+      const sk = grid[`${row}_${col}`];
+      if(!sk){ cells.push(`<div></div>`); continue; }
+      const unlocked = (S.skillsUnlocked||[]).includes(sk.id);
+      const available = canUnlockSkill(sk);
+      const effLabel = _skillEffectLabel(sk.effect);
+
+      let state = 'locked';
+      if(unlocked) state='unlocked';
+      else if(available) state='available';
+
+      cells.push(`
+        <div class="sk-node sk-${state}" onclick="unlockSkill('${sk.id}')"
+          title="${sk.name}${unlocked?' (Desbloqueada)':available?' — Clique para desbloquear':' (Bloqueada)'}">
+          <div class="sk-node-inner" style="--cls-color:${clsColor}">
+            <div class="sk-icon">${sk.icon}</div>
+            <div class="sk-name">${sk.name}</div>
+            <div class="sk-cost">${unlocked?'✓':available?`${sk.cost}pt${sk.cost>1?'s':''}`:'🔒'}</div>
+          </div>
+          <div class="sk-tooltip">
+            <div class="sk-tip-name">${sk.icon} ${sk.name}</div>
+            <div class="sk-tip-effect">${effLabel}</div>
+            <div class="sk-tip-desc">${sk.desc}</div>
+            ${!unlocked?`<div class="sk-tip-cost" style="color:${available?'var(--gold2)':'var(--text3)'}">Custo: ${sk.cost} ponto${sk.cost>1?'s':''} ${available?'(disponível)':'(bloqueada)'}</div>`:'<div class="sk-tip-cost" style="color:var(--green3)">✓ Desbloqueada</div>'}
+          </div>
+        </div>`);
+    }
+  }
+
+  cont.innerHTML=`
+    <div style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+        <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:.1em;color:var(--text3)">PONTOS DISPONÍVEIS</div>
+        <div style="font-family:'Cinzel Decorative',serif;font-size:20px;color:${(S.skillPts||0)>0?'var(--gold3)':'var(--text2)'}">
+          ${S.skillPts||0} <span style="font-size:12px;color:var(--text3)">pts</span>
+        </div>
+      </div>
+      ${(totDmg||totXp||totGold||totCr||hpBonus)?`
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+        ${hpBonus?`<span class="sk-bonus-tag" style="color:var(--red3)">❤️ +${hpBonus} HP</span>`:''}
+        ${totDmg?`<span class="sk-bonus-tag" style="color:var(--amber2)">⚔️ +${totDmg}% DMG</span>`:''}
+        ${totXp?`<span class="sk-bonus-tag" style="color:var(--gold2)">⚡ +${totXp}% XP</span>`:''}
+        ${totGold?`<span class="sk-bonus-tag" style="color:var(--gold)">🪙 +${totGold}% Gold</span>`:''}
+        ${totCr?`<span class="sk-bonus-tag" style="color:var(--crystal)">💎 +${totCr}% CR</span>`:''}
+      </div>`:''}
+    </div>
+
+    <div class="sk-graph-wrap">
+      <svg class="sk-lines" viewBox="0 0 100 100" preserveAspectRatio="none">${svgLines}</svg>
+      <div class="sk-grid">
+        ${cells.join('')}
+      </div>
+    </div>
+    <div style="margin-top:10px;font-size:9px;color:var(--text3);font-style:italic;text-align:center">Ganhe 1 ponto de habilidade por nível. Clique nos nós disponíveis para desbloquear.</div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // INVENTORY SYSTEM (10 slot limit)
 // ═══════════════════════════════════════════════════════════════
 const INV_MAX = 10;
@@ -1090,6 +1475,7 @@ const NAV_CATS = {
     {p:'dark',      icon:'💀', label:'Vícios'},
     {p:'attrs',     icon:'📊', label:'Atributos'},
     {p:'classe',    icon:'🏅', label:'Classe'},
+    {p:'skilltree', icon:'✨', label:'Habilidades'},
     {p:'calendar',  icon:'📅', label:'Calendário'},
   ]},
   combat:{ label:'🐉 Combate', tabs:[
@@ -1152,6 +1538,8 @@ function setActiveSubtab(p){
   document.querySelectorAll('.subtab').forEach(el=>{
     el.classList.toggle('active', el.dataset.p===p);
   });
+  // Render skill tree when tab becomes active
+  if(p==='skilltree') renderSkillTree();
 }
 
 // Alert badge on events tab when event active

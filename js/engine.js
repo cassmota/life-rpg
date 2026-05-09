@@ -39,10 +39,12 @@ const DEF=()=>({
   guildRank:{},
   activeGuild:null, // id of active guild
   profile:{name:'Herói',age:'',sex:'',weight:'',height:''},
+  skillPts:0,           // pontos de habilidade disponíveis
+  skillsUnlocked:[],    // array de IDs de habilidades desbloqueadas
 });
 
 let S=(()=>{
-  try{const s=localStorage.getItem('lrpg6');if(s){const p=JSON.parse(s);const d=DEF();for(const k in d)if(!(k in p))p[k]=d[k];if(!p.classLockedAt)p.classLockedAt=null;if(!p.bardBuff)p.bardBuff=null;if(!p.potions)p.potions={transform:0};if(!p.guildRank)p.guildRank={};if(!p.activeGuild&&p.activeGuild!==null)p.activeGuild=null;if(!p.profile)p.profile={name:'Herói',age:'',sex:'',weight:'',height:''};return p;}}catch(e){}
+  try{const s=localStorage.getItem('lrpg6');if(s){const p=JSON.parse(s);const d=DEF();for(const k in d)if(!(k in p))p[k]=d[k];if(!p.classLockedAt)p.classLockedAt=null;if(!p.bardBuff)p.bardBuff=null;if(!p.potions)p.potions={transform:0};if(!p.guildRank)p.guildRank={};if(!p.activeGuild&&p.activeGuild!==null)p.activeGuild=null;if(!p.profile)p.profile={name:'Herói',age:'',sex:'',weight:'',height:''};if(p.skillPts===undefined)p.skillPts=0;if(!p.skillsUnlocked)p.skillsUnlocked=[];return p;}}catch(e){}
   return DEF();
 })();
 let uAch=JSON.parse(localStorage.getItem('lrpgAch5')||'[]');
@@ -199,7 +201,8 @@ function resolveEffects(baseDmg, src){
 
 function bossDmg(amt,src){
   if(S.boss.def)return;const boss=getBoss();
-  const bm=(1+(eqPow()/100))*getClassDmgMult();const dmg=Math.max(1,Math.floor(amt*bm));
+  const skillDmg=(typeof getSkillDmgBonus==='function')?getSkillDmgBonus():1;
+  const bm=(1+(eqPow()/100))*getClassDmgMult()*skillDmg;const dmg=Math.max(1,Math.floor(amt*bm));
   S.boss.hp=Math.max(0,S.boss.hp-dmg);
   bLog(`<span class="ld">⚔ ${src}: ${dmg} dano (×${bm.toFixed(2)})!</span>`);
   // Combat animation
@@ -317,12 +320,13 @@ function eLog(h){const l=document.getElementById('ev-log');if(l){l.innerHTML+=h+
 const XPL=lv=>Math.floor(100*Math.pow(1.4,lv-1));
 const getMult=()=>{const base=S.streak>=30?2:S.streak>=7?1.5:S.streak>=3?1.2:1;return base+getClassStreakBonus();};
 function addXP(n){
-  const g=Math.floor(n*getMult()*getClassXpMult()*getGuildXpBonus());S.xp+=g;S.totXp+=g;S.xpTd+=g;
+  const skillXp = (typeof getSkillXpBonus==='function') ? getSkillXpBonus() : 1;
+  const g=Math.floor(n*getMult()*getClassXpMult()*getGuildXpBonus()*skillXp);S.xp+=g;S.totXp+=g;S.xpTd+=g;
   let lv=false;
-  while(S.xp>=XPL(S.lv)){S.xp-=XPL(S.lv);S.lv++;lv=true;S.mhp+=10;S.hp=S.mhp;}
+  while(S.xp>=XPL(S.lv)){S.xp-=XPL(S.lv);S.lv++;lv=true;S.mhp+=10;S.hp=S.mhp;S.skillPts++;}
   if(lv){
-    bLog(`<span style="color:var(--gold3)">✨ LEVEL UP! Nível ${S.lv} — HP completamente restaurado! (${S.mhp}/${S.mhp})</span>`);
-    notify('🏆','LEVEL UP!',`Nível ${S.lv}! ❤️ HP totalmente restaurado!`,'ng');
+    bLog(`<span style="color:var(--gold3)">✨ LEVEL UP! Nível ${S.lv} — HP completamente restaurado! +1 Ponto de Habilidade! (${S.mhp}/${S.mhp})</span>`);
+    notify('🏆','LEVEL UP!',`Nível ${S.lv}! ❤️ HP restaurado! ✨ +1 Ponto de Habilidade!`,'ng');
     // Check evolution milestones
     const evolved = getEvolvedClass();
     const tree = S.playerClass ? CLASS_EVOLUTIONS[S.playerClass] : null;
@@ -352,8 +356,8 @@ function addXP(n){
   }
   return g;
 }
-function addGold(n){const g=Math.floor(n*getMult()*getClassGoldMult()*getGuildGoldBonus());S.gold+=g;S.totGo+=g;S.goTd+=g;return g;}
-function addCr(n){const g=Math.floor(n*getClassCrMult());S.cr+=g;S.totCr+=g;return g;}
+function addGold(n){const skillGold=(typeof getSkillGoldBonus==='function')?getSkillGoldBonus():1;const g=Math.floor(n*getMult()*getClassGoldMult()*getGuildGoldBonus()*skillGold);S.gold+=g;S.totGo+=g;S.goTd+=g;return g;}
+function addCr(n){const skillCr=(typeof getSkillCrBonus==='function')?getSkillCrBonus():1;const g=Math.floor(n*getClassCrMult()*skillCr);S.cr+=g;S.totCr+=g;return g;}
 
 // =============== HABITS ===============
 function togH(id){
