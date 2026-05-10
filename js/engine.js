@@ -41,10 +41,11 @@ const DEF=()=>({
   profile:{name:'Herói',age:'',sex:'',weight:'',height:''},
   skillPts:0,           // pontos de habilidade disponíveis
   skillsUnlocked:[],    // array de IDs de habilidades desbloqueadas
+  hall:{},              // Hall dos Heróis: foto do ídolo + respostas
 });
 
 let S=(()=>{
-  try{const s=localStorage.getItem('lrpg6');if(s){const p=JSON.parse(s);const d=DEF();for(const k in d)if(!(k in p))p[k]=d[k];if(!p.classLockedAt)p.classLockedAt=null;if(!p.bardBuff)p.bardBuff=null;if(!p.potions)p.potions={transform:0};if(!p.guildRank)p.guildRank={};if(!p.activeGuild&&p.activeGuild!==null)p.activeGuild=null;if(!p.profile)p.profile={name:'Herói',age:'',sex:'',weight:'',height:''};if(p.skillPts===undefined)p.skillPts=0;if(!p.skillsUnlocked)p.skillsUnlocked=[];return p;}}catch(e){}
+  try{const s=localStorage.getItem('lrpg6');if(s){const p=JSON.parse(s);const d=DEF();for(const k in d)if(!(k in p))p[k]=d[k];if(!p.classLockedAt)p.classLockedAt=null;if(!p.bardBuff)p.bardBuff=null;if(!p.potions)p.potions={transform:0};if(!p.guildRank)p.guildRank={};if(!p.activeGuild&&p.activeGuild!==null)p.activeGuild=null;if(!p.profile)p.profile={name:'Herói',age:'',sex:'',weight:'',height:''};if(p.skillPts===undefined)p.skillPts=0;if(!p.skillsUnlocked)p.skillsUnlocked=[];if(!p.hall)p.hall={};return p;}}catch(e){}
   return DEF();
 })();
 let uAch=JSON.parse(localStorage.getItem('lrpgAch5')||'[]');

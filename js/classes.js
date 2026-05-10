@@ -1489,10 +1489,11 @@ const NAV_CATS = {
     {p:'tavern',    icon:'🍺', label:'Taberna'},
   ]},
   world: { label:'🗺️ Mundo', tabs:[
-    {p:'quests',  icon:'🗺️', label:'Quests'},
-    {p:'shop',    icon:'🏪', label:'Loja'},
-    {p:'prog',    icon:'📈', label:'Progresso'},
-    {p:'guilds',  icon:'🏰', label:'Guilda'},
+    {p:'quests',     icon:'🗺️', label:'Quests'},
+    {p:'shop',       icon:'🏪', label:'Loja'},
+    {p:'prog',       icon:'📈', label:'Progresso'},
+    {p:'guilds',     icon:'🏰', label:'Guilda'},
+    {p:'hallherois', icon:'🏛', label:'Hall'},
   ]},
 };
 
@@ -1538,9 +1539,93 @@ function setActiveSubtab(p){
   document.querySelectorAll('.subtab').forEach(el=>{
     el.classList.toggle('active', el.dataset.p===p);
   });
-  // Render skill tree when tab becomes active
   if(p==='skilltree') renderSkillTree();
+  if(p==='hallherois') renderHall();
 }
+
+// ═══════════════════════════════════════════════════════════════
+// HALL DOS HERÓIS SYSTEM
+// ═══════════════════════════════════════════════════════════════
+
+const HALL_FIELDS_HERO = ['hf-who','hf-challenges','hf-food','hf-sleep','hf-train','hf-external','hf-prepare'];
+const HALL_FIELDS_ME   = ['mf-influence','mf-challenges','mf-food','mf-sleep','mf-train','mf-external','mf-prepare'];
+
+function saveHall(){
+  if(!S.hall) S.hall = {};
+  HALL_FIELDS_HERO.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) S.hall[id]=el.value;
+  });
+  HALL_FIELDS_ME.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) S.hall[id]=el.value;
+  });
+  save();
+}
+
+function renderHall(){
+  // Load saved text values
+  if(S.hall){
+    [...HALL_FIELDS_HERO,...HALL_FIELDS_ME].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el && S.hall[id]!==undefined){ el.value=S.hall[id]; autoResizeTA(el); }
+    });
+  }
+
+  // Idol photo
+  const idolImg = document.getElementById('idol-av-img');
+  const idolPh  = document.getElementById('idol-av-ph');
+  const idolEd  = document.getElementById('idol-av-ed');
+  if(idolImg && S.hall?.idolImg){
+    idolImg.src=S.hall.idolImg; idolImg.style.display='block';
+    if(idolPh) idolPh.style.display='none';
+    if(idolEd) idolEd.style.display='block';
+  }
+
+  // Hero name from hf-who (first line)
+  const nameEl = document.getElementById('idol-name-display');
+  if(nameEl && S.hall?.['hf-who']){
+    const firstLine = S.hall['hf-who'].split('\n')[0].substring(0,40);
+    nameEl.textContent = firstLine || '';
+  }
+
+  // Player photo (mirror from profile avatar)
+  const meImg = document.getElementById('hall-me-img');
+  const mePh  = document.getElementById('hall-me-ph');
+  if(meImg && mePh){
+    if(S.avData){
+      meImg.src=S.avData; meImg.style.display='block'; mePh.style.display='none';
+    } else {
+      meImg.style.display='none'; mePh.style.display='flex';
+    }
+  }
+
+  // Player name
+  const meNameEl = document.getElementById('hall-me-name');
+  if(meNameEl) meNameEl.textContent = S.profile?.name || 'Herói';
+}
+
+function handleIdolAv(e){
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    if(!S.hall) S.hall={};
+    S.hall.idolImg=ev.target.result;
+    save();
+    renderHall();
+    notify('🌟','Foto do Ídolo!','Seu herói foi adicionado ao Hall!','ng');
+  };
+  r.readAsDataURL(f);
+}
+
+function autoResizeTA(el){
+  el.style.height='auto';
+  el.style.height=(el.scrollHeight)+'px';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// END HALL DOS HERÓIS
+// ═══════════════════════════════════════════════════════════════
 
 // Alert badge on events tab when event active
 function updateNavAlerts(){

@@ -787,6 +787,138 @@
 </div>
 </div>
 
+<!-- HALL DOS HERÓIS PANEL -->
+<div class="panel" id="panel-hallherois">
+  <!-- ── SEÇÃO: MEU HERÓI/HEROÍNA ──────────────────────────────── -->
+  <div class="card mb12" id="hall-hero-card">
+
+    <!-- Cabeçalho -->
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-family:'Cinzel Decorative',serif;font-size:15px;color:var(--gold3);letter-spacing:.06em">🏛 Meu Herói / Heroína</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:3px;font-style:italic">O modelo que guia sua jornada</div>
+    </div>
+
+    <!-- Foto do ídolo -->
+    <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:18px">
+      <div id="idol-av-wrap" style="position:relative;width:110px;height:110px;border-radius:50%;overflow:hidden;border:3px solid var(--gold2);box-shadow:0 0 24px rgba(201,168,76,.3),0 0 8px rgba(201,168,76,.15);background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="document.getElementById('idol-av-in').click()">
+        <img id="idol-av-img" src="" style="display:none;width:100%;height:100%;object-fit:cover" alt="Ídolo">
+        <div id="idol-av-ph" style="text-align:center">
+          <div style="font-size:32px">🌟</div>
+          <div style="font-size:8px;color:var(--text3);margin-top:4px;font-family:'Cinzel',serif;letter-spacing:.05em">ADICIONAR<br>FOTO</div>
+        </div>
+        <div id="idol-av-ed" style="display:none;position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);text-align:center;padding:4px;font-size:9px;color:var(--gold2)">✎ Alterar</div>
+      </div>
+      <input type="file" id="idol-av-in" accept="image/*" style="display:none" onchange="handleIdolAv(event)">
+      <div id="idol-name-display" style="margin-top:8px;font-family:'Cinzel',serif;font-size:11px;color:var(--gold2);letter-spacing:.05em;min-height:16px"></div>
+    </div>
+
+    <!-- Perguntas sobre o herói -->
+    <div id="hall-hero-fields">
+      <!-- Campo 1 -->
+      <div class="hall-field">
+        <div class="hall-field-label">🌟 Quem é seu herói/heroína e por que ele te influencia?</div>
+        <textarea id="hf-who" class="hall-textarea" placeholder="Ex: Muhammad Ali — porque nunca desistiu mesmo quando o mundo inteiro estava contra ele..." oninput="autoResizeTA(this);saveHall()"></textarea>
+      </div>
+      <!-- Campo 2 -->
+      <div class="hall-field">
+        <div class="hall-field-label">⚔️ Como ele/ela age diante de desafios?</div>
+        <textarea id="hf-challenges" class="hall-textarea" placeholder="Ex: Enfrenta de frente, sem fugir. Usa o obstáculo como combustível..." oninput="autoResizeTA(this);saveHall()"></textarea>
+      </div>
+      <!-- Campo 3 -->
+      <div class="hall-field">
+        <div class="hall-field-label">🥗 Como ele/ela se alimenta?</div>
+        <textarea id="hf-food" class="hall-textarea" placeholder="Ex: Dieta rica em proteínas, sem açúcar processado, jejum intermitente..." oninput="autoResizeTA(this);saveHall()"></textarea>
+      </div>
+      <!-- Campo 4 -->
+      <div class="hall-field">
+        <div class="hall-field-label">😴 Como ele/ela dorme?</div>
+        <textarea id="hf-sleep" class="hall-textarea" placeholder="Ex: 8h por noite, rotina rígida de descanso, sem telas 1h antes..." oninput="autoResizeTA(this);saveHall()"></textarea>
+      </div>
+      <!-- Campo 5 -->
+      <div class="hall-field">
+        <div class="hall-field-label">🏋️ Como ele/ela treina e cuida do corpo?</div>
+        <textarea id="hf-train" class="hall-textarea" placeholder="Ex: Treina 6x por semana, bebe 4L de água, nunca pula o alongamento..." oninput="autoResizeTA(this);saveHall()"></textarea>
+      </div>
+      <!-- Campo 6 -->
+      <div class="hall-field">
+        <div class="hall-field-label">🌊 Como ele/ela lida com influência externa?</div>
+        <textarea id="hf-external" class="hall-textarea" placeholder="Ex: Filtra quem está ao redor, não busca aprovação, mantém o foco na missão..." oninput="autoResizeTA(this);saveHall()"></textarea>
+      </div>
+      <!-- Campo 7 -->
+      <div class="hall-field">
+        <div class="hall-field-label">🎯 Como ele/ela se prepara para um grande desafio?</div>
+        <textarea id="hf-prepare" class="hall-textarea" placeholder="Ex: Pesquisa o adversário, faz visualização, cria rotina especial nas semanas antes..." oninput="autoResizeTA(this);saveHall()"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DIVISOR ──────────────────────────────────────────────── -->
+  <div style="display:flex;align-items:center;gap:10px;margin:4px 0 16px">
+    <div style="flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.3))"></div>
+    <div style="font-family:'Cinzel Decorative',serif;font-size:11px;color:var(--gold3);letter-spacing:.08em">⚔ VS ⚔</div>
+    <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(201,168,76,.3),transparent)"></div>
+  </div>
+
+  <!-- ── SEÇÃO: EU MESMO ────────────────────────────────────────── -->
+  <div class="card" id="hall-me-card">
+
+    <!-- Cabeçalho -->
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-family:'Cinzel Decorative',serif;font-size:15px;color:var(--crystal);letter-spacing:.06em">⚡ Eu, o Herói</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:3px;font-style:italic">Sua versão atual — honesta e em construção</div>
+    </div>
+
+    <!-- Foto do jogador (puxa da aba Perfil) -->
+    <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:18px">
+      <div style="position:relative;width:110px;height:110px;border-radius:50%;overflow:hidden;border:3px solid var(--crystal);box-shadow:0 0 24px rgba(0,212,255,.25),0 0 8px rgba(0,212,255,.1);background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center">
+        <img id="hall-me-img" src="" style="display:none;width:100%;height:100%;object-fit:cover" alt="Eu">
+        <div id="hall-me-ph" style="text-align:center">
+          <div style="font-size:32px">🧙</div>
+          <div style="font-size:8px;color:var(--text3);margin-top:4px;font-family:'Cinzel',serif;letter-spacing:.05em">SUA<br>FOTO</div>
+        </div>
+      </div>
+      <div id="hall-me-name" style="margin-top:8px;font-family:'Cinzel',serif;font-size:11px;color:var(--crystal);letter-spacing:.05em;min-height:16px"></div>
+    </div>
+
+    <!-- Perguntas sobre mim -->
+    <div id="hall-me-fields">
+      <div class="hall-field">
+        <div class="hall-field-label" style="border-left-color:var(--crystal)">💫 Como meu herói/heroína me influencia no dia a dia?</div>
+        <textarea id="mf-influence" class="hall-textarea" placeholder="Ex: Quando quero desistir, lembro que ele nunca desistiu. Isso me move..." oninput="autoResizeTA(this);saveHall()"></textarea>
+      </div>
+      <div class="hall-field">
+        <div class="hall-field-label" style="border-left-color:var(--crystal)">⚔️ Como eu ajo diante de desafios?</div>
+        <textarea id="mf-challenges" class="hall-textarea" placeholder="Ex: Ainda evito alguns, mas estou aprendendo a encará-los de frente..." oninput="autoResizeTA(this);saveHall()"></textarea>
+      </div>
+      <div class="hall-field">
+        <div class="hall-field-label" style="border-left-color:var(--crystal)">🥗 Como eu me alimento?</div>
+        <textarea id="mf-food" class="hall-textarea" placeholder="Ex: Ainda como fora vez ou outra, mas já reduzi açúcar e aumento proteína..." oninput="autoResizeTA(this);saveHall()"></textarea>
+      </div>
+      <div class="hall-field">
+        <div class="hall-field-label" style="border-left-color:var(--crystal)">😴 Como eu durmo?</div>
+        <textarea id="mf-sleep" class="hall-textarea" placeholder="Ex: Durmo em torno de 6-7h, ainda usando tela antes de dormir..." oninput="autoResizeTA(this);saveHall()"></textarea>
+      </div>
+      <div class="hall-field">
+        <div class="hall-field-label" style="border-left-color:var(--crystal)">🏋️ Como eu treino e cuido do corpo?</div>
+        <textarea id="mf-train" class="hall-textarea" placeholder="Ex: Treino 3x por semana, bebo cerca de 2L de água, pulo o alongamento às vezes..." oninput="autoResizeTA(this);saveHall()"></textarea>
+      </div>
+      <div class="hall-field">
+        <div class="hall-field-label" style="border-left-color:var(--crystal)">🌊 Como eu lido com influência externa?</div>
+        <textarea id="mf-external" class="hall-textarea" placeholder="Ex: Ainda me deixo afetar por opiniões alheias, mas estou trabalhando nisso..." oninput="autoResizeTA(this);saveHall()"></textarea>
+      </div>
+      <div class="hall-field">
+        <div class="hall-field-label" style="border-left-color:var(--crystal)">🎯 Como eu me preparo para um grande desafio?</div>
+        <textarea id="mf-prepare" class="hall-textarea" placeholder="Ex: Ainda procrastino a preparação, mas quando entro no modo sério, me concentro..." oninput="autoResizeTA(this);saveHall()"></textarea>
+      </div>
+    </div>
+
+    <!-- Botão salvar -->
+    <div style="margin-top:16px;text-align:center">
+      <button class="btn" onclick="saveHall()" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:.08em">💾 Salvar Hall dos Heróis</button>
+    </div>
+  </div>
+</div>
+
 <!-- CLASSE PANEL -->
 <div class="panel" id="panel-classe">
   <div class="card mb12">

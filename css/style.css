@@ -2088,12 +2088,59 @@ input[type="file"]{display:none;}
 }
 
 /* ── MOBILE ADJUSTMENTS ─────────────────────────────────────── */
-@media(max-width:400px){
-  .sk-graph-wrap{ height:300px; max-height:50vh; }
-  .sk-node-inner{ border-radius:8px; }
-  .sk-icon{ font-size:14px; }
-  .sk-name{ font-size:5px; }
-  .sk-cost{ font-size:6px; }
-  .sk-tooltip{ width:150px; font-size:9px; }
+/* ═══════════════════════════════════════════════════════════════
+   HALL DOS HERÓIS
+   ═══════════════════════════════════════════════════════════════ */
+
+.hall-field{
+  margin-bottom:14px;
 }
+
+.hall-field-label{
+  font-family:'Cinzel',serif;
+  font-size:10px;
+  letter-spacing:.04em;
+  color:var(--gold2);
+  margin-bottom:6px;
+  line-height:1.5;
+  padding-left:8px;
+  border-left:2px solid var(--gold2);
+}
+
+.hall-textarea{
+  width:100%;
+  min-height:60px;
+  background:rgba(0,0,0,.45);
+  border:1px solid rgba(201,168,76,.18);
+  border-radius:6px;
+  color:var(--text);
+  font-size:12px;
+  font-family:'Crimson Pro',serif;
+  line-height:1.7;
+  padding:10px 12px;
+  resize:none;
+  overflow:hidden;
+  box-sizing:border-box;
+  transition:border-color .2s,box-shadow .2s;
+}
+.hall-textarea:focus{
+  outline:none;
+  border-color:rgba(201,168,76,.5);
+  box-shadow:0 0 0 2px rgba(201,168,76,.08);
+}
+.hall-textarea::placeholder{
+  color:rgba(255,255,255,.2);
+  font-style:italic;
+}
+
+#hall-me-card .hall-textarea{
+  border-color:rgba(0,212,255,.18);
+}
+#hall-me-card .hall-textarea:focus{
+  border-color:rgba(0,212,255,.5);
+  box-shadow:0 0 0 2px rgba(0,212,255,.06);
+}
+
+#idol-av-wrap:hover #idol-av-ed{ display:block !important; }
+
 </style>
