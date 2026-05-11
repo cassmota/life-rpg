@@ -24,6 +24,16 @@ const ELITE_IMGS = {
   g_vambrace:   'img/elite/g_vambrace.jpg',
   g_goldgaunt:  'img/elite/g_goldgaunt.jpg',
   w_bloomstaff: 'img/elite/w_bloomstaff.jpg',
+  d_iron:        'img/elite/d_iron.jpg',
+  d_frostfang:   'img/elite/d_frostfang.jpg',
+  d_skulldread:  'img/elite/d_skulldread.jpg',
+  d_moonpiercer: 'img/elite/d_moonpiercer.jpg',
+  d_solarblade:  'img/elite/d_solarblade.jpg',
+  d_thornfang:   'img/elite/d_thornfang.jpg',
+  d_leafblade:   'img/elite/d_leafblade.jpg',
+  d_voidpiercer: 'img/elite/d_voidpiercer.jpg',
+  d_emberfang:   'img/elite/d_emberfang.jpg',
+  d_infernoclaw: 'img/elite/d_infernoclaw.jpg',
 };
 
 // Item definitions
