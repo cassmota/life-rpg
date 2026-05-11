@@ -228,6 +228,96 @@ const ELITE_ITEMS = [
     fx: null,
     sc:'hands'
   },
+  {
+    id:'d_iron', nm:'Adaga de Ferro Frio', slot:'weapon', ik:'d_iron',
+    pw:8, atk:14, def:2, price:180,
+    tier:'elite', element:'none', elemBonus:0,
+    elemColor:'var(--text2)', elemEmoji:'',
+    lore:'Simples e letal. Forjada por um ferreiro que nunca errou um golpe.',
+    desc:'Elite · Weapon · Adaga',
+    fx: null, sc:'weapon'
+  },
+  {
+    id:'d_frostfang', nm:'Presa do Gelo Eterno', slot:'weapon', ik:'d_frostfang',
+    pw:20, atk:26, def:4, price:480,
+    tier:'epic', element:'ice', elemBonus:22,
+    elemColor:'#7ecef4', elemEmoji:'❄️',
+    lore:'Forjada nas profundezas do Ártico Arcano. Congela o sangue dos inimigos com um único toque.',
+    desc:'Épico · Weapon · ❄️ Ice +22%',
+    fx: null, sc:'weapon'
+  },
+  {
+    id:'d_skulldread', nm:'Adaga do Crânio Maldito', slot:'weapon', ik:'d_skulldread',
+    pw:18, atk:24, def:3, price:420,
+    tier:'epic', element:'shadow', elemBonus:20,
+    elemColor:'#b39ddb', elemEmoji:'💀',
+    lore:'O crânio na empunhadura absorve a alma dos caídos e empodera cada golpe subsequente.',
+    desc:'Épico · Weapon · 💀 Shadow +20%',
+    fx: null, sc:'weapon'
+  },
+  {
+    id:'d_moonpiercer', nm:'Perfuradora da Lua', slot:'weapon', ik:'d_moonpiercer',
+    pw:16, atk:22, def:5, price:380,
+    tier:'elite', element:'ice', elemBonus:16,
+    elemColor:'#7ecef4', elemEmoji:'❄️',
+    lore:'Forjada sob eclipse total. A lâmina reflete a luz da lua e cega inimigos no escuro.',
+    desc:'Elite · Weapon · ❄️ Ice +16%',
+    fx: null, sc:'weapon'
+  },
+  {
+    id:'d_solarblade', nm:'Lâmina Solar', slot:'weapon', ik:'d_solarblade',
+    pw:17, atk:23, def:3, price:400,
+    tier:'elite', element:'holy', elemBonus:18,
+    elemColor:'#fff176', elemEmoji:'✨',
+    lore:'Canaliza a energia do sol no momento do golpe. Inimigos sombrios sofrem dano dobrado.',
+    desc:'Elite · Weapon · ✨ Holy +18%',
+    fx: null, sc:'weapon'
+  },
+  {
+    id:'d_thornfang', nm:'Presa dos Espinhos', slot:'weapon', ik:'d_thornfang',
+    pw:15, atk:20, def:4, price:350,
+    tier:'elite', element:'nature', elemBonus:15,
+    elemColor:'#7bc67e', elemEmoji:'🌿',
+    lore:'Cada ferida que causa envenena lentamente. A natureza cobra seu preço em silêncio.',
+    desc:'Elite · Weapon · 🌿 Nature +15%',
+    fx: null, sc:'weapon'
+  },
+  {
+    id:'d_leafblade', nm:'Lâmina das Folhas Gêmeas', slot:'weapon', ik:'d_leafblade',
+    pw:14, atk:18, def:6, price:320,
+    tier:'elite', element:'nature', elemBonus:12,
+    elemColor:'#7bc67e', elemEmoji:'🌿',
+    lore:'Duas lâminas tecidas com nervuras de folha. Cada golpe aplica veneno acumulativo.',
+    desc:'Elite · Weapon · 🌿 Nature +12%',
+    fx: null, sc:'weapon'
+  },
+  {
+    id:'d_voidpiercer', nm:'Perfuradora do Vazio', slot:'weapon', ik:'d_voidpiercer',
+    pw:22, atk:28, def:2, price:520,
+    tier:'epic', element:'arcane', elemBonus:24,
+    elemColor:'#ce93d8', elemEmoji:'🔮',
+    lore:'Atravessa defesas mágicas como se não existissem. Forjada no espaço entre dimensões.',
+    desc:'Épico · Weapon · 🔮 Arcane +24%',
+    fx: null, sc:'weapon'
+  },
+  {
+    id:'d_emberfang', nm:'Presa das Brasas', slot:'weapon', ik:'d_emberfang',
+    pw:19, atk:25, def:3, price:440,
+    tier:'elite', element:'fire', elemBonus:18,
+    elemColor:'#ff6b35', elemEmoji:'🔥',
+    lore:'A lâmina nunca esfria. Cada golpe deixa queimaduras que persistem por dias.',
+    desc:'Elite · Weapon · 🔥 Fire +18%',
+    fx: null, sc:'weapon'
+  },
+  {
+    id:'d_infernoclaw', nm:'Garra do Inferno', slot:'weapon', ik:'d_infernoclaw',
+    pw:24, atk:32, def:2, price:580,
+    tier:'epic', element:'fire', elemBonus:26,
+    elemColor:'#ff6b35', elemEmoji:'🔥',
+    lore:'Nasceu dentro de um vulcão ativo. Derrete armaduras e queima a alma do adversário.',
+    desc:'Épico · Weapon · 🔥 Fire +26%',
+    fx: null, sc:'weapon'
+  },
 ];
 
 // ── Element FX config ─────────────────────────────────────────
