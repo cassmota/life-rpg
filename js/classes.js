@@ -1476,6 +1476,7 @@ const NAV_CATS = {
     {p:'attrs',     icon:'📊', label:'Atributos'},
     {p:'classe',    icon:'🏅', label:'Classe'},
     {p:'skilltree', icon:'✨', label:'Habilidades'},
+    {p:'potions',   icon:'⚗️', label:'Poções'},
     {p:'calendar',  icon:'📅', label:'Calendário'},
   ]},
   combat:{ label:'🐉 Combate', tabs:[
@@ -1541,7 +1542,105 @@ function setActiveSubtab(p){
   });
   if(p==='skilltree') renderSkillTree();
   if(p==='hallherois') renderHall();
+  if(p==='potions') renderPotions();
 }
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER POTIONS PAGE
+// ═══════════════════════════════════════════════════════════════
+function renderPotions(){
+  const cont=document.getElementById('pot-cont'); if(!cont) return;
+  if(typeof POTION_DB==='undefined'){ cont.innerHTML='<div style="color:var(--text3)">Sistema de poções carregando...</div>'; return; }
+
+  cleanExpiredPotions();
+  const now=Date.now();
+  const rarLabel={common:'COMUM',rare:'RARA',epic:'ÉPICA',legendary:'LENDÁRIA'};
+  const rarColor={common:'var(--text2)',rare:'#4fc3f7',epic:'#ce93d8',legendary:'#ffca28'};
+
+  // ── Active potions banner
+  let activeBanner='';
+  if(S.activePotions&&S.activePotions.length){
+    const tags=S.activePotions.map(ap=>{
+      const pot=getPot(ap.id);if(!pot) return '';
+      let timeStr='';
+      if(ap.expiresAt){ const rem=Math.max(0,ap.expiresAt-now); const h=Math.floor(rem/3600000); const m=Math.floor((rem%3600000)/60000); timeStr=`${h}h${m}m`; }
+      if(ap.usesLeft!==undefined) timeStr=`${ap.usesLeft} uso${ap.usesLeft!==1?'s':''}`;
+      return `<div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.4);border:1px solid ${pot.color};border-radius:8px;padding:6px 10px">
+        <img src="${pot.img}" style="width:28px;height:28px;object-fit:contain">
+        <div>
+          <div style="font-family:'Cinzel',serif;font-size:10px;color:${pot.color}">${pot.nm}</div>
+          <div style="font-size:9px;color:var(--text3)">${timeStr?'⏱ '+timeStr:''}</div>
+        </div>
+      </div>`;
+    }).join('');
+    activeBanner=`<div class="card mb12" style="border-color:rgba(201,168,76,.3)">
+      <div class="ct" style="color:var(--gold2)">⚡ Poções Ativas</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">${tags}</div>
+    </div>`;
+  }
+
+  // ── Inventory
+  const invKeys=Object.keys(S.potionInv||{}).filter(k=>(S.potionInv[k]||0)>0);
+  let invHtml='';
+  if(invKeys.length){
+    invHtml=`<div class="card mb12" style="border-color:rgba(0,212,255,.2)">
+      <div class="ct" style="color:var(--crystal)">🎒 Seu Inventário</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px">
+        ${invKeys.map(id=>{
+          const pot=getPot(id);if(!pot)return'';
+          const cnt=S.potionInv[id];
+          return `<div class="pot-card" style="--pot-color:${pot.color}" onclick="usePotion('${id}')">
+            <div class="pot-img-wrap"><img src="${pot.img}" class="pot-img"><div class="pot-cnt">${cnt}</div></div>
+            <div class="pot-nm">${pot.nm}</div>
+            <div class="pot-desc">${pot.desc}</div>
+            <div class="pot-use-btn">⚗️ Usar</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+
+  // ── Shop
+  const shopCards=POTION_DB.map(pot=>{
+    const owned=S.potionInv?.[pot.id]||0;
+    const canBuy=S.gold>=pot.cost;
+    return `<div class="pot-card" style="--pot-color:${pot.color}">
+      <div class="pot-img-wrap">
+        <img src="${pot.img}" class="pot-img">
+        ${owned?`<div class="pot-cnt">${owned}</div>`:''}
+      </div>
+      <div style="display:inline-block;font-family:'Cinzel',serif;font-size:7px;letter-spacing:.08em;color:${rarColor[pot.rarity]||'var(--text3)'};background:rgba(0,0,0,.5);border:1px solid ${rarColor[pot.rarity]};border-radius:8px;padding:1px 6px;margin-bottom:4px">${rarLabel[pot.rarity]}</div>
+      <div class="pot-nm">${pot.nm}</div>
+      <div class="pot-desc">${pot.desc}</div>
+      <button class="pot-buy-btn" style="--pot-color:${pot.color};opacity:${canBuy?1:.45};cursor:${canBuy?'pointer':'not-allowed'}"
+        onclick="${canBuy?`buyPotion('${pot.id}')`:'void(0)'}">
+        🪙 ${pot.cost} ouro
+      </button>
+    </div>`;
+  }).join('');
+
+  cont.innerHTML=`
+    ${activeBanner}
+    ${invHtml}
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div>
+          <div class="ct" style="margin-bottom:2px">🏪 Alquimista</div>
+          <div style="font-size:10px;color:var(--text3);font-style:italic">Poções poderosas para turbinar sua jornada</div>
+        </div>
+        <div style="font-family:'Cinzel Decorative',serif;font-size:16px;color:var(--gold2)">🪙 ${S.gold}</div>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:12px;background:rgba(201,168,76,.05);border:1px solid rgba(201,168,76,.15);border-radius:6px;padding:8px 10px">
+        🎲 Poções também podem ser obtidas ao derrotar Bosses (40% de chance de drop)
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px">
+        ${shopCards}
+      </div>
+    </div>`;
+}
+// ═══════════════════════════════════════════════════════════════
+// END RENDER POTIONS
+// ═══════════════════════════════════════════════════════════════
 
 // ═══════════════════════════════════════════════════════════════
 // HALL DOS HERÓIS SYSTEM

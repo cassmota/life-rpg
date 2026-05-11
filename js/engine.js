@@ -36,6 +36,8 @@ const DEF=()=>({
   classLockedAt:null,
   bardBuff:null,
   potions:{transform:0},
+  potionInv:{},         // {potionId: count}
+  activePotions:[],     // [{id, effect, expiresAt, usesLeft}]
   guildRank:{},
   activeGuild:null, // id of active guild
   profile:{name:'Herói',age:'',sex:'',weight:'',height:''},
@@ -45,7 +47,7 @@ const DEF=()=>({
 });
 
 let S=(()=>{
-  try{const s=localStorage.getItem('lrpg6');if(s){const p=JSON.parse(s);const d=DEF();for(const k in d)if(!(k in p))p[k]=d[k];if(!p.classLockedAt)p.classLockedAt=null;if(!p.bardBuff)p.bardBuff=null;if(!p.potions)p.potions={transform:0};if(!p.guildRank)p.guildRank={};if(!p.activeGuild&&p.activeGuild!==null)p.activeGuild=null;if(!p.profile)p.profile={name:'Herói',age:'',sex:'',weight:'',height:''};if(p.skillPts===undefined)p.skillPts=0;if(!p.skillsUnlocked)p.skillsUnlocked=[];if(!p.hall)p.hall={};return p;}}catch(e){}
+  try{const s=localStorage.getItem('lrpg6');if(s){const p=JSON.parse(s);const d=DEF();for(const k in d)if(!(k in p))p[k]=d[k];if(!p.classLockedAt)p.classLockedAt=null;if(!p.bardBuff)p.bardBuff=null;if(!p.potions)p.potions={transform:0};if(!p.guildRank)p.guildRank={};if(!p.activeGuild&&p.activeGuild!==null)p.activeGuild=null;if(!p.profile)p.profile={name:'Herói',age:'',sex:'',weight:'',height:''};if(p.skillPts===undefined)p.skillPts=0;if(!p.skillsUnlocked)p.skillsUnlocked=[];if(!p.hall)p.hall={};if(!p.potionInv)p.potionInv={};if(!p.activePotions)p.activePotions=[];return p;}}catch(e){}
   return DEF();
 })();
 let uAch=JSON.parse(localStorage.getItem('lrpgAch5')||'[]');
@@ -203,7 +205,8 @@ function resolveEffects(baseDmg, src){
 function bossDmg(amt,src){
   if(S.boss.def)return;const boss=getBoss();
   const skillDmg=(typeof getSkillDmgBonus==='function')?getSkillDmgBonus():1;
-  const bm=(1+(eqPow()/100))*getClassDmgMult()*skillDmg;const dmg=Math.max(1,Math.floor(amt*bm));
+  const potDmg=getBossDmgPotionMult();
+  const bm=(1+(eqPow()/100))*getClassDmgMult()*skillDmg*potDmg;const dmg=Math.max(1,Math.floor(amt*bm));
   S.boss.hp=Math.max(0,S.boss.hp-dmg);
   bLog(`<span class="ld">⚔ ${src}: ${dmg} dano (×${bm.toFixed(2)})!</span>`);
   // Combat animation
@@ -224,12 +227,21 @@ function bossDmg(amt,src){
     S.bkHist.unshift({nm:boss.nm,em:boss.em,svk:boss.svk,dt:new Date().toLocaleDateString('pt-BR'),xp:boss.xr,go:boss.gr,cr:boss.cr,ri:bRewardNm});
     bLog(`<span class="lw">🏆 BOSS DERROTADO! +${boss.xr}XP +${boss.gr}Gold +${boss.cr}💎!</span>`);
     notify('🏆','Boss Derrotado!',`${boss.em} ${boss.nm}\n+${boss.xr}XP +${boss.gr}Gold +${boss.cr}💎${bRewardNm?'\n🎁 '+bRewardNm:''}!`,'ng');
+    // 40% chance to drop a random potion
+    if(Math.random()<0.4) setTimeout(()=>grantRandomPotion(),800);
     checkAch();
   }
   save();renderBoss();renderMini();
 }
 function bossAtk(nm){
   if(S.boss.def){bLog(`<span style="color:var(--text2)">Boss derrotado, mas ${nm} causou dano...</span>`);return;}
+  // Check potion shield
+  if(hasBossShield()){
+    consumeBossShield();
+    bLog(`<span style="color:var(--gold2)">🛡️ Escudo da Morte bloqueou o ataque de ${nm}!</span>`);
+    notify('🛡️','Bloqueado!',`O Osso da Morte absorveu o ataque!`,'ng');
+    return;
+  }
   const boss=getBoss();const def=eqDef();
   const rawD=Math.floor(boss.atk*0.5+Math.random()*boss.atk*0.5);
   const dmg=Math.max(1,rawD-Math.floor(def*0.3));
@@ -321,8 +333,9 @@ function eLog(h){const l=document.getElementById('ev-log');if(l){l.innerHTML+=h+
 const XPL=lv=>Math.floor(100*Math.pow(1.4,lv-1));
 const getMult=()=>{const base=S.streak>=30?2:S.streak>=7?1.5:S.streak>=3?1.2:1;return base+getClassStreakBonus();};
 function addXP(n){
-  const skillXp = (typeof getSkillXpBonus==='function') ? getSkillXpBonus() : 1;
-  const g=Math.floor(n*getMult()*getClassXpMult()*getGuildXpBonus()*skillXp);S.xp+=g;S.totXp+=g;S.xpTd+=g;
+  const skillXp=(typeof getSkillXpBonus==='function')?getSkillXpBonus():1;
+  const potXp=getPotionMult('xp');
+  const g=Math.floor(n*getMult()*getClassXpMult()*getGuildXpBonus()*skillXp*potXp);S.xp+=g;S.totXp+=g;S.xpTd+=g;
   let lv=false;
   while(S.xp>=XPL(S.lv)){S.xp-=XPL(S.lv);S.lv++;lv=true;S.mhp+=10;S.hp=S.mhp;S.skillPts++;}
   if(lv){
@@ -357,8 +370,8 @@ function addXP(n){
   }
   return g;
 }
-function addGold(n){const skillGold=(typeof getSkillGoldBonus==='function')?getSkillGoldBonus():1;const g=Math.floor(n*getMult()*getClassGoldMult()*getGuildGoldBonus()*skillGold);S.gold+=g;S.totGo+=g;S.goTd+=g;return g;}
-function addCr(n){const skillCr=(typeof getSkillCrBonus==='function')?getSkillCrBonus():1;const g=Math.floor(n*getClassCrMult()*skillCr);S.cr+=g;S.totCr+=g;return g;}
+function addGold(n){const skillGold=(typeof getSkillGoldBonus==='function')?getSkillGoldBonus():1;const potGold=getPotionMult('gold');const g=Math.floor(n*getMult()*getClassGoldMult()*getGuildGoldBonus()*skillGold*potGold);S.gold+=g;S.totGo+=g;S.goTd+=g;return g;}
+function addCr(n){const skillCr=(typeof getSkillCrBonus==='function')?getSkillCrBonus():1;const potCr=getPotionMult('cr');const g=Math.floor(n*getClassCrMult()*skillCr*potCr);S.cr+=g;S.totCr+=g;return g;}
 
 // =============== HABITS ===============
 function togH(id){
@@ -478,6 +491,111 @@ function buyShop(id){
   else notify('🛒','Comprado!',`${item.nm}!`,'ng');
   checkAch();save();renderAll();
 }
+
+// ═══════════════════════════════════════════════════════════════
+// POTION SYSTEM
+// ═══════════════════════════════════════════════════════════════
+
+function getPot(id){ return (typeof POTION_DB!=='undefined')?POTION_DB.find(p=>p.id===id):null; }
+
+function getPotionMult(stat){
+  if(!S.activePotions||!S.activePotions.length) return 1;
+  cleanExpiredPotions();
+  let bonus=0;
+  S.activePotions.forEach(ap=>{
+    const e=ap.effect;
+    if(stat==='xp'  &&(e==='xp50_24h'||e==='gold100xp100_1h'||e==='cr50xp50_24h')) bonus+=e==='gold100xp100_1h'?100:50;
+    if(stat==='gold'&&(e==='gold60_24h'||e==='gold100xp100_1h'))                    bonus+=e==='gold100xp100_1h'?100:60;
+    if(stat==='cr'  &&(e==='cr40_24h'  ||e==='cr50xp50_24h'))                       bonus+=e==='cr50xp50_24h'?50:40;
+    if(stat==='skill'&&e==='skill30_24h') bonus+=30;
+  });
+  return 1+bonus/100;
+}
+
+function hasBossShield(){
+  cleanExpiredPotions();
+  return (S.activePotions||[]).some(ap=>ap.effect==='boss_shield');
+}
+function consumeBossShield(){
+  const idx=(S.activePotions||[]).findIndex(ap=>ap.effect==='boss_shield');
+  if(idx!==-1){S.activePotions.splice(idx,1);save();}
+}
+function getBossDmgPotionMult(){
+  const ap=(S.activePotions||[]).find(ap=>ap.effect==='boss3x_3atk'&&(ap.usesLeft===undefined||ap.usesLeft>0));
+  if(!ap) return 1;
+  ap.usesLeft--;if(ap.usesLeft<=0)S.activePotions.splice(S.activePotions.indexOf(ap),1);
+  save();return 3;
+}
+function cleanExpiredPotions(){
+  if(!S.activePotions) return;
+  const now=Date.now();
+  S.activePotions=S.activePotions.filter(ap=>{
+    if(ap.expiresAt&&ap.expiresAt<now) return false;
+    if(ap.usesLeft!==undefined&&ap.usesLeft<=0) return false;
+    return true;
+  });
+}
+
+function buyPotion(id){
+  const pot=getPot(id);
+  if(!pot){notify('⚠️','Erro','Poção não encontrada.','nr');return;}
+  if(S.gold<pot.cost){notify('🪙','Ouro insuficiente',`Precisa de ${pot.cost}🪙. Você tem ${S.gold}🪙.`,'nr');return;}
+  confMo(`Comprar <strong>${pot.nm}</strong>?`,
+    `Custo: <strong style="color:var(--gold2)">${pot.cost}🪙</strong> · <em>${pot.desc}</em><br>Você tem ${S.gold}🪙.`,
+    ()=>{
+      S.gold-=pot.cost;
+      if(!S.potionInv)S.potionInv={};
+      S.potionInv[id]=(S.potionInv[id]||0)+1;
+      save();renderPotions();renderStatus();
+      notify('⚗️',`${pot.nm} adquirida!`,'Use na aba Poções para ativar.','ng');
+    }
+  );
+}
+
+function usePotion(id){
+  if(!S.potionInv||!(S.potionInv[id]>0)){notify('⚗️','Sem estoque','Você não tem essa poção.','nr');return;}
+  const pot=getPot(id);if(!pot)return;
+  const now=Date.now(),h24=now+86400000,h1=now+3600000;
+  let entry=null;
+  switch(pot.effect){
+    case 'xp50_24h':        entry={id,effect:pot.effect,expiresAt:h24};break;
+    case 'cr40_24h':        entry={id,effect:pot.effect,expiresAt:h24};break;
+    case 'gold60_24h':      entry={id,effect:pot.effect,expiresAt:h24};break;
+    case 'gold100xp100_1h': entry={id,effect:pot.effect,expiresAt:h1}; break;
+    case 'skill30_24h':     entry={id,effect:pot.effect,expiresAt:h24};break;
+    case 'cr50xp50_24h':    entry={id,effect:pot.effect,expiresAt:h24};break;
+    case 'boss3x_3atk':     entry={id,effect:pot.effect,usesLeft:3};   break;
+    case 'boss_shield':     entry={id,effect:pot.effect,usesLeft:1};   break;
+    case 'hp50pct':{
+      const heal=Math.floor(S.mhp*0.5);S.hp=Math.min(S.mhp,S.hp+heal);
+      notify('💊','Vida restaurada!',`+${heal} HP!`,'ng');
+      bLog(`<span style="color:var(--green3)">⚗️ ${pot.nm}: +${heal} HP!</span>`);break;
+    }
+    case 'streak2x_today':
+      (S.habits||[]).forEach(h=>{if(h.dn&&h.sk>0)h.sk++;});
+      notify('🔥','Streaks turbinados!','Todos os streaks ativos +1!','ng');
+      bLog(`<span style="color:var(--gold2)">⚗️ ${pot.nm}: streaks +1!</span>`);break;
+  }
+  if(entry){if(!S.activePotions)S.activePotions=[];S.activePotions.push(entry);}
+  S.potionInv[id]--;if(S.potionInv[id]<=0)delete S.potionInv[id];
+  save();renderPotions();renderStatus();renderAll();
+  if(entry)notify('⚗️',`${pot.nm} ativada!`,`${pot.desc}`,'ng');
+}
+
+function grantRandomPotion(){
+  if(typeof POTION_DB==='undefined'||!POTION_DB.length)return;
+  const pool=POTION_DB.filter(p=>p.rarity!=='legendary');
+  const pot=pool[Math.floor(Math.random()*pool.length)];
+  if(!S.potionInv)S.potionInv={};
+  S.potionInv[pot.id]=(S.potionInv[pot.id]||0)+1;
+  save();renderPotions();
+  notify('🎁','Poção encontrada!',`${pot.nm} — ${pot.desc}`,'ng');
+  bLog(`<span class="lw">🎁 DROP: ${pot.nm}! Veja na aba Poções.</span>`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// END POTION SYSTEM
+// ═══════════════════════════════════════════════════════════════
 
 // =============== QUESTS ===============
 function genQ(){
