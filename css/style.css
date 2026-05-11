@@ -2184,4 +2184,39 @@ input[type="file"]{display:none;}
   letter-spacing:.04em;cursor:pointer;transition:background .2s;
 }
 .pot-buy-btn:hover{ background:color-mix(in srgb, var(--pot-color,#c9a84c) 25%, transparent); }
+
+/* ═══════════════════════════════════════════════════════════════
+   ELITE / EPIC ITEM BADGES
+   ═══════════════════════════════════════════════════════════════ */
+.elite-badge{
+  display:inline-flex;align-items:center;gap:3px;
+  font-family:'Cinzel',serif;font-size:7px;letter-spacing:.08em;
+  border-radius:8px;padding:1px 7px;margin-bottom:3px;
+}
+.elite-badge.tier-elite{
+  background:rgba(255,107,53,.1);
+  border:1px solid rgba(255,107,53,.5);
+  color:#ff9f6b;
+}
+.elite-badge.tier-epic{
+  background:linear-gradient(90deg,rgba(206,147,216,.1),rgba(255,214,0,.1));
+  border:1px solid rgba(255,214,0,.6);
+  color:#ffd700;
+}
+.elem-badge{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:8px;border-radius:6px;padding:1px 6px;
+  font-family:'Cinzel',serif;letter-spacing:.04em;
+  background:rgba(0,0,0,.4);margin-left:4px;
+}
+
+/* Glow for epic items in smithy grid */
+.sm-item.tier-epic{
+  box-shadow:0 0 12px rgba(255,214,0,.15),0 0 4px rgba(206,147,216,.1);
+  border-color:rgba(255,214,0,.35) !important;
+}
+.sm-item.tier-elite{
+  box-shadow:0 0 8px rgba(255,107,53,.12);
+  border-color:rgba(255,107,53,.3) !important;
+}
 </style>

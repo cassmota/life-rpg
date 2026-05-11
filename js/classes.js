@@ -1643,7 +1643,127 @@ function renderPotions(){
 // ═══════════════════════════════════════════════════════════════
 
 // ═══════════════════════════════════════════════════════════════
-// HALL DOS HERÓIS SYSTEM
+// ELITE ITEMS — Smithy integration patch
+// ═══════════════════════════════════════════════════════════════
+
+// Intercept smithy filter to support 'elite' category
+function patchSmithyEliteFilter(){
+  const flt = document.getElementById('sm-flt');
+  if(!flt || flt._elitePatchDone) return;
+  flt._elitePatchDone = true;
+
+  flt.addEventListener('click', e=>{
+    const btn = e.target.closest('.sf-btn');
+    if(!btn) return;
+    const sc = btn.dataset.sc;
+    if(sc !== 'elite') return;
+
+    // Mark active
+    flt.querySelectorAll('.sf-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+
+    // Render elite-only items
+    renderEliteSmithyGrid();
+    e.stopImmediatePropagation();
+  }, true);
+}
+
+function renderEliteSmithyGrid(){
+  const grid = document.getElementById('sm-grid');
+  if(!grid || typeof ELITE_ITEMS==='undefined') return;
+
+  const SLOT_LABEL = {weapon:'⚔ Arma',armor:'🛡 Armadura',head:'⛑ Cabeça',
+    feet:'👢 Pés',legs:'🩲 Pernas',hands:'🧤 Mãos',offhand:'🛡 Off-Hand'};
+
+  grid.innerHTML = ELITE_ITEMS.map(item=>{
+    const owned = S.owned.includes(item.id);
+    const equipped = Object.values(S.eq||{}).includes(item.id);
+    const canBuy = S.cr >= item.price;
+    const imgSrc = (typeof ELITE_IMGS!=='undefined') ? ELITE_IMGS[item.ik] : '';
+
+    const tierCls = item.tier==='epic' ? 'tier-epic' : 'tier-elite';
+    const tierLabel = item.tier==='epic' ? '⚡ ÉPICO' : '🔸 ELITE';
+    const elemBadge = item.element && item.element!=='none'
+      ? `<span class="elem-badge" style="color:${item.elemColor||'#fff'};border:1px solid ${item.elemColor||'#fff'}33">
+           ${item.elemEmoji} ${item.element.charAt(0).toUpperCase()+item.element.slice(1)} +${item.elemBonus}%
+         </span>` : '';
+
+    return `<div class="sm-item ${tierCls}" style="cursor:pointer" onclick="${owned?`equipItem('${item.id}')`:`forgeEliteItem('${item.id}')`}">
+      <div style="position:relative;width:52px;height:52px;margin:0 auto 6px">
+        ${imgSrc?`<img src="${imgSrc}" style="width:52px;height:52px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,.7))">`:
+          `<span style="font-size:28px">⚔️</span>`}
+        ${equipped?`<div style="position:absolute;top:-3px;right:-3px;background:var(--green3);border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;font-size:8px">✓</div>`:''}
+      </div>
+      <div style="text-align:center">
+        <div class="elite-badge ${tierCls}">${tierLabel}</div>
+        <div style="font-family:'Cinzel',serif;font-size:9px;color:${item.tier==='epic'?'#ffd700':'#ff9f6b'};line-height:1.3;margin-bottom:2px">${item.nm}</div>
+        <div style="font-size:8px;color:var(--text3);margin-bottom:3px">${SLOT_LABEL[item.slot]||item.slot}</div>
+        ${elemBadge}
+        <div style="display:flex;justify-content:center;gap:6px;margin:4px 0;flex-wrap:wrap">
+          ${item.pw?`<span style="font-size:8px;color:var(--gold2)">⚡${item.pw}%</span>`:''}
+          ${item.atk?`<span style="font-size:8px;color:var(--red3)">⚔${item.atk}</span>`:''}
+          ${item.def?`<span style="font-size:8px;color:var(--blue3)">🛡${item.def}</span>`:''}
+        </div>
+        <div style="font-family:'Cinzel',serif;font-size:9px;color:${canBuy||owned?'var(--crystal)':'var(--text3)'};margin-top:3px">
+          ${owned ? (equipped?'<span style="color:var(--green3)">Equipado</span>':'<span style="color:var(--green2)">✓ Usar</span>') : `💎 ${item.price}`}
+        </div>
+        ${!owned&&!canBuy?`<div style="font-size:7px;color:var(--red3);margin-top:1px">Precisa ${item.price-S.cr} 💎</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+
+  // Ensure own items in owned list is visible in el
+  document.getElementById('sm-own') && renderOwnedElite();
+}
+
+function forgeEliteItem(id){
+  const item = (typeof ELITE_ITEMS!=='undefined') ? ELITE_ITEMS.find(i=>i.id===id) : null;
+  if(!item) return;
+  if(S.owned.includes(id)){ equipItem(id); return; }
+  if(S.cr < item.price){
+    notify('💎','Cristais insuficientes',`Precisa de ${item.price}💎. Você tem ${S.cr}💎.`,'nc'); return;
+  }
+  confMo(`Forjar <strong>${item.nm}</strong>?`,
+    `Custo: <strong style="color:var(--crystal)">${item.price}💎</strong><br>
+     <em style="font-size:10px;color:var(--text3)">${item.lore||''}</em><br><br>
+     Você tem ${S.cr}💎.`,
+    ()=>{
+      S.cr -= item.price;
+      S.owned.push(id);
+      S.eq[item.slot] = id;
+      save(); renderEliteSmithyGrid(); renderStatus();
+      notify('⚡',`${item.nm} forjado!`,`Equipado automaticamente! +${item.pw}% poder.`,'ng');
+    }
+  );
+}
+
+function renderOwnedElite(){
+  // Add elite owned items to the existing owned section
+  const own = document.getElementById('sm-own');
+  if(!own||typeof ELITE_ITEMS==='undefined') return;
+  const eliteOwned = ELITE_ITEMS.filter(i=>S.owned.includes(i.id));
+  if(!eliteOwned.length) return;
+  const existing = own.innerHTML;
+  const eliteSection = `<div style="margin-top:8px;border-top:1px solid rgba(255,107,53,.2);padding-top:8px">
+    <div style="font-family:'Cinzel',serif;font-size:8px;color:#ff9f6b;letter-spacing:.1em;margin-bottom:6px">⚡ ITENS ELITE</div>
+    ${eliteOwned.map(i=>`<div style="display:flex;align-items:center;gap:8px;padding:4px 0">
+      <img src="${ELITE_IMGS[i.ik]||''}" style="width:24px;height:24px;object-fit:contain">
+      <span style="font-size:10px;color:${i.tier==='epic'?'#ffd700':'#ff9f6b'}">${i.nm}</span>
+      ${i.elemEmoji?`<span style="font-size:9px;color:${i.elemColor}">${i.elemEmoji}</span>`:''}
+    </div>`).join('')}
+  </div>`;
+  own.innerHTML = existing + eliteSection;
+}
+
+// Hook: patch smithy after each renderAll
+const _origRenderAll = typeof renderAll==='function' ? renderAll : null;
+document.addEventListener('DOMContentLoaded',()=>{
+  patchSmithyEliteFilter();
+  // Also add elite badge to normal items when rendered
+});
+
+// ═══════════════════════════════════════════════════════════════
+// END ELITE SMITHY
 // ═══════════════════════════════════════════════════════════════
 
 const HALL_FIELDS_HERO = ['hf-who','hf-challenges','hf-food','hf-sleep','hf-train','hf-external','hf-prepare'];
