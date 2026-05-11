@@ -24,6 +24,7 @@ const ELITE_IMGS = {
   l_goldskirt:  'img/elite/l_goldskirt.jpg',
   g_vambrace:   'img/elite/g_vambrace.jpg',
   g_goldgaunt:  'img/elite/g_goldgaunt.jpg',
+  w_bloomstaff: 'img/elite/w_bloomstaff.jpg',
 };
 
 // Item definitions
@@ -217,6 +218,16 @@ const ELITE_ITEMS = [
     desc:'Elite · Hands · ',
     fx: null,
     sc:'hands'
+  },
+  {
+    id:'w_bloomstaff', nm:'Cajado da Flor Maldita', slot:'weapon', ik:'w_bloomstaff',
+    pw:24, atk:30, def:6, price:540,
+    tier:'epic', element:'nature', elemBonus:22,
+    elemColor:'#7bc67e', elemEmoji:'🌿',
+    lore:'Brotou de um túmulo antigo. A flor que o encima nunca murcha — mas drena a vida de tudo ao redor.',
+    desc:'Épico · Weapon · 🌿 Nature +22% · 💀 Shadow',
+    fx: null,
+    sc:'weapon'
   },
   {
     id:'g_goldgaunt', nm:'Manoplas do Guerreiro Eterno', slot:'hands', ik:'g_goldgaunt',
