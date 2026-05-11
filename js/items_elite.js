@@ -14,7 +14,6 @@ const ELITE_IMGS = {
   a_ironplate:  'img/elite/a_ironplate.jpg',
   a_titanplate: 'img/elite/a_titanplate.jpg',
   a_warlord:    'img/elite/a_warlord.jpg',
-  a_tribaldres: 'img/elite/a_tribaldres.jpg',
   a_vamcloak:   'img/elite/a_vamcloak.jpg',
   h_ironhelm:   'img/elite/h_ironhelm.jpg',
   h_goldhelm:   'img/elite/h_goldhelm.jpg',
@@ -126,16 +125,6 @@ const ELITE_ITEMS = [
     elemColor:'#ff6b35', elemEmoji:'🔥',
     lore:'O olho central vê além do véu — antecipa ataques antes que aconteçam.',
     desc:'Épico · Armor · 🔥 Fire +18%',
-    fx: null,
-    sc:'armor'
-  },
-  {
-    id:'a_tribaldres', nm:'Veste do Espírito Tribal', slot:'armor', ik:'a_tribaldres',
-    pw:12, atk:8, def:15, price:360,
-    tier:'elite', element:'nature', elemBonus:10,
-    elemColor:'#7bc67e', elemEmoji:'🌿',
-    lore:'Costurada com presas de lobo e penas de águia. Conecta o portador com os ancestrais.',
-    desc:'Elite · Armor · 🌿 Nature +10%',
     fx: null,
     sc:'armor'
   },
