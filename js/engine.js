@@ -98,6 +98,23 @@ function buyEquip(id){
 // =============== BOSS ===============
 const getBoss=()=>BOSSES[S.boss.idx];
 function checkBW(){if(S.boss.ws!==WS()){const ni=(S.boss.idx+1)%BOSSES.length;const b=BOSSES[ni];S.boss={idx:ni,hp:b.mh,mhp:b.mh,ws:WS(),def:false};save();notify('🐉','Novo Boss!',b.nm,'nr');}}
+function spawnNextBoss(){
+  const ni=(S.boss.idx+1)%BOSSES.length;
+  const b=BOSSES[ni];
+  S.boss={idx:ni,hp:b.mh,mhp:b.mh,ws:WS(),def:false,defeatedAt:null};
+  save();renderBoss();renderMini();
+  bLog(`<span style="color:var(--red3)">🐉 <strong>${b.em} ${b.nm}</strong> surgiu das sombras!</span>`);
+  notify('🐉','Novo Boss!',`${b.em} ${b.nm} chegou! Prepare-se!`,'nr');
+}
+// Checa se o cooldown de 24h após derrota do boss já passou e faz o respawn
+function checkBossRespawn(){
+  if(!S.boss.def) return; // boss ainda vivo, nada a fazer
+  const defeatedAt=S.boss.defeatedAt;
+  if(!defeatedAt) return; // sem timestamp (save antigo), aguarda próximo ciclo
+  const elapsed=Date.now()-defeatedAt;
+  const h24=24*60*60*1000;
+  if(elapsed>=h24) spawnNextBoss();
+}
 // ══ LORE DOS BOSSES ══════════════════════════════════════════════════
 const BOSS_LORE=[
   {lore:'Nas profundezas da Caverna do Amanhã, este ser ancestral aguarda. Alimentado por cada tarefa adiada e sonho engavetado, seu corpo cresce a cada hora desperdiçada. Sua respiração libera névoa do esquecimento — o veneno que apaga ambições e entorpece a vontade dos fracos.',weakness:'Ação imediata e consistência diária'},
@@ -230,6 +247,10 @@ function bossDmg(amt,src){
     // 40% chance to drop a random potion
     if(Math.random()<0.4) setTimeout(()=>grantRandomPotion(),800);
     checkAch();
+    // Registra timestamp da derrota; o próximo boss nasce após 24h
+    S.boss.defeatedAt=Date.now();
+    save();
+    scheduleBossRespawn();
   }
   save();renderBoss();renderMini();
 }
@@ -284,7 +305,16 @@ function bLog(h){const l=document.getElementById('b-log');if(!l)return;l.innerHT
 
 // =============== EVENTS ===============
 let evTimer=null;
-function startEv(){checkEvExp();evTimer=setInterval(()=>{checkEvExp();if(!S.activeEv&&Math.random()<0.3)spawnEv();},10*60*1000);}
+let bossRespawnTimer=null;
+function scheduleBossRespawn(){
+  // Cancela qualquer timer anterior
+  if(bossRespawnTimer){clearTimeout(bossRespawnTimer);bossRespawnTimer=null;}
+  if(!S.boss.def||!S.boss.defeatedAt) return;
+  const h24=24*60*60*1000;
+  const remaining=Math.max(0, h24-(Date.now()-S.boss.defeatedAt));
+  bossRespawnTimer=setTimeout(()=>{ checkBossRespawn(); },remaining);
+}
+function startEv(){checkEvExp();checkBossRespawn();scheduleBossRespawn();evTimer=setInterval(()=>{checkEvExp();if(!S.activeEv&&Math.random()<0.3)spawnEv();},10*60*1000);}
 function spawnEv(){
   const pool=EVENTS_DB;const ev=pool[Math.floor(Math.random()*pool.length)];
   const now=Date.now();
