@@ -28,7 +28,7 @@ const DEF=()=>({
   ],
   eq:{weapon:null,armor:null,offhand:null,head:null,feet:null,legs:null,hands:null},
   owned:[],
-  boss:{idx:0,hp:500,mhp:500,ws:WS(),def:false},
+  boss:{idx:0,hp:500,mhp:500,ws:WS(),def:false,phase:1},
   activeEv:null,
   tavHist:[],
   playerClass:null,
@@ -44,10 +44,11 @@ const DEF=()=>({
   skillPts:0,           // pontos de habilidade disponíveis
   skillsUnlocked:[],    // array de IDs de habilidades desbloqueadas
   hall:{},              // Hall dos Heróis: foto do ídolo + respostas
+  comboHit:{},          // flags de combo por dia {_day, 3:bool, 5:bool, 8:bool}
 });
 
 let S=(()=>{
-  try{const s=localStorage.getItem('lrpg6');if(s){const p=JSON.parse(s);const d=DEF();for(const k in d)if(!(k in p))p[k]=d[k];if(!p.classLockedAt)p.classLockedAt=null;if(!p.bardBuff)p.bardBuff=null;if(!p.potions)p.potions={transform:0};if(!p.guildRank)p.guildRank={};if(!p.activeGuild&&p.activeGuild!==null)p.activeGuild=null;if(!p.profile)p.profile={name:'Herói',age:'',sex:'',weight:'',height:''};if(p.skillPts===undefined)p.skillPts=0;if(!p.skillsUnlocked)p.skillsUnlocked=[];if(!p.hall)p.hall={};if(!p.potionInv)p.potionInv={};if(!p.activePotions)p.activePotions=[];return p;}}catch(e){}
+  try{const s=localStorage.getItem('lrpg6');if(s){const p=JSON.parse(s);const d=DEF();for(const k in d)if(!(k in p))p[k]=d[k];if(!p.classLockedAt)p.classLockedAt=null;if(!p.bardBuff)p.bardBuff=null;if(!p.potions)p.potions={transform:0};if(!p.guildRank)p.guildRank={};if(!p.activeGuild&&p.activeGuild!==null)p.activeGuild=null;if(!p.profile)p.profile={name:'Herói',age:'',sex:'',weight:'',height:''};if(p.skillPts===undefined)p.skillPts=0;if(!p.skillsUnlocked)p.skillsUnlocked=[];if(!p.hall)p.hall={};if(!p.potionInv)p.potionInv={};if(!p.activePotions)p.activePotions=[];if(p.boss&&p.boss.phase===undefined)p.boss.phase=1;if(p.comboDmgToday===undefined)p.comboDmgToday=0;if(!p.comboHit)p.comboHit={};return p;}}catch(e){}
   return DEF();
 })();
 let uAch=JSON.parse(localStorage.getItem('lrpgAch5')||'[]');
@@ -97,11 +98,11 @@ function buyEquip(id){
 
 // =============== BOSS ===============
 const getBoss=()=>BOSSES[S.boss.idx];
-function checkBW(){if(S.boss.ws!==WS()){const ni=(S.boss.idx+1)%BOSSES.length;const b=BOSSES[ni];S.boss={idx:ni,hp:b.mh,mhp:b.mh,ws:WS(),def:false};save();notify('🐉','Novo Boss!',b.nm,'nr');}}
+function checkBW(){if(S.boss.ws!==WS()){const ni=(S.boss.idx+1)%BOSSES.length;const b=BOSSES[ni];S.boss={idx:ni,hp:b.mh,mhp:b.mh,ws:WS(),def:false,phase:1};save();notify('🐉','Novo Boss!',b.nm,'nr');}}
 function spawnNextBoss(){
   const ni=(S.boss.idx+1)%BOSSES.length;
   const b=BOSSES[ni];
-  S.boss={idx:ni,hp:b.mh,mhp:b.mh,ws:WS(),def:false,defeatedAt:null};
+  S.boss={idx:ni,hp:b.mh,mhp:b.mh,ws:WS(),def:false,defeatedAt:null,phase:1};
   save();renderBoss();renderMini();
   bLog(`<span style="color:var(--red3)">🐉 <strong>${b.em} ${b.nm}</strong> surgiu das sombras!</span>`);
   notify('🐉','Novo Boss!',`${b.em} ${b.nm} chegou! Prepare-se!`,'nr');
@@ -124,10 +125,34 @@ const BOSS_LORE=[
   {lore:'Imortal por definição — o Lich do Passado não pode ser morto pelo tempo, pois ele próprio controla o tempo. Coleciona memórias dolorosas e erros cometidos como troféus em sua torre. Enquanto você olhar para trás com arrependimento, ele se alimentará. Apenas o perdão a si mesmo pode quebrar o feitiço eterno.',weakness:'Autoaceitação e foco no crescimento futuro'},
   {lore:'Sete cabeças — sete formas de distração. Redes sociais, notificações, conteúdo infinito e o canto sedutor do multitasking. Cortar uma cabeça faz crescerem duas. A Hidra da Distração só morre quando você mergulha em foco profundo e deliberado, ignorando o coro de suas vozes hipnóticas.',weakness:'Foco único e bloqueio total de distrações'},
 ];
-// ── EFFECT RESOLVER ──────────────────────────────────────────────────────────
+// ── ELEMENTAL RESISTANCE/WEAKNESS TABLE ─────────────────────────────────────
+// resist: elemento recebe 50% do dano  |  weak: elemento recebe 175% do dano
+const BOSS_ELEM = {
+  dragao:  { weak:['ice','holy'],      resist:['fire','lightning'] },
+  demonio: { weak:['holy','fire'],     resist:['shadow','poison']  },
+  sombra:  { weak:['holy','lightning'],resist:['shadow','ice']     },
+  golem:   { weak:['lightning','fire'],resist:['bleed','poison']   },
+  lich:    { weak:['fire','holy'],     resist:['ice','shadow']     },
+  hidra:   { weak:['ice','poison'],   resist:['holy','fire']      },
+};
+
+function getElemMult(fxType){
+  const boss=getBoss(); if(!boss) return 1;
+  const tbl=BOSS_ELEM[boss.svk]; if(!tbl) return 1;
+  if(tbl.weak    && tbl.weak.includes(fxType))    return 1.75;
+  if(tbl.resist  && tbl.resist.includes(fxType))  return 0.5;
+  return 1;
+}
+
+function elemLog(mult, fx, bonus){
+  const col = fx.color;
+  if(mult >= 1.75) bLog(`<span style="color:${col}">${fx.emoji} ${fx.label}: +${bonus} — <strong>FRAQUEZA! ×1.75</strong></span>`);
+  else if(mult <= 0.5) bLog(`<span style="color:${col}">${fx.emoji} ${fx.label}: +${bonus} — <em>Resistido (×0.5)</em></span>`);
+  else bLog(`<span style="color:${col}">${fx.emoji} ${fx.label}: +${bonus} dano!</span>`);
+}
+
 function resolveEffects(baseDmg, src){
   if(S.boss.def) return;
-  // Collect all fx from equipped items
   const effects = [];
   for(const sl in S.eq){
     const id = S.eq[sl]; if(!id) continue;
@@ -136,103 +161,199 @@ function resolveEffects(baseDmg, src){
   }
   effects.forEach(fx=>{
     if(Math.random() > fx.chance) return;
+    const em = getElemMult(fx.type);
     let bonus = 0;
-    let label = `${fx.emoji} ${fx.label}`;
     switch(fx.type){
       case 'double_strike':
-        bonus = Math.floor(baseDmg * (fx.dmgMult||1.0));
+        bonus = Math.floor(baseDmg * (fx.dmgMult||1.0) * em);
         S.boss.hp = Math.max(0, S.boss.hp - bonus);
-        bLog(`<span style="color:${fx.color}">${label}: golpe extra +${bonus} dano!</span>`);
+        bLog(`<span style="color:${fx.color}">${fx.emoji} ${fx.label}: golpe extra +${bonus} dano!</span>`);
         break;
       case 'multishot':
-        bonus = Math.floor(baseDmg * (fx.dmgMult||1.5));
+        bonus = Math.floor(baseDmg * (fx.dmgMult||1.5) * em);
         S.boss.hp = Math.max(0, S.boss.hp - bonus);
-        bLog(`<span style="color:${fx.color}">${label}: salva extra +${bonus} dano!</span>`);
+        bLog(`<span style="color:${fx.color}">${fx.emoji} ${fx.label}: salva extra +${bonus} dano!</span>`);
         break;
       case 'triple_element':
-        bonus = Math.floor(baseDmg * (fx.dmgMult||3.0)) + (fx.extraDmg||0);
+        bonus = Math.floor((baseDmg * (fx.dmgMult||3.0) + (fx.extraDmg||0)) * em);
         S.boss.hp = Math.max(0, S.boss.hp - bonus);
-        bLog(`<span style="color:${fx.color}">${label}: 🔥🧊⚡ +${bonus} dano ELEMENTAL!</span>`);
+        bLog(`<span style="color:${fx.color}">${fx.emoji} ${fx.label}: 🔥🧊⚡ +${bonus} dano ELEMENTAL!</span>`);
         break;
       case 'bleed':
-        bonus = fx.extraDmg || Math.floor(baseDmg * 0.3);
+        bonus = Math.floor((fx.extraDmg || Math.floor(baseDmg * 0.3)) * em);
         S.boss.hp = Math.max(0, S.boss.hp - bonus);
-        bLog(`<span style="color:${fx.color}">${label}: +${bonus} dano${fx.dot?' (continua...)':', '}!</span>`);
+        elemLog(em, fx, bonus);
         if(fx.dot && fx.dotTurns) applyDotToState(fx.type, fx.label, fx.emoji, fx.color, Math.floor(bonus*0.5), fx.dotTurns);
         break;
       case 'fire':
-        bonus = fx.extraDmg || Math.floor(baseDmg * 0.4);
+        bonus = Math.floor((fx.extraDmg || Math.floor(baseDmg * 0.4)) * em);
         S.boss.hp = Math.max(0, S.boss.hp - bonus);
-        bLog(`<span style="color:${fx.color}">${label}: +${bonus} dano de fogo${fx.dot?' 🔥🔥':''}</span>`);
+        elemLog(em, fx, bonus);
         if(fx.dot && fx.dotTurns) applyDotToState(fx.type, fx.label, fx.emoji, fx.color, Math.floor(bonus*0.5), fx.dotTurns);
         break;
       case 'ice':
-        bonus = fx.extraDmg || Math.floor(baseDmg * 0.35);
+        bonus = Math.floor((fx.extraDmg || Math.floor(baseDmg * 0.35)) * em);
         S.boss.hp = Math.max(0, S.boss.hp - bonus);
-        bLog(`<span style="color:${fx.color}">${label}: +${bonus} dano — Boss congelado!</span>`);
+        elemLog(em, fx, bonus);
         break;
       case 'lightning':
-        bonus = Math.floor(baseDmg * (fx.dmgMult||2.0));
+        bonus = Math.floor(baseDmg * (fx.dmgMult||2.0) * em);
         S.boss.hp = Math.max(0, S.boss.hp - bonus);
-        bLog(`<span style="color:${fx.color}">${label}: +${bonus} dano em CADEIA!</span>`);
+        elemLog(em, fx, bonus);
         break;
       case 'poison':
-        bonus = fx.extraDmg || Math.floor(baseDmg * 0.25);
+        bonus = Math.floor((fx.extraDmg || Math.floor(baseDmg * 0.25)) * em);
         S.boss.hp = Math.max(0, S.boss.hp - bonus);
-        bLog(`<span style="color:${fx.color}">${label}: +${bonus} dano${fx.dot?' (veneno ativo!)':''}</span>`);
+        elemLog(em, fx, bonus);
         if(fx.dot && fx.dotTurns) applyDotToState(fx.type, fx.label, fx.emoji, fx.color, Math.floor(bonus*0.4), fx.dotTurns);
         break;
       case 'shadow':
-        bonus = fx.extraDmg ? Math.floor(baseDmg*(fx.dmgMult||1)+fx.extraDmg) : Math.floor(baseDmg*(fx.dmgMult||2.2));
+        bonus = Math.floor((fx.extraDmg ? baseDmg*(fx.dmgMult||1)+fx.extraDmg : baseDmg*(fx.dmgMult||2.2)) * em);
         S.boss.hp = Math.max(0, S.boss.hp - bonus);
-        bLog(`<span style="color:${fx.color}">${label}: +${bonus} dano das trevas!</span>`);
+        elemLog(em, fx, bonus);
         break;
       case 'holy':
-        bonus = Math.floor(baseDmg * (fx.dmgMult||1.9));
+        bonus = Math.floor(baseDmg * (fx.dmgMult||1.9) * em);
         S.boss.hp = Math.max(0, S.boss.hp - bonus);
-        bLog(`<span style="color:${fx.color}">${label}: +${bonus} dano sagrado!</span>`);
+        elemLog(em, fx, bonus);
         break;
       case 'lifesteal':
-        bonus = fx.extraDmg || Math.floor(baseDmg * 0.4);
+        bonus = Math.floor((fx.extraDmg || Math.floor(baseDmg * 0.4)) * em);
         S.boss.hp = Math.max(0, S.boss.hp - bonus);
         const healed = Math.floor(bonus * 0.4);
         S.hp = Math.min(S.mhp, S.hp + healed);
-        bLog(`<span style="color:${fx.color}">${label}: +${bonus} dano, +${healed} HP recuperado!</span>`);
+        bLog(`<span style="color:${fx.color}">${fx.emoji} ${fx.label}: +${bonus} dano, +${healed} HP recuperado!</span>`);
         break;
       case 'stun':
-        bonus = Math.floor(baseDmg * (fx.dmgMult||1.5));
+        bonus = Math.floor(baseDmg * (fx.dmgMult||1.5) * em);
         S.boss.hp = Math.max(0, S.boss.hp - bonus);
-        bLog(`<span style="color:${fx.color}">${label}: +${bonus} dano — Boss atordoado!</span>`);
+        elemLog(em, fx, bonus);
         break;
       case 'earthquake':
-        bonus = fx.extraDmg ? Math.floor(baseDmg*(fx.dmgMult||1.5)+fx.extraDmg) : Math.floor(baseDmg*1.5);
+        bonus = Math.floor((fx.extraDmg ? baseDmg*(fx.dmgMult||1.5)+fx.extraDmg : baseDmg*1.5) * em);
         S.boss.hp = Math.max(0, S.boss.hp - bonus);
-        bLog(`<span style="color:${fx.color}">${label}: +${bonus} dano de área!</span>`);
+        elemLog(em, fx, bonus);
         break;
       case 'thorns':
-        bonus = fx.extraDmg || Math.floor(baseDmg * 0.2);
+        bonus = Math.floor((fx.extraDmg || Math.floor(baseDmg * 0.2)) * em);
         S.boss.hp = Math.max(0, S.boss.hp - bonus);
-        bLog(`<span style="color:${fx.color}">${label}: +${bonus} dano refletido!</span>`);
+        elemLog(em, fx, bonus);
         break;
     }
     S.boss.hp = Math.max(0, S.boss.hp);
   });
 }
 
+// ── BOSS PHASE DEFINITIONS ───────────────────────────────────────────────────
+// phase 1 → normal  |  phase 2 (≤50% HP) → enraivecido  |  phase 3 (≤25% HP) → desesperado
+const BOSS_PHASES = {
+  dragao: {
+    p2:{ label:'🔥 Chama Furiosa',  msg:'O Dragão ENRAIVECE! Sua chama agora queima mais forte — ataques de vício causam 50% mais dano!', atkMult:1.5, hint:'Use gelo e luz sagrada!' },
+    p3:{ label:'💀 Agonia Eterna',  msg:'O Dragão entra em AGONIA! Ataques ficam frenéticos — mas sua armadura racha!',                  atkMult:2.0, hint:'Foco total — ele está quase morto!' },
+  },
+  demonio: {
+    p2:{ label:'😈 Possessão',      msg:'O Demônio te POSSUI! Cada vício cometido agora devolve HP para ele!',                           atkMult:1.4, hint:'Evite vícios a todo custo agora!' },
+    p3:{ label:'🩸 Pacto de Sangue',msg:'O Demônio faz um PACTO DE SANGUE! Ele drena 10 HP seu a cada ataque independente de defesa!',   atkMult:1.8, hint:'Santa água e fogo purificam!' },
+  },
+  sombra: {
+    p2:{ label:'👁️ Olho do Caos',   msg:'A Sombra abre o OLHO DO CAOS! Seus hábitos causam 20% menos dano enquanto ela observa!',        atkMult:1.3, dmgDebuff:0.8, hint:'Luz sagrada e raio são sua saída!' },
+    p3:{ label:'🌑 Eclipse Total',   msg:'ECLIPSE TOTAL! A Sombra absorve 15% de todo dano recebido como cura!',                          atkMult:1.6, absorbPct:0.15, hint:'Dano explosivo em rajadas!' },
+  },
+  golem: {
+    p2:{ label:'🗿 Endurecimento',   msg:'O Golem ENDURECE! Sua pedra torna-se adamantina — recebe apenas 60% do dano de ataques normais!', atkMult:1.2, dmgDebuff:0.6, hint:'Raio e fogo racham a pedra!' },
+    p3:{ label:'⚡ Colapso Sísmico', msg:'O Golem entra em COLAPSO SÍSMICO! Tremores causam 20 de dano a você a cada hábito feito!',       atkMult:1.5, sismoDmg:20,  hint:'Resista — ele está se destruindo!' },
+  },
+  lich: {
+    p2:{ label:'💀 Maldição',        msg:'O Lich lança MALDIÇÃO! Cada hábito desfeito neste fase te custa o dobro de XP!',                atkMult:1.3, hint:'Fire e holy ignoram sua maldição!' },
+    p3:{ label:'☠️ Lich Imortal',    msg:'O Lich ativa IMORTALIDADE! Ele regenera 15 HP por hábito completado durante 3 turnos!',         atkMult:1.7, regenHp:15, regenTurns:3, hint:'Cause dano massivo em cadeia!' },
+  },
+  hidra: {
+    p2:{ label:'🐍 Cabeça Dupla',    msg:'A Hidra revela CABEÇA DUPLA! Ataques de vício agora acertam duas vezes!',                       atkMult:1.6, hint:'Veneno e gelo congelam as cabeças!' },
+    p3:{ label:'🌊 Veneno Mortal',   msg:'A Hidra cospe VENENO MORTAL! Você perde 8 HP por turno pelos próximos 4 hábitos!',              atkMult:2.0, dotDmg:8, dotTurns:4, hint:'Reta final — tudo ou nada!' },
+  },
+};
+
+function checkBossPhase(){
+  const boss = getBoss(); if(!boss || S.boss.def) return;
+  const phaseDef = BOSS_PHASES[boss.svk]; if(!phaseDef) return;
+  const pct = S.boss.hp / S.boss.mhp;
+  const curPhase = S.boss.phase || 1;
+  let newPhase = 1;
+  if(pct <= 0.25) newPhase = 3;
+  else if(pct <= 0.50) newPhase = 2;
+  if(newPhase <= curPhase) return; // só avança, nunca retrocede
+  S.boss.phase = newPhase;
+  const pd = newPhase === 3 ? phaseDef.p3 : phaseDef.p2;
+  // Aplicar efeitos de fase contínuos
+  if(pd.dotDmg && pd.dotTurns){
+    applyDotToState('phase_venom','Veneno da Hidra','🌊','#5dcaa5', pd.dotDmg, pd.dotTurns);
+  }
+  if(pd.regenHp && pd.regenTurns){
+    S.boss.phaseRegen = {hp: pd.regenHp, turns: pd.regenTurns};
+  }
+  // Log e notify de fase
+  bLog(`<span style="color:var(--red3);font-weight:bold">⚠️ FASE ${newPhase}: ${pd.label}!</span>`);
+  bLog(`<span style="color:var(--red3)">${pd.msg}</span>`);
+  if(pd.hint) bLog(`<span style="color:var(--gold2)">💡 Dica: ${pd.hint}</span>`);
+  notify(`⚠️ Fase ${newPhase}!`, pd.label, pd.msg, 'nr');
+  animBossHit(0, true); // animação de transição de fase
+}
+
+function getBossAtkMult(){
+  const boss = getBoss(); if(!boss) return 1;
+  const phaseDef = BOSS_PHASES[boss.svk]; if(!phaseDef) return 1;
+  const phase = S.boss.phase || 1;
+  if(phase === 3 && phaseDef.p3) return phaseDef.p3.atkMult || 1;
+  if(phase >= 2 && phaseDef.p2) return phaseDef.p2.atkMult || 1;
+  return 1;
+}
+
+function getBossDmgDebuff(){
+  const boss = getBoss(); if(!boss) return 1;
+  const phaseDef = BOSS_PHASES[boss.svk]; if(!phaseDef) return 1;
+  const phase = S.boss.phase || 1;
+  if(phase === 3 && phaseDef.p3 && phaseDef.p3.dmgDebuff) return phaseDef.p3.dmgDebuff;
+  if(phase >= 2 && phaseDef.p2 && phaseDef.p2.dmgDebuff) return phaseDef.p2.dmgDebuff;
+  return 1;
+}
+
 function bossDmg(amt,src){
   if(S.boss.def)return;const boss=getBoss();
   const skillDmg=(typeof getSkillDmgBonus==='function')?getSkillDmgBonus():1;
   const potDmg=getBossDmgPotionMult();
-  const bm=(1+(eqPow()/100))*getClassDmgMult()*skillDmg*potDmg;const dmg=Math.max(1,Math.floor(amt*bm));
+  const phaseDebuff = getBossDmgDebuff();
+  const bm=(1+(eqPow()/100))*getClassDmgMult()*skillDmg*potDmg*phaseDebuff;
+  const dmg=Math.max(1,Math.floor(amt*bm));
   S.boss.hp=Math.max(0,S.boss.hp-dmg);
-  bLog(`<span class="ld">⚔ ${src}: ${dmg} dano (×${bm.toFixed(2)})!</span>`);
-  // Combat animation
+  // Fase 3 Sombra: absorção de dano como cura
+  const pd3 = (S.boss.phase===3 && BOSS_PHASES[boss.svk]?.p3);
+  if(pd3 && pd3.absorbPct){
+    const absorbed = Math.floor(dmg * pd3.absorbPct);
+    S.boss.hp = Math.min(S.boss.mhp, S.boss.hp + absorbed);
+    bLog(`<span style="color:#b39ddb">🌑 Sombra absorve ${absorbed} HP do ataque!</span>`);
+  }
+  // Fase 3 Golem: tremor sísmico ao atacar
+  if(S.boss.phase>=3 && BOSS_PHASES[boss.svk]?.p3?.sismoDmg){
+    const sd = BOSS_PHASES[boss.svk].p3.sismoDmg;
+    S.hp = Math.max(1, S.hp - sd);
+    bLog(`<span style="color:#888">⚡ Tremor sísmico: -${sd} HP!</span>`);
+  }
+  // Fase 2+ Lich: regen de boss
+  if(S.boss.phaseRegen && S.boss.phaseRegen.turns > 0){
+    const rg = S.boss.phaseRegen;
+    S.boss.hp = Math.min(S.boss.mhp, S.boss.hp + rg.hp);
+    bLog(`<span style="color:#b39ddb">☠️ Lich regenera ${rg.hp} HP! (${rg.turns} turnos restantes)</span>`);
+    rg.turns--;
+    if(rg.turns <= 0) S.boss.phaseRegen = null;
+  }
+  const debuffTag = phaseDebuff < 1 ? ` <em style="color:var(--text3)">[debuff ×${phaseDebuff.toFixed(1)}]</em>` : '';
+  bLog(`<span class="ld">⚔ ${src}: ${dmg} dano (×${bm.toFixed(2)})${debuffTag}!</span>`);
   animBossHit(dmg, false);
-  // Resolve special item effects
   resolveEffects(dmg, src);
+  // Verificar transição de fase ANTES de checar morte
+  checkBossPhase();
   if(S.boss.hp<=0){animBossDeath();
     S.boss.def=true;S.kills++;addXP(boss.xr);addGold(boss.gr);addCr(boss.cr);
-    // Grant boss reward item
     let bRewardNm='';
     if(boss.rewardItem){
       const ri=EDB.find(e=>e.id===boss.rewardItem);
@@ -244,10 +365,8 @@ function bossDmg(amt,src){
     S.bkHist.unshift({nm:boss.nm,em:boss.em,svk:boss.svk,dt:new Date().toLocaleDateString('pt-BR'),xp:boss.xr,go:boss.gr,cr:boss.cr,ri:bRewardNm});
     bLog(`<span class="lw">🏆 BOSS DERROTADO! +${boss.xr}XP +${boss.gr}Gold +${boss.cr}💎!</span>`);
     notify('🏆','Boss Derrotado!',`${boss.em} ${boss.nm}\n+${boss.xr}XP +${boss.gr}Gold +${boss.cr}💎${bRewardNm?'\n🎁 '+bRewardNm:''}!`,'ng');
-    // 40% chance to drop a random potion
     if(Math.random()<0.4) setTimeout(()=>grantRandomPotion(),800);
     checkAch();
-    // Registra timestamp da derrota; o próximo boss nasce após 24h
     S.boss.defeatedAt=Date.now();
     save();
     scheduleBossRespawn();
@@ -265,12 +384,14 @@ function bossAtk(nm){
   }
   const boss=getBoss();const def=eqDef();
   const rawD=Math.floor(boss.atk*0.5+Math.random()*boss.atk*0.5);
-  const dmg=Math.max(1,rawD-Math.floor(def*0.3));
+  const phaseAtkMult = getBossAtkMult();
+  const dmg=Math.max(1,Math.floor((rawD-Math.floor(def*0.3))*phaseAtkMult));
   // Paladin: HP below 30% triggers holy protection (cleric at 100 also)
   const isProtected = (S.playerClass==='cleric' && getEvolvedClass()?.lv>=100) && S.hp-dmg<=0;
   if(isProtected){ S.hp=1; bLog(`<span style="color:#f5e098">😇 Graça Eterna: morte evitada! (1 HP)</span>`); }
   else S.hp=Math.max(0,S.hp-dmg);
-  bLog(`<span class="lb">👹 ${boss.nm}: ${dmg} dano (${nm})</span>`);
+  const phaseTag = phaseAtkMult > 1 ? ` <em style="color:var(--red3)">[Fase ${S.boss.phase||1} ×${phaseAtkMult.toFixed(1)}]</em>` : '';
+  bLog(`<span class="lb">👹 ${boss.nm}: ${dmg} dano (${nm})${phaseTag}</span>`);
   if(S.hp<=0) playerDeath();
   else if(S.hp<=Math.floor(S.mhp*0.2)) notify('💀','Perigo!','HP crítico! Cuidado com os vícios!','nr');
   save();renderBoss();renderStatus();
@@ -403,6 +524,34 @@ function addXP(n){
 function addGold(n){const skillGold=(typeof getSkillGoldBonus==='function')?getSkillGoldBonus():1;const potGold=getPotionMult('gold');const g=Math.floor(n*getMult()*getClassGoldMult()*getGuildGoldBonus()*skillGold*potGold);S.gold+=g;S.totGo+=g;S.goTd+=g;return g;}
 function addCr(n){const skillCr=(typeof getSkillCrBonus==='function')?getSkillCrBonus():1;const potCr=getPotionMult('cr');const g=Math.floor(n*getClassCrMult()*skillCr*potCr);S.cr+=g;S.totCr+=g;return g;}
 
+// ── COMBO DE HÁBITOS ─────────────────────────────────────────────────────────
+// Dispara dano bônus ao atingir limiares de hábitos completos no dia.
+// Cada limiar é disparado uma única vez por dia (guardado em S.comboHit).
+const COMBO_TIERS = [
+  { at:3, label:'⚡ COMBO I',    color:'#f39c12', dmgMult:0.8,  xpBonus:20,  msg:'3 missões em cadeia!'   },
+  { at:5, label:'🌟 COMBO II',   color:'#e67e22', dmgMult:1.5,  xpBonus:50,  msg:'5 missões! Imparável!'  },
+  { at:8, label:'💥 PERFEITO!',  color:'#e74c3c', dmgMult:3.0,  xpBonus:120, msg:'Dia Perfeito — PODER MÁXIMO!' },
+];
+function checkHabitCombo(lastDmg){
+  if(S.boss.def) return;
+  if(!S.comboHit) S.comboHit = {};
+  const today = new Date().toDateString();
+  // Resetar flags se for um novo dia
+  if(S.comboHit._day !== today) S.comboHit = {_day: today};
+  COMBO_TIERS.forEach(tier=>{
+    if(S.dnTd === tier.at && !S.comboHit[tier.at]){
+      S.comboHit[tier.at] = true;
+      const comboDmg = Math.max(1, Math.floor(lastDmg * tier.dmgMult));
+      S.boss.hp = Math.max(0, S.boss.hp - comboDmg);
+      const xpGained = addXP(tier.xpBonus);
+      bLog(`<span style="color:${tier.color};font-weight:bold">${tier.label}: ${tier.msg} +${comboDmg} dano em cadeia! +${xpGained} XP!</span>`);
+      notify(tier.label, tier.msg, `+${comboDmg} dano bonus! +${xpGained} XP!`, 'ng');
+      animBossHit(comboDmg, false);
+      save(); renderBoss(); renderMini();
+    }
+  });
+}
+
 // =============== HABITS ===============
 function togH(id){
   const h=S.habits.find(x=>x.id===id);if(!h)return;
@@ -424,6 +573,10 @@ function togH(id){
     // Process DoTs BEFORE this hit
     processDots();
     bossDmg(dmg,h.nm);
+
+    // ── COMBO DE HÁBITOS ─────────────────────────────────────────
+    // 3 hábitos = Combo I · 5 = Combo II · 8 = Combo Perfeito
+    checkHabitCombo(dmg);
 
     // ── Special class abilities on mission completion ──
     const evo = getEvolvedClass();
