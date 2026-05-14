@@ -12,6 +12,8 @@
 <link rel="manifest" id="pwa-manifest">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dark_fantasy_motion.css">
+  <link rel="stylesheet" href="css/nav_fix.css">
   <style>
     #fb-login-bar{
       position:fixed;top:0;left:0;right:0;z-index:9999;
@@ -24,6 +26,60 @@
   </style>
 </head>
 <body style="padding-top:34px">
+
+<!-- ════════════════════════════════════════════════════════
+     DARK FANTASY MOTION GRAPHICS LAYER
+     ════════════════════════════════════════════════════════ -->
+<div id="ambient-vignette"></div>
+<div id="arcane-portal">
+  <div class="ap-ring ap-ring-1"></div>
+  <div class="ap-ring ap-ring-2"></div>
+  <div class="ap-ring ap-ring-3"></div>
+  <div class="ap-ring ap-ring-4"></div>
+  <div class="ap-center"></div>
+</div>
+<div id="castle-silhouette">
+  <svg width="100%" height="100%" viewBox="0 0 1400 300" preserveAspectRatio="xMidYMax meet" style="position:absolute;bottom:0">
+    <g opacity="0.18" fill="#04030a">
+      <rect x="660" y="80" width="80" height="220"/>
+      <rect x="650" y="60" width="100" height="25"/>
+      <rect x="650" y="40" width="14" height="22"/><rect x="670" y="40" width="14" height="22"/>
+      <rect x="690" y="40" width="14" height="22"/><rect x="710" y="40" width="14" height="22"/>
+      <rect x="730" y="40" width="14" height="22"/>
+      <rect x="530" y="120" width="130" height="180"/><rect x="520" y="100" width="150" height="22"/>
+      <rect x="490" y="90" width="50" height="210"/><rect x="484" y="72" width="62" height="20"/>
+      <rect x="740" y="125" width="130" height="175"/><rect x="730" y="105" width="150" height="22"/>
+      <rect x="860" y="96" width="50" height="204"/><rect x="854" y="78" width="62" height="20"/>
+      <polygon points="700,0 720,40 680,40"/>
+      <polygon points="515,30 525,60 505,60"/>
+      <polygon points="885,40 895,70 875,70"/>
+    </g>
+  </svg>
+</div>
+<div id="castle-windows">
+  <div class="cw-window cw-w1"><div class="cw-arch"><div class="cw-inner-glow"></div><div class="cw-pane"></div><div class="cw-pane"></div><svg class="cw-tracery" viewBox="0 0 48 76" style="position:absolute;inset:0;width:100%;height:100%"><line x1="24" y1="0" x2="24" y2="76" stroke="rgba(30,20,8,0.8)" stroke-width="1.5"/><line x1="0" y1="38" x2="48" y2="38" stroke="rgba(30,20,8,0.8)" stroke-width="1.5"/><ellipse cx="16" cy="20" rx="10" ry="14" fill="none" stroke="rgba(30,20,8,0.6)" stroke-width="1"/><ellipse cx="32" cy="20" rx="10" ry="14" fill="none" stroke="rgba(30,20,8,0.6)" stroke-width="1"/></svg></div><div class="cw-stone-frame"></div></div>
+  <div class="cw-window cw-w2"><div class="cw-arch"><div class="cw-inner-glow"></div></div><div class="cw-stone-frame"></div></div>
+  <div class="cw-window cw-w3"><div class="cw-arch"><div class="cw-inner-glow"></div><div class="cw-pane"></div><div class="cw-pane"></div><svg class="cw-tracery" viewBox="0 0 42 68" style="position:absolute;inset:0;width:100%;height:100%"><line x1="21" y1="0" x2="21" y2="68" stroke="rgba(25,10,10,0.9)" stroke-width="1.5"/><line x1="0" y1="36" x2="42" y2="36" stroke="rgba(25,10,10,0.8)" stroke-width="1.5"/></svg></div><div class="cw-stone-frame"></div></div>
+  <div class="cw-window cw-w4"><div class="cw-arch"><div class="cw-inner-glow"></div><div class="cw-pane"></div><div class="cw-pane"></div><div class="cw-pane"></div><svg class="cw-tracery" viewBox="0 0 55 88" style="position:absolute;inset:0;width:100%;height:100%"><line x1="27.5" y1="0" x2="27.5" y2="88" stroke="rgba(10,25,15,0.85)" stroke-width="1.8"/><line x1="0" y1="50" x2="55" y2="50" stroke="rgba(10,25,15,0.85)" stroke-width="1.8"/><ellipse cx="17" cy="24" rx="12" ry="18" fill="none" stroke="rgba(10,25,15,0.6)" stroke-width="1.2"/><ellipse cx="38" cy="24" rx="12" ry="18" fill="none" stroke="rgba(10,25,15,0.6)" stroke-width="1.2"/></svg></div><div class="cw-stone-frame"></div></div>
+  <div class="cw-window cw-w5"><div class="cw-arch"><div class="cw-inner-glow"></div><div class="cw-pane"></div><div class="cw-pane"></div></div><div class="cw-stone-frame"></div></div>
+  <div class="cw-window cw-w6"><div class="cw-arch"><div class="cw-inner-glow"></div></div><div class="cw-stone-frame"></div></div>
+  <div class="cw-window cw-w7"><div class="cw-arch"><div class="cw-inner-glow"></div></div><div class="cw-stone-frame"></div></div>
+  <div class="cw-cast-light cw-light-w1"></div>
+  <div class="cw-cast-light cw-light-w3"></div>
+  <div class="cw-cast-light cw-light-w4"></div>
+  <div class="cw-cast-light cw-light-w5"></div>
+</div>
+<div id="runeScanner">
+  <div class="rune-scan"></div>
+  <div class="rune-scan rune-scan-2" style="animation-delay:-12s"></div>
+</div>
+<div id="forge-embers"></div>
+<div id="wraithLayer">
+  <div class="wraith wraith-1" style="bottom:15vh;left:0"><svg width="120" height="180" viewBox="0 0 120 180" fill="rgba(40,15,60,0.5)" style="filter:blur(2px)"><path d="M60,0 C45,20 30,30 25,60 C20,90 15,100 10,130 C8,145 12,160 20,170 C15,165 18,155 22,150 C20,170 30,175 35,168 C33,178 42,182 48,175 C46,185 55,186 60,180 C65,186 74,185 72,175 C78,182 87,178 85,168 C90,175 100,170 98,150 C102,155 105,165 100,170 C108,160 112,145 110,130 C105,100 100,90 95,60 C90,30 75,20 60,0Z"/></svg></div>
+  <div class="wraith wraith-2" style="bottom:10vh;right:0"><svg width="90" height="140" viewBox="0 0 120 180" fill="rgba(40,15,60,0.4)" style="filter:blur(2px)"><path d="M60,0 C45,20 30,30 25,60 C20,90 15,100 10,130 C8,145 12,160 20,170 C15,165 18,155 22,150 C20,170 30,175 35,168 C33,178 42,182 48,175 C46,185 55,186 60,180 C65,186 74,185 72,175 C78,182 87,178 85,168 C90,175 100,170 98,150 C102,155 105,165 100,170 C108,160 112,145 110,130 C105,100 100,90 95,60 C90,30 75,20 60,0Z"/></svg></div>
+</div>
+<!-- ════ FIM MOTION LAYER ════ -->
+
 
 <!-- ── Floresta Amaldiçoada: árvores + névoa + vagalumes ── -->
 <div id="forest-bg" style="position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden">
@@ -1219,6 +1275,84 @@
     height: 62px !important;
   }
 </style>
+
+
+<!-- ══ DARK FANTASY MOTION ENGINE ══ -->
+<script>
+(function() {
+  'use strict';
+
+  /* 1. EMBERS */
+  const ec = document.getElementById('forge-embers');
+  if (!ec) return;
+  const TYPES = [
+    { cls: 'ember ember-hot',   count: 18, min: 2.5, max: 5   },
+    { cls: 'ember ember-magic', count: 12, min: 3,   max: 6.5 },
+    { cls: 'ember ember-blood', count: 8,  min: 1.8, max: 3.5 }
+  ];
+  function spawnEmber(cfg) {
+    const el = document.createElement('div');
+    el.className = cfg.cls;
+    const dur = cfg.min + Math.random() * (cfg.max - cfg.min);
+    const delay = Math.random() * -dur;
+    el.style.cssText = `left:${Math.random()*100}%;bottom:${Math.random()*30}%;animation-duration:${dur}s;animation-delay:${delay}s;--drift:${(Math.random()-.5)*40}px;`;
+    ec.appendChild(el);
+    setTimeout(() => { if (el.parentNode) { el.parentNode.removeChild(el); spawnEmber(cfg); } }, (dur + Math.abs(delay)) * 1000);
+  }
+  TYPES.forEach(cfg => { for (let i=0; i<cfg.count; i++) setTimeout(() => spawnEmber(cfg), Math.random()*3000); });
+
+  /* 2. RUNE RING */
+  const portal = document.getElementById('arcane-portal');
+  if (portal) {
+    const ring = document.createElement('div');
+    ring.style.cssText = 'position:absolute;inset:0;border-radius:50%;animation:ringRotateCW 80s linear infinite;';
+    'ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ'.split('').forEach((r,i,a) => {
+      const s = document.createElement('span');
+      s.textContent = r;
+      s.style.cssText = `position:absolute;font-size:10px;color:rgba(201,168,76,0.6);font-family:'Cinzel',serif;top:50%;left:50%;transform:translate(-50%,-50%) rotate(${(i/a.length)*360}deg) translateY(-130px);`;
+      ring.appendChild(s);
+    });
+    portal.appendChild(ring);
+  }
+
+  /* 3. MOUSE TRAIL */
+  let last = 0;
+  document.addEventListener('mousemove', e => {
+    const now = Date.now(); if (now - last < 80) return; last = now;
+    const s = document.createElement('div');
+    const sz = Math.random()*4+2;
+    const c = ['rgba(201,168,76,0.8)','rgba(139,26,26,0.7)','rgba(0,180,80,0.6)','rgba(100,60,200,0.6)'][Math.floor(Math.random()*4)];
+    s.style.cssText = `position:fixed;left:${e.clientX-sz/2}px;top:${e.clientY-sz/2}px;width:${sz}px;height:${sz}px;border-radius:50%;background:${c};box-shadow:0 0 ${sz*2}px ${c};pointer-events:none;z-index:9998;transition:all 0.6s ease-out;`;
+    document.body.appendChild(s);
+    requestAnimationFrame(() => { s.style.transform=`scale(0) translateY(-${Math.random()*20+10}px)`; s.style.opacity='0'; });
+    setTimeout(() => s.parentNode && s.parentNode.removeChild(s), 700);
+  });
+
+  /* 4. CARD REVEAL ON SCROLL */
+  const st = document.createElement('style');
+  st.textContent = `@keyframes cardReveal{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}} .card{opacity:0}`;
+  document.head.appendChild(st);
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.style.animation='cardReveal 0.45s ease-out forwards'; obs.unobserve(e.target); } });
+  }, { threshold: 0.08 });
+  setTimeout(() => document.querySelectorAll('.card').forEach((c,i) => { c.style.animationDelay=`${i*0.04}s`; obs.observe(c); }), 200);
+
+  /* 5. TAB FLASH */
+  const fs = document.createElement('style');
+  fs.textContent = `@keyframes runeFlash{0%{opacity:0}20%{opacity:1}100%{opacity:0}}`;
+  document.head.appendChild(fs);
+  document.querySelectorAll('.nav-cat').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const f = document.createElement('div');
+      f.style.cssText = 'position:fixed;inset:0;z-index:9997;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,rgba(201,168,76,0.06) 0%,transparent 70%);animation:runeFlash 0.4s ease-out forwards;';
+      document.body.appendChild(f);
+      setTimeout(() => f.parentNode && f.parentNode.removeChild(f), 500);
+    });
+  });
+
+  console.log('%c⚔ LIFE RPG — Dark Fantasy Engine ⚔', 'color:#c9a84c;font-family:serif;font-size:14px;');
+})();
+</script>
 
 </body>
 </html>
