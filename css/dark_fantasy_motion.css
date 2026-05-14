@@ -798,14 +798,20 @@ button, .tab, .btn, [onclick], a { cursor: url("data:image/svg+xml,%3Csvg xmlns=
    18. LOADING SCREEN — Epic Fade In
    ════════════════════════════════════════════════════════ */
 
-/* pageLoad usa só opacity — filter no body quebra position:fixed dos filhos */
-@keyframes pageLoad {
-  0%   { opacity: 0; }
-  100% { opacity: 1; }
+/* IMPORTANTE: body NÃO pode ter filter, transform, ou will-change
+   pois isso quebra position:fixed em todos os filhos.
+   O fade-in fica no .container */
+@keyframes containerFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 body {
-  animation: pageLoad 0.8s ease-out forwards;
+  /* sem animation, filter ou transform aqui */
+}
+
+.container {
+  animation: containerFadeIn 0.8s ease-out forwards;
 }
 
 /* ─── NAV FIXED: garantir que nunca quebre por filter/transform ─── */
@@ -814,8 +820,13 @@ body {
   bottom: 0 !important;
   left: 0 !important;
   right: 0 !important;
-  z-index: 9990 !important;
+  top: auto !important;
+  z-index: 99999 !important;
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
   transform: none !important;
+  pointer-events: all !important;
 }
 
 /* Padding para conteúdo não ficar oculto sob a nav */
