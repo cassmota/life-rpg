@@ -798,14 +798,29 @@ button, .tab, .btn, [onclick], a { cursor: url("data:image/svg+xml,%3Csvg xmlns=
    18. LOADING SCREEN — Epic Fade In
    ════════════════════════════════════════════════════════ */
 
+/* pageLoad usa só opacity — filter no body quebra position:fixed dos filhos */
 @keyframes pageLoad {
-  0% { opacity: 0; filter: brightness(0) blur(4px); }
-  100% { opacity: 1; filter: brightness(1) blur(0); }
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
 }
 
 body {
-  animation: pageLoad 1.2s ease-out forwards;
+  animation: pageLoad 0.8s ease-out forwards;
 }
+
+/* ─── NAV FIXED: garantir que nunca quebre por filter/transform ─── */
+.nav-bottom {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 9990 !important;
+  transform: none !important;
+}
+
+/* Padding para conteúdo não ficar oculto sob a nav */
+.container { padding-bottom: 82px !important; }
+.panel.active { padding-bottom: 82px !important; }
 
 /* ════════════════════════════════════════════════════════
    19. ENHANCED BUTTONS — Forge Glow

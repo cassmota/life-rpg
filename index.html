@@ -576,34 +576,6 @@
   <div class="subtabs" id="subtabs"></div>
 </div>
 
-<!-- BOTTOM NAVIGATION -->
-<nav class="nav-bottom" id="nav-bottom">
-  <div class="nav-cat active" data-cat="main" onclick="switchCat('main')">
-    <div class="nav-badge"></div>
-    <span class="nav-cat-icon">🏰</span>
-    <span class="nav-cat-label">Painel</span>
-  </div>
-  <div class="nav-cat" data-cat="hero" onclick="switchCat('hero')">
-    <div class="nav-badge"></div>
-    <span class="nav-cat-icon">⚔️</span>
-    <span class="nav-cat-label">Herói</span>
-  </div>
-  <div class="nav-cat" data-cat="combat" onclick="switchCat('combat')">
-    <div class="nav-badge"></div>
-    <span class="nav-cat-icon">🐉</span>
-    <span class="nav-cat-label">Combate</span>
-  </div>
-  <div class="nav-cat" data-cat="forge" onclick="switchCat('forge')">
-    <div class="nav-badge"></div>
-    <span class="nav-cat-icon">🔨</span>
-    <span class="nav-cat-label">Arsenal</span>
-  </div>
-  <div class="nav-cat" data-cat="world" onclick="switchCat('world')">
-    <div class="nav-badge"></div>
-    <span class="nav-cat-icon">🗺️</span>
-    <span class="nav-cat-label">Mundo</span>
-  </div>
-</nav>
 
 <div class="panel active" id="panel-dash">
   <div class="g2 mb12">
@@ -1489,5 +1461,36 @@
     console.log('%c\u2694 LIFE RPG \u2014 Dark Fantasy Motion Engine Active \u2694', 'color:#c9a84c;font-family:serif;font-size:14px;');
   })();
   </script>
+
+
+<!-- BOTTOM NAVIGATION — fixed outside container so position:fixed always works -->
+<nav class="nav-bottom" id="nav-bottom">
+  <div class="nav-cat active" data-cat="main" onclick="switchCat('main')">
+    <div class="nav-badge"></div>
+    <span class="nav-cat-icon">🏰</span>
+    <span class="nav-cat-label">Painel</span>
+  </div>
+  <div class="nav-cat" data-cat="hero" onclick="switchCat('hero')">
+    <div class="nav-badge"></div>
+    <span class="nav-cat-icon">⚔️</span>
+    <span class="nav-cat-label">Herói</span>
+  </div>
+  <div class="nav-cat" data-cat="combat" onclick="switchCat('combat')">
+    <div class="nav-badge"></div>
+    <span class="nav-cat-icon">🐉</span>
+    <span class="nav-cat-label">Combate</span>
+  </div>
+  <div class="nav-cat" data-cat="forge" onclick="switchCat('forge')">
+    <div class="nav-badge"></div>
+    <span class="nav-cat-icon">🔨</span>
+    <span class="nav-cat-label">Arsenal</span>
+  </div>
+  <div class="nav-cat" data-cat="world" onclick="switchCat('world')">
+    <div class="nav-badge"></div>
+    <span class="nav-cat-icon">🗺️</span>
+    <span class="nav-cat-label">Mundo</span>
+  </div>
+</nav>
+
 </body>
 </html>
