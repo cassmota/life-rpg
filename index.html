@@ -12,6 +12,7 @@
 <link rel="manifest" id="pwa-manifest">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dark_fantasy_motion.css">
   <style>
     #fb-login-bar{
       position:fixed;top:0;left:0;right:0;z-index:9999;
@@ -24,6 +25,208 @@
   </style>
 </head>
 <body style="padding-top:34px">
+
+<!-- ════════════════════════════════════════════════════════
+     DARK FANTASY MOTION GRAPHICS LAYER
+     Castle Windows · Arcane Portal · Embers · Wraights · Runes
+     ════════════════════════════════════════════════════════ -->
+
+<!-- Ambient edge vignette -->
+<div id="ambient-vignette"></div>
+
+<!-- Arcane portal — faint background magic circle -->
+<div id="arcane-portal">
+  <div class="ap-ring ap-ring-1"></div>
+  <div class="ap-ring ap-ring-2"></div>
+  <div class="ap-ring ap-ring-3"></div>
+  <div class="ap-ring ap-ring-4"></div>
+  <div class="ap-center"></div>
+</div>
+
+<!-- Castle silhouette layer (SVG distant towers) -->
+<div id="castle-silhouette">
+  <svg width="100%" height="100%" viewBox="0 0 1400 300" preserveAspectRatio="xMidYMax meet" style="position:absolute;bottom:0">
+    <!-- Far distant keep — very dark, subtle -->
+    <g opacity="0.18" fill="#04030a">
+      <!-- Central tower -->
+      <rect x="660" y="80" width="80" height="220"/>
+      <rect x="650" y="60" width="100" height="25"/>
+      <!-- Battlements on central tower -->
+      <rect x="650" y="40" width="14" height="22"/><rect x="670" y="40" width="14" height="22"/>
+      <rect x="690" y="40" width="14" height="22"/><rect x="710" y="40" width="14" height="22"/>
+      <rect x="730" y="40" width="14" height="22"/>
+      <!-- Left wing -->
+      <rect x="530" y="120" width="130" height="180"/><rect x="520" y="100" width="150" height="22"/>
+      <rect x="520" y="82" width="12" height="20"/><rect x="538" y="82" width="12" height="20"/>
+      <rect x="556" y="82" width="12" height="20"/><rect x="574" y="82" width="12" height="20"/>
+      <rect x="592" y="82" width="12" height="20"/><rect x="610" y="82" width="12" height="20"/>
+      <rect x="628" y="82" width="12" height="20"/>
+      <!-- Left tower -->
+      <rect x="490" y="90" width="50" height="210"/><rect x="484" y="72" width="62" height="20"/>
+      <rect x="484" y="54" width="10" height="18"/><rect x="500" y="54" width="10" height="18"/>
+      <rect x="516" y="54" width="10" height="18"/><rect x="532" y="54" width="10" height="18"/>
+      <!-- Right wing -->
+      <rect x="740" y="125" width="130" height="175"/><rect x="730" y="105" width="150" height="22"/>
+      <rect x="730" y="86" width="12" height="20"/><rect x="748" y="86" width="12" height="20"/>
+      <rect x="766" y="86" width="12" height="20"/><rect x="784" y="86" width="12" height="20"/>
+      <rect x="802" y="86" width="12" height="20"/><rect x="820" y="86" width="12" height="20"/>
+      <rect x="838" y="86" width="12" height="20"/>
+      <!-- Right tower -->
+      <rect x="860" y="96" width="50" height="204"/><rect x="854" y="78" width="62" height="20"/>
+      <rect x="854" y="60" width="10" height="18"/><rect x="870" y="60" width="10" height="18"/>
+      <rect x="886" y="60" width="10" height="18"/><rect x="902" y="60" width="10" height="18"/>
+      <!-- Spires -->
+      <polygon points="700,0 720,40 680,40"/><polygon points="515,30 525,60 505,60"/>
+      <polygon points="885,40 895,70 875,70"/>
+      <!-- Chapel/chapel window glow hint -->
+      <ellipse cx="700" cy="150" rx="12" ry="20" fill="rgba(201,168,76,0.05)"/>
+    </g>
+  </svg>
+</div>
+
+<!-- Gothic animated castle windows -->
+<div id="castle-windows">
+
+  <!-- Window 1: left warm amber -->
+  <div class="cw-window cw-w1">
+    <div class="cw-arch">
+      <div class="cw-glass"></div>
+      <div class="cw-inner-glow"></div>
+      <div class="cw-pane"></div>
+      <div class="cw-pane"></div>
+      <div class="cw-pane"></div>
+      <!-- Tracery SVG -->
+      <svg class="cw-tracery" viewBox="0 0 48 76" style="position:absolute;inset:0;width:100%;height:100%">
+        <line x1="24" y1="0" x2="24" y2="76" stroke="rgba(30,20,8,0.8)" stroke-width="1.5"/>
+        <line x1="0" y1="38" x2="48" y2="38" stroke="rgba(30,20,8,0.8)" stroke-width="1.5"/>
+        <ellipse cx="16" cy="20" rx="10" ry="14" fill="none" stroke="rgba(30,20,8,0.6)" stroke-width="1"/>
+        <ellipse cx="32" cy="20" rx="10" ry="14" fill="none" stroke="rgba(30,20,8,0.6)" stroke-width="1"/>
+      </svg>
+    </div>
+    <div class="cw-stone-frame"></div>
+  </div>
+
+  <!-- Window 2: far left blue/violet small -->
+  <div class="cw-window cw-w2">
+    <div class="cw-arch">
+      <div class="cw-inner-glow"></div>
+      <svg class="cw-tracery" viewBox="0 0 36 58" style="position:absolute;inset:0;width:100%;height:100%">
+        <line x1="18" y1="0" x2="18" y2="58" stroke="rgba(20,15,30,0.9)" stroke-width="1.2"/>
+        <ellipse cx="12" cy="16" rx="8" ry="10" fill="none" stroke="rgba(20,15,30,0.7)" stroke-width="0.8"/>
+        <ellipse cx="24" cy="16" rx="8" ry="10" fill="none" stroke="rgba(20,15,30,0.7)" stroke-width="0.8"/>
+      </svg>
+    </div>
+    <div class="cw-stone-frame"></div>
+  </div>
+
+  <!-- Window 3: left-center crimson blood -->
+  <div class="cw-window cw-w3">
+    <div class="cw-arch">
+      <div class="cw-inner-glow"></div>
+      <div class="cw-pane"></div>
+      <div class="cw-pane"></div>
+      <svg class="cw-tracery" viewBox="0 0 42 68" style="position:absolute;inset:0;width:100%;height:100%">
+        <line x1="21" y1="0" x2="21" y2="68" stroke="rgba(25,10,10,0.9)" stroke-width="1.5"/>
+        <line x1="0" y1="36" x2="42" y2="36" stroke="rgba(25,10,10,0.8)" stroke-width="1.5"/>
+        <path d="M8,10 Q21,0 34,10 Q34,30 21,36 Q8,30 8,10Z" fill="none" stroke="rgba(25,10,10,0.5)" stroke-width="0.8"/>
+      </svg>
+    </div>
+    <div class="cw-stone-frame"></div>
+  </div>
+
+  <!-- Window 4: center emerald/magic — LARGEST -->
+  <div class="cw-window cw-w4">
+    <div class="cw-arch">
+      <div class="cw-inner-glow"></div>
+      <div class="cw-pane"></div>
+      <div class="cw-pane"></div>
+      <div class="cw-pane"></div>
+      <svg class="cw-tracery" viewBox="0 0 55 88" style="position:absolute;inset:0;width:100%;height:100%">
+        <line x1="27.5" y1="0" x2="27.5" y2="88" stroke="rgba(10,25,15,0.85)" stroke-width="1.8"/>
+        <line x1="0" y1="50" x2="55" y2="50" stroke="rgba(10,25,15,0.85)" stroke-width="1.8"/>
+        <ellipse cx="17" cy="24" rx="12" ry="18" fill="none" stroke="rgba(10,25,15,0.6)" stroke-width="1.2"/>
+        <ellipse cx="38" cy="24" rx="12" ry="18" fill="none" stroke="rgba(10,25,15,0.6)" stroke-width="1.2"/>
+        <circle cx="27.5" cy="20" r="5" fill="none" stroke="rgba(0,180,60,0.3)" stroke-width="0.8"/>
+      </svg>
+    </div>
+    <div class="cw-stone-frame"></div>
+  </div>
+
+  <!-- Window 5: right-center gold -->
+  <div class="cw-window cw-w5">
+    <div class="cw-arch">
+      <div class="cw-inner-glow"></div>
+      <div class="cw-pane"></div>
+      <div class="cw-pane"></div>
+      <svg class="cw-tracery" viewBox="0 0 50 80" style="position:absolute;inset:0;width:100%;height:100%">
+        <line x1="25" y1="0" x2="25" y2="80" stroke="rgba(25,18,8,0.9)" stroke-width="1.5"/>
+        <line x1="0" y1="45" x2="50" y2="45" stroke="rgba(25,18,8,0.8)" stroke-width="1.5"/>
+        <ellipse cx="16" cy="22" rx="11" ry="16" fill="none" stroke="rgba(25,18,8,0.55)" stroke-width="1"/>
+        <ellipse cx="34" cy="22" rx="11" ry="16" fill="none" stroke="rgba(25,18,8,0.55)" stroke-width="1"/>
+      </svg>
+    </div>
+    <div class="cw-stone-frame"></div>
+  </div>
+
+  <!-- Window 6: right violet -->
+  <div class="cw-window cw-w6">
+    <div class="cw-arch">
+      <div class="cw-inner-glow"></div>
+      <svg class="cw-tracery" viewBox="0 0 44 70" style="position:absolute;inset:0;width:100%;height:100%">
+        <line x1="22" y1="0" x2="22" y2="70" stroke="rgba(20,10,28,0.9)" stroke-width="1.5"/>
+        <ellipse cx="14" cy="18" rx="10" ry="13" fill="none" stroke="rgba(20,10,28,0.65)" stroke-width="1"/>
+        <ellipse cx="30" cy="18" rx="10" ry="13" fill="none" stroke="rgba(20,10,28,0.65)" stroke-width="1"/>
+      </svg>
+    </div>
+    <div class="cw-stone-frame"></div>
+  </div>
+
+  <!-- Window 7: far right small -->
+  <div class="cw-window cw-w7">
+    <div class="cw-arch">
+      <div class="cw-inner-glow"></div>
+    </div>
+    <div class="cw-stone-frame"></div>
+  </div>
+
+  <!-- Light cones cast on the ground -->
+  <div class="cw-cast-light cw-light-w1"></div>
+  <div class="cw-cast-light cw-light-w3"></div>
+  <div class="cw-cast-light cw-light-w4"></div>
+  <div class="cw-cast-light cw-light-w5"></div>
+</div>
+
+<!-- Rune scan lines -->
+<div id="runeScanner">
+  <div class="rune-scan" style="animation-delay:0s"></div>
+  <div class="rune-scan rune-scan-2" style="animation-delay:-12s"></div>
+</div>
+
+<!-- Forge embers & magic particles -->
+<div id="forge-embers" id="forgeEmbers"></div>
+
+<!-- Wraith silhouettes drifting -->
+<div id="wraithLayer">
+  <div class="wraith wraith-1" style="bottom:15vh;left:0">
+    <svg width="120" height="180" viewBox="0 0 120 180">
+      <path d="M60,0 C45,20 30,30 25,60 C20,90 15,100 10,130 C8,145 12,160 20,170 C15,165 18,155 22,150 C20,170 30,175 35,168 C33,178 42,182 48,175 C46,185 55,186 60,180 C65,186 74,185 72,175 C78,182 87,178 85,168 C90,175 100,170 98,150 C102,155 105,165 100,170 C108,160 112,145 110,130 C105,100 100,90 95,60 C90,30 75,20 60,0Z" />
+      <ellipse cx="55" cy="40" rx="6" ry="8" fill="rgba(80,20,120,0.3)"/>
+      <ellipse cx="70" cy="42" rx="5" ry="7" fill="rgba(80,20,120,0.3)"/>
+    </svg>
+  </div>
+  <div class="wraith wraith-2" style="bottom:10vh;right:0">
+    <svg width="90" height="140" viewBox="0 0 120 180">
+      <path d="M60,0 C45,20 30,30 25,60 C20,90 15,100 10,130 C8,145 12,160 20,170 C15,165 18,155 22,150 C20,170 30,175 35,168 C33,178 42,182 48,175 C46,185 55,186 60,180 C65,186 74,185 72,175 C78,182 87,178 85,168 C90,175 100,170 98,150 C102,155 105,165 100,170 C108,160 112,145 110,130 C105,100 100,90 95,60 C90,30 75,20 60,0Z" />
+    </svg>
+  </div>
+  <div class="wraith wraith-3" style="bottom:20vh;left:20%">
+    <svg width="70" height="110" viewBox="0 0 120 180">
+      <path d="M60,0 C45,20 30,30 25,60 C20,90 15,100 10,130 C8,145 12,160 20,170 C15,165 18,155 22,150 C20,170 30,175 35,168 C33,178 42,182 48,175 C46,185 55,186 60,180 C65,186 74,185 72,175 C78,182 87,178 85,168 C90,175 100,170 98,150 C102,155 105,165 100,170 C108,160 112,145 110,130 C105,100 100,90 95,60 C90,30 75,20 60,0Z"/>
+    </svg>
+  </div>
+</div>
+
+<!-- ════════════ END DARK FANTASY MOTION LAYER ════════════ -->
 
 <!-- ── Floresta Amaldiçoada: árvores + névoa + vagalumes ── -->
 <div id="forest-bg" style="position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden">
@@ -1190,5 +1393,101 @@
   <script src="js/anim.js"></script>
   <!-- Firebase: carregado por último como módulo ES (não bloqueia o jogo) -->
   <script type="module" src="js/firebase.js"></script>
+
+  <!-- DARK FANTASY MOTION GRAPHICS ENGINE -->
+  <script>
+  (function() {
+    'use strict';
+
+    /* 1. FORGE EMBERS & MAGIC PARTICLE SYSTEM */
+    const emberContainer = document.getElementById('forge-embers');
+    const EMBER_TYPES = [
+      { cls: 'ember ember-hot',   count: 18, minDur: 2.5, maxDur: 5   },
+      { cls: 'ember ember-magic', count: 12, minDur: 3,   maxDur: 6.5 },
+      { cls: 'ember ember-blood', count: 8,  minDur: 1.8, maxDur: 3.5 }
+    ];
+
+    function spawnEmber(cfg) {
+      const el = document.createElement('div');
+      el.className = cfg.cls;
+      const x = Math.random() * 100;
+      const dur = cfg.minDur + Math.random() * (cfg.maxDur - cfg.minDur);
+      const delay = Math.random() * -dur;
+      const drift = (Math.random() - 0.5) * 40;
+      el.style.cssText = `left:${x}%;bottom:${Math.random()*30}%;animation-duration:${dur}s;animation-delay:${delay}s;--drift:${drift}px;`;
+      emberContainer.appendChild(el);
+      setTimeout(() => { if (el.parentNode) { el.parentNode.removeChild(el); spawnEmber(cfg); } }, (dur + Math.abs(delay)) * 1000);
+    }
+    EMBER_TYPES.forEach(cfg => { for (let i = 0; i < cfg.count; i++) setTimeout(() => spawnEmber(cfg), Math.random() * 3000); });
+
+    /* 2. ARCANE RUNE RING */
+    const portal = document.getElementById('arcane-portal');
+    if (portal) {
+      const runeRing = document.createElement('div');
+      runeRing.style.cssText = 'position:absolute;inset:0;border-radius:50%;animation:ringRotateCW 80s linear infinite;';
+      const runes = 'ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ'.split('');
+      runes.forEach((r, i) => {
+        const span = document.createElement('span');
+        span.textContent = r;
+        const angle = (i / runes.length) * 360;
+        span.style.cssText = `position:absolute;font-size:10px;color:rgba(201,168,76,0.6);font-family:'Cinzel',serif;top:50%;left:50%;transform:translate(-50%,-50%) rotate(${angle}deg) translateY(-130px);`;
+        runeRing.appendChild(span);
+      });
+      portal.appendChild(runeRing);
+    }
+
+    /* 3. MOUSE TRAIL — Arcane sparkle */
+    let lastTrail = 0;
+    document.addEventListener('mousemove', (e) => {
+      const now = Date.now();
+      if (now - lastTrail < 80) return;
+      lastTrail = now;
+      const spark = document.createElement('div');
+      const size = Math.random() * 4 + 2;
+      const colors = ['rgba(201,168,76,0.8)','rgba(139,26,26,0.7)','rgba(0,180,80,0.6)','rgba(100,60,200,0.6)'];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      spark.style.cssText = `position:fixed;left:${e.clientX-size/2}px;top:${e.clientY-size/2}px;width:${size}px;height:${size}px;border-radius:50%;background:${color};box-shadow:0 0 ${size*2}px ${color};pointer-events:none;z-index:9998;transition:all 0.6s ease-out;`;
+      document.body.appendChild(spark);
+      requestAnimationFrame(() => { spark.style.transform = `scale(0) translateY(-${Math.random()*20+10}px)`; spark.style.opacity = '0'; });
+      setTimeout(() => { if (spark.parentNode) spark.parentNode.removeChild(spark); }, 700);
+    });
+
+    /* 4. CARD ENTRY ANIMATIONS */
+    const revealStyle = document.createElement('style');
+    revealStyle.textContent = `
+      @keyframes cardReveal { from { opacity:0; transform:translateY(16px); filter:blur(2px); } to { opacity:1; transform:translateY(0); filter:blur(0); } }
+      .card { opacity:0; }
+    `;
+    document.head.appendChild(revealStyle);
+    const cardObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) { entry.target.style.animation = 'cardReveal 0.5s ease-out forwards'; cardObserver.unobserve(entry.target); }
+      });
+    }, { threshold: 0.1 });
+    setTimeout(() => { document.querySelectorAll('.card').forEach((c, i) => { c.style.animationDelay = `${i * 0.04}s`; cardObserver.observe(c); }); }, 100);
+
+    /* 5. BLOOD DRIP TIMING */
+    document.querySelectorAll('.sh-drip').forEach((drip) => {
+      const dur = 4 + Math.random() * 4;
+      drip.style.animationDuration = dur + 's';
+      drip.style.animationDelay = -(Math.random() * dur) + 's';
+    });
+
+    /* 6. TAB FLASH EFFECT */
+    const flashStyle = document.createElement('style');
+    flashStyle.textContent = `@keyframes runeFlash { 0%{opacity:0} 20%{opacity:1} 100%{opacity:0} }`;
+    document.head.appendChild(flashStyle);
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        const flash = document.createElement('div');
+        flash.style.cssText = 'position:fixed;inset:0;z-index:9997;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,rgba(201,168,76,0.06) 0%,transparent 70%);animation:runeFlash 0.4s ease-out forwards;';
+        document.body.appendChild(flash);
+        setTimeout(() => flash.parentNode && flash.parentNode.removeChild(flash), 500);
+      });
+    });
+
+    console.log('%c\u2694 LIFE RPG \u2014 Dark Fantasy Motion Engine Active \u2694', 'color:#c9a84c;font-family:serif;font-size:14px;');
+  })();
+  </script>
 </body>
 </html>

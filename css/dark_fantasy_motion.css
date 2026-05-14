@@ -1,0 +1,927 @@
+/* ═══════════════════════════════════════════════════════════════════
+   LIFE RPG — DARK FANTASY MOTION GRAPHICS ENHANCEMENT
+   Cathedral Windows · Arcane Portals · Blood Runes · Shadow Wraiths
+   Forge Embers · Cursed Chains · Gothic Architecture Alive
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── GOOGLE FONTS: add MedievalSharp + UnifrakturMaguntia ── */
+@import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=UnifrakturMaguntia&display=swap');
+
+/* ════════════════════════════════════════════════════════
+   1. ANIMATED CASTLE WINDOWS (Gothic Stained Glass)
+   ════════════════════════════════════════════════════════ */
+
+#castle-windows {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Gothic arch window shape */
+.cw-window {
+  position: absolute;
+  width: 60px;
+  height: 90px;
+  bottom: 0;
+}
+
+/* Arch clipping via border-radius trick */
+.cw-arch {
+  position: absolute;
+  inset: 0;
+  border-radius: 50% 50% 0 0 / 60% 60% 0 0;
+  overflow: hidden;
+}
+
+.cw-glass {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+/* Stained glass pane colors */
+.cw-pane {
+  position: absolute;
+  border-radius: 50% 50% 0 0 / 60% 60% 0 0;
+}
+
+/* Window inner glow — flickers like candle or fire */
+.cw-inner-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 50% 50% 0 0 / 60% 60% 0 0;
+}
+
+/* Lead lines (window tracery) */
+.cw-tracery {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Stone surround */
+.cw-stone-frame {
+  position: absolute;
+  inset: -4px;
+  border: 4px solid rgba(30, 22, 12, 0.95);
+  border-radius: 50% 50% 0 0 / 60% 60% 0 0;
+  box-shadow:
+    inset 0 0 6px rgba(0,0,0,0.8),
+    0 0 0 2px rgba(60,45,20,0.6),
+    0 0 0 4px rgba(20,15,8,0.9);
+}
+
+/* ── Window 1: Deep LEFT — warm amber/orange ── */
+.cw-w1 {
+  left: 3%;
+  bottom: 18vh;
+  width: 48px;
+  height: 76px;
+  opacity: 0.72;
+  animation: windowBobble 7s ease-in-out infinite;
+}
+.cw-w1 .cw-arch { background: linear-gradient(160deg, #3d1a00 0%, #1a0800 100%); }
+.cw-w1 .cw-inner-glow { animation: candleFlicker1 3.2s ease-in-out infinite; background: radial-gradient(ellipse at 50% 80%, rgba(255,140,20,0.55) 0%, rgba(255,80,0,0.2) 40%, transparent 70%); }
+.cw-w1 .cw-pane:nth-child(1) { top: 10%; left: 15%; width: 30%; height: 45%; background: rgba(200,80,10,0.4); }
+.cw-w1 .cw-pane:nth-child(2) { top: 10%; right: 15%; width: 30%; height: 45%; background: rgba(220,120,20,0.35); }
+.cw-w1 .cw-pane:nth-child(3) { top: 50%; left: 20%; width: 60%; height: 40%; background: rgba(180,60,5,0.3); }
+
+/* ── Window 2: FAR LEFT — cold blue/violet ── */
+.cw-w2 {
+  left: 7.5%;
+  bottom: 22vh;
+  width: 36px;
+  height: 58px;
+  opacity: 0.55;
+  animation: windowBobble 9s ease-in-out infinite reverse;
+}
+.cw-w2 .cw-arch { background: linear-gradient(160deg, #05041a 0%, #02020e 100%); }
+.cw-w2 .cw-inner-glow { animation: candleFlicker2 5.5s ease-in-out infinite; background: radial-gradient(ellipse at 50% 80%, rgba(80,40,180,0.5) 0%, rgba(40,20,120,0.2) 50%, transparent 75%); }
+
+/* ── Window 3: LEFT-CENTER — crimson red ── */
+.cw-w3 {
+  left: 18%;
+  bottom: 28vh;
+  width: 42px;
+  height: 68px;
+  opacity: 0.6;
+  animation: windowBobble 6s ease-in-out infinite;
+  animation-delay: -2s;
+}
+.cw-w3 .cw-arch { background: linear-gradient(160deg, #1a0005 0%, #0a0002 100%); }
+.cw-w3 .cw-inner-glow { animation: candleFlicker3 4.1s ease-in-out infinite; background: radial-gradient(ellipse at 50% 80%, rgba(180,20,20,0.6) 0%, rgba(100,10,10,0.25) 45%, transparent 70%); }
+.cw-w3 .cw-pane:nth-child(1) { top: 8%; left: 10%; width: 35%; height: 50%; background: rgba(160,15,15,0.45); }
+.cw-w3 .cw-pane:nth-child(2) { top: 8%; right: 10%; width: 35%; height: 50%; background: rgba(180,20,20,0.4); }
+
+/* ── Window 4: CENTER — emerald/magic ── */
+.cw-w4 {
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 30vh;
+  width: 55px;
+  height: 88px;
+  opacity: 0.65;
+  animation: windowBobble 8s ease-in-out infinite;
+  animation-delay: -4s;
+}
+.cw-w4 .cw-arch { background: linear-gradient(160deg, #001a08 0%, #000d04 100%); }
+.cw-w4 .cw-inner-glow { animation: magicFlicker 3.8s ease-in-out infinite; background: radial-gradient(ellipse at 50% 80%, rgba(0,200,80,0.45) 0%, rgba(0,120,40,0.2) 40%, rgba(0,60,20,0.1) 60%, transparent 80%); }
+.cw-w4 .cw-pane:nth-child(1) { top: 5%; left: 5%; width: 40%; height: 55%; background: rgba(0,150,50,0.35); }
+.cw-w4 .cw-pane:nth-child(2) { top: 5%; right: 5%; width: 40%; height: 55%; background: rgba(0,180,60,0.3); }
+.cw-w4 .cw-pane:nth-child(3) { top: 55%; left: 15%; width: 70%; height: 38%; background: rgba(0,130,45,0.25); }
+
+/* ── Window 5: RIGHT-CENTER — gold/amber large ── */
+.cw-w5 {
+  right: 20%;
+  bottom: 24vh;
+  width: 50px;
+  height: 80px;
+  opacity: 0.68;
+  animation: windowBobble 7.5s ease-in-out infinite reverse;
+  animation-delay: -1.5s;
+}
+.cw-w5 .cw-arch { background: linear-gradient(160deg, #1a1000 0%, #0d0800 100%); }
+.cw-w5 .cw-inner-glow { animation: candleFlicker1 2.9s ease-in-out infinite; background: radial-gradient(ellipse at 50% 80%, rgba(220,160,20,0.55) 0%, rgba(180,120,10,0.2) 45%, transparent 70%); }
+.cw-w5 .cw-pane:nth-child(1) { top: 8%; left: 8%; width: 38%; height: 52%; background: rgba(200,140,15,0.4); }
+.cw-w5 .cw-pane:nth-child(2) { top: 8%; right: 8%; width: 38%; height: 52%; background: rgba(220,160,20,0.35); }
+
+/* ── Window 6: FAR RIGHT ── */
+.cw-w6 {
+  right: 5%;
+  bottom: 20vh;
+  width: 44px;
+  height: 70px;
+  opacity: 0.58;
+  animation: windowBobble 10s ease-in-out infinite;
+  animation-delay: -6s;
+}
+.cw-w6 .cw-arch { background: linear-gradient(160deg, #10001a 0%, #080010 100%); }
+.cw-w6 .cw-inner-glow { animation: candleFlicker2 6s ease-in-out infinite; background: radial-gradient(ellipse at 50% 80%, rgba(120,40,200,0.5) 0%, rgba(80,20,140,0.2) 45%, transparent 72%); }
+
+/* ── Window 7: Small far right ── */
+.cw-w7 {
+  right: 10%;
+  bottom: 32vh;
+  width: 30px;
+  height: 48px;
+  opacity: 0.45;
+  animation: windowBobble 11s ease-in-out infinite reverse;
+  animation-delay: -3s;
+}
+.cw-w7 .cw-arch { background: rgba(5,2,15,0.9); }
+.cw-w7 .cw-inner-glow { animation: candleFlicker3 7s ease-in-out infinite; background: radial-gradient(ellipse at 50% 80%, rgba(60,20,160,0.4) 0%, transparent 65%); }
+
+/* ── Cast light on ground below each window ── */
+.cw-cast-light {
+  position: absolute;
+  bottom: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.cw-light-w1 { left: calc(3% + 8px); border-left: 20px solid transparent; border-right: 20px solid transparent; border-bottom: 80px solid rgba(255,120,20,0.06); animation: castLightFlicker1 3.2s ease-in-out infinite; }
+.cw-light-w3 { left: calc(18% + 5px); border-left: 18px solid transparent; border-right: 18px solid transparent; border-bottom: 100px solid rgba(180,10,10,0.05); animation: castLightFlicker3 4.1s ease-in-out infinite; }
+.cw-light-w4 { left: calc(50% - 20px); border-left: 24px solid transparent; border-right: 24px solid transparent; border-bottom: 120px solid rgba(0,180,60,0.05); animation: castLightFlicker2 3.8s ease-in-out infinite; }
+.cw-light-w5 { right: calc(20% + 6px); border-left: 22px solid transparent; border-right: 22px solid transparent; border-bottom: 90px solid rgba(210,150,15,0.06); animation: castLightFlicker1 2.9s ease-in-out infinite; }
+
+/* ════════════════════════════════════════════════════════
+   2. ARCANE PORTAL / MAGIC CIRCLE
+   ════════════════════════════════════════════════════════ */
+
+#arcane-portal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 280px;
+  height: 280px;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.07;
+  animation: portalBreath 12s ease-in-out infinite;
+}
+
+.ap-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(201,168,76,0.6);
+}
+.ap-ring-1 { animation: ringRotateCW 40s linear infinite; inset: 10px; border-color: rgba(201,168,76,0.5); }
+.ap-ring-2 { animation: ringRotateCCW 25s linear infinite; inset: 25px; border: 1px dashed rgba(180,60,20,0.5); }
+.ap-ring-3 { animation: ringRotateCW 60s linear infinite; inset: 40px; border-color: rgba(0,180,80,0.4); }
+.ap-ring-4 { animation: ringRotateCCW 35s linear infinite; inset: 55px; border: 1px dotted rgba(100,60,200,0.5); }
+
+.ap-rune-ring {
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  animation: ringRotateCW 80s linear infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ap-rune {
+  position: absolute;
+  font-size: 10px;
+  color: rgba(201,168,76,0.7);
+  font-family: 'Cinzel', serif;
+  transform-origin: center 135px;
+}
+
+.ap-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,0.15) 0%, transparent 70%);
+  animation: centralPulse 4s ease-in-out infinite;
+}
+
+/* ════════════════════════════════════════════════════════
+   3. FORGE EMBERS / FLOATING PARTICLES
+   ════════════════════════════════════════════════════════ */
+
+#forge-embers {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ember {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Hot embers — orange/red */
+.ember-hot {
+  width: 2px;
+  height: 2px;
+  background: #ff8c00;
+  box-shadow: 0 0 3px 1px rgba(255,120,0,0.8), 0 0 6px 2px rgba(255,60,0,0.4);
+  animation: emberRise 0s linear infinite;
+}
+
+/* Magic dust — blue/purple */
+.ember-magic {
+  width: 1.5px;
+  height: 1.5px;
+  background: #8040ff;
+  box-shadow: 0 0 3px 1px rgba(100,40,255,0.7), 0 0 6px 2px rgba(60,20,180,0.3);
+  animation: emberRise 0s linear infinite;
+}
+
+/* Blood droplets — crimson */
+.ember-blood {
+  width: 2px;
+  height: 3px;
+  border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
+  background: #8b0000;
+  box-shadow: 0 0 3px 1px rgba(180,0,0,0.6);
+  animation: bloodDrop 0s linear infinite;
+}
+
+/* ════════════════════════════════════════════════════════
+   4. WRAITH SILHOUETTES
+   ════════════════════════════════════════════════════════ */
+
+#wraithLayer {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.wraith {
+  position: absolute;
+  bottom: 0;
+  opacity: 0;
+}
+
+.wraith svg {
+  fill: rgba(40, 15, 60, 0.5);
+  filter: blur(2px);
+}
+
+.wraith-1 { animation: wraithDrift1 25s ease-in-out infinite; animation-delay: 0s; }
+.wraith-2 { animation: wraithDrift2 32s ease-in-out infinite; animation-delay: -8s; }
+.wraith-3 { animation: wraithDrift1 28s ease-in-out infinite; animation-delay: -16s; }
+
+/* ════════════════════════════════════════════════════════
+   5. BLOOD RUNE SCAN LINES
+   ════════════════════════════════════════════════════════ */
+
+#runeScanner {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.rune-scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(180,20,20,0.3) 30%, rgba(201,168,76,0.4) 50%, rgba(180,20,20,0.3) 70%, transparent 100%);
+  animation: runeScan 18s linear infinite;
+  opacity: 0;
+}
+
+.rune-scan-2 {
+  background: linear-gradient(90deg, transparent 0%, rgba(0,180,80,0.2) 40%, rgba(0,200,100,0.3) 50%, rgba(0,180,80,0.2) 60%, transparent 100%);
+  animation: runeScan 26s linear infinite;
+  animation-delay: -12s;
+}
+
+/* ════════════════════════════════════════════════════════
+   6. STONE WALL CRACKS (animated reveal)
+   ════════════════════════════════════════════════════════ */
+
+#stoneCracks {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.08;
+}
+
+/* ════════════════════════════════════════════════════════
+   7. ENHANCED CARD STYLES — Gothic Illuminated Windows
+   ════════════════════════════════════════════════════════ */
+
+/* Gothic window border effect on cards */
+.card {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated shine sweep across cards */
+.card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(201,168,76,0.04) 50%,
+    transparent 60%
+  );
+  animation: cardShineSweep 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Subtle pulsing border glow */
+@keyframes cardBorderPulse {
+  0%, 100% { border-color: rgba(201,168,76, 0.2); box-shadow: none; }
+  50% { border-color: rgba(201,168,76, 0.35); box-shadow: 0 0 12px rgba(201,168,76,0.06), inset 0 0 20px rgba(0,0,0,0.3); }
+}
+
+.card:hover {
+  animation: cardBorderPulse 3s ease-in-out infinite;
+  transform: translateY(-1px);
+  transition: transform 0.3s ease;
+}
+
+/* Gothic corner marks on hover */
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg, rgba(201,168,76,0.06) 0%, transparent 20%),
+    linear-gradient(225deg, rgba(201,168,76,0.04) 0%, transparent 20%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.card:hover::before { opacity: 1; }
+
+/* ════════════════════════════════════════════════════════
+   8. ENHANCED HERO HEADER — Dramatic Entry
+   ════════════════════════════════════════════════════════ */
+
+/* Animated runic border on site header */
+@keyframes headerRuneBorder {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.site-header {
+  position: relative;
+}
+
+/* Moving magical border top */
+.site-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(139,26,26,0.8) 15%,
+    rgba(201,168,76,1) 30%,
+    rgba(0,200,80,0.6) 50%,
+    rgba(201,168,76,1) 70%,
+    rgba(139,26,26,0.8) 85%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: headerRuneBorder 6s linear infinite;
+  z-index: 3;
+}
+
+/* Moving magical border bottom */
+.site-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(201,168,76,0.9) 20%,
+    rgba(139,26,26,0.7) 50%,
+    rgba(201,168,76,0.9) 80%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: headerRuneBorder 8s linear infinite reverse;
+  z-index: 3;
+}
+
+/* H1 title — deeper glow */
+.site-header h1 {
+  text-shadow:
+    0 0 10px rgba(201,168,76,0.8),
+    0 0 25px rgba(201,168,76,0.5),
+    0 0 50px rgba(201,168,76,0.25),
+    0 0 80px rgba(139,26,26,0.2);
+  animation: titleFlicker 7s ease-in-out infinite;
+}
+
+/* ════════════════════════════════════════════════════════
+   9. NAVIGATION TAB — Rune Glow on Active
+   ════════════════════════════════════════════════════════ */
+
+.tab.active {
+  position: relative;
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  animation: tabGlowPulse 2s ease-in-out infinite;
+}
+
+/* ════════════════════════════════════════════════════════
+   10. BLOOD DRIP ENHANCED — Animated dripping
+   ════════════════════════════════════════════════════════ */
+
+.sh-drip {
+  position: absolute;
+  top: 100%;
+  width: 4px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(180deg, #8b0000 0%, #5a0000 60%, rgba(90,0,0,0) 100%);
+  animation: dripGrow 0s ease-in-out infinite;
+  transform-origin: top center;
+}
+
+/* Drop at end of drip */
+.sh-drip::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+  background: #8b0000;
+  animation: dripDrop 0s ease-in-out infinite;
+}
+
+/* ════════════════════════════════════════════════════════
+   11. ANIMATED KEYFRAMES — THE MOTION ENGINE
+   ════════════════════════════════════════════════════════ */
+
+/* Window bobble — subtle sway */
+@keyframes windowBobble {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  30% { transform: translateY(-2px) rotate(0.3deg); }
+  70% { transform: translateY(1px) rotate(-0.2deg); }
+}
+
+/* Candle flickers */
+@keyframes candleFlicker1 {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  15% { opacity: 0.95; transform: scale(1.05, 0.98); }
+  30% { opacity: 0.65; transform: scale(0.97, 1.04); }
+  50% { opacity: 1; transform: scale(1.08, 0.95); }
+  65% { opacity: 0.75; transform: scale(0.96, 1.06); }
+  80% { opacity: 0.9; transform: scale(1.03, 0.99); }
+}
+
+@keyframes candleFlicker2 {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  20% { opacity: 1; transform: scale(1.1, 0.93); }
+  45% { opacity: 0.55; transform: scale(0.94, 1.07); }
+  70% { opacity: 0.9; transform: scale(1.06, 0.97); }
+}
+
+@keyframes candleFlicker3 {
+  0%, 100% { opacity: 0.85; }
+  25% { opacity: 0.6; transform: scaleX(1.04); }
+  55% { opacity: 1; transform: scaleX(0.97); }
+  80% { opacity: 0.7; transform: scaleX(1.02); }
+}
+
+@keyframes magicFlicker {
+  0%, 100% { opacity: 0.9; transform: scale(1) rotate(0deg); }
+  25% { opacity: 0.7; transform: scale(1.05) rotate(1deg); }
+  50% { opacity: 1; transform: scale(0.97) rotate(-0.5deg); }
+  75% { opacity: 0.8; transform: scale(1.03) rotate(0.8deg); }
+}
+
+/* Cast light on ground */
+@keyframes castLightFlicker1 {
+  0%, 100% { opacity: 1; transform: scaleX(1); }
+  30% { opacity: 0.7; transform: scaleX(1.08); }
+  60% { opacity: 1.2; transform: scaleX(0.95); }
+}
+
+@keyframes castLightFlicker2 {
+  0%, 100% { opacity: 1; transform: scaleX(1); }
+  40% { opacity: 0.6; transform: scaleX(1.1); }
+  75% { opacity: 1.1; transform: scaleX(0.92); }
+}
+
+@keyframes castLightFlicker3 {
+  0%, 100% { opacity: 0.9; transform: scaleX(1); }
+  35% { opacity: 1.3; transform: scaleX(0.96); }
+  65% { opacity: 0.65; transform: scaleX(1.06); }
+}
+
+/* Arcane portal */
+@keyframes portalBreath {
+  0%, 100% { opacity: 0.05; transform: translate(-50%,-50%) scale(1); }
+  50% { opacity: 0.1; transform: translate(-50%,-50%) scale(1.04); }
+}
+
+@keyframes ringRotateCW {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ringRotateCCW {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+
+@keyframes centralPulse {
+  0%, 100% { transform: translate(-50%,-50%) scale(1); opacity: 0.8; }
+  50% { transform: translate(-50%,-50%) scale(1.2); opacity: 1; }
+}
+
+/* Embers */
+@keyframes emberRise {
+  0% { transform: translateY(0) translateX(0) scale(1); opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { transform: translateY(-80px) translateX(var(--drift, 10px)) scale(0.3); opacity: 0; }
+}
+
+@keyframes bloodDrop {
+  0% { transform: translateY(0) scaleY(1); opacity: 0.9; }
+  70% { transform: translateY(50px) scaleY(1.5); opacity: 0.6; }
+  100% { transform: translateY(80px) scaleY(0.5); opacity: 0; }
+}
+
+/* Wraiths drifting */
+@keyframes wraithDrift1 {
+  0% { transform: translateX(-200px) translateY(0px); opacity: 0; }
+  10% { opacity: 0.15; }
+  50% { transform: translateX(50vw) translateY(-20px); opacity: 0.12; }
+  90% { opacity: 0.08; }
+  100% { transform: translateX(110vw) translateY(10px); opacity: 0; }
+}
+
+@keyframes wraithDrift2 {
+  0% { transform: translateX(110vw) translateY(0px); opacity: 0; }
+  10% { opacity: 0.12; }
+  50% { transform: translateX(40vw) translateY(-15px); opacity: 0.1; }
+  90% { opacity: 0.06; }
+  100% { transform: translateX(-200px) translateY(5px); opacity: 0; }
+}
+
+/* Rune scan line */
+@keyframes runeScan {
+  0% { top: -2px; opacity: 0; }
+  5% { opacity: 0.6; }
+  95% { opacity: 0.3; }
+  100% { top: 100vh; opacity: 0; }
+}
+
+/* Card shine sweep */
+@keyframes cardShineSweep {
+  0% { left: -100%; }
+  30%, 100% { left: 150%; }
+}
+
+/* Title flicker */
+@keyframes titleFlicker {
+  0%, 90%, 100% {
+    text-shadow:
+      0 0 10px rgba(201,168,76,0.8),
+      0 0 25px rgba(201,168,76,0.5),
+      0 0 50px rgba(201,168,76,0.25);
+  }
+  92% {
+    text-shadow:
+      0 0 5px rgba(201,168,76,0.4),
+      0 0 12px rgba(201,168,76,0.2);
+  }
+  94% {
+    text-shadow:
+      0 0 15px rgba(201,168,76,1),
+      0 0 40px rgba(201,168,76,0.7),
+      0 0 80px rgba(201,168,76,0.3),
+      0 0 120px rgba(139,26,26,0.2);
+  }
+}
+
+/* Tab glow pulse */
+@keyframes tabGlowPulse {
+  0%, 100% { opacity: 0.6; transform: scaleX(0.8); }
+  50% { opacity: 1; transform: scaleX(1); }
+}
+
+/* Drip animations */
+@keyframes dripGrow {
+  0%, 40% { transform: scaleY(0); opacity: 0.8; }
+  70% { transform: scaleY(1); opacity: 0.9; }
+  85%, 100% { transform: scaleY(1); opacity: 0; }
+}
+
+@keyframes dripDrop {
+  0%, 60% { opacity: 0; transform: translateX(-50%) scale(0); }
+  75% { opacity: 1; transform: translateX(-50%) scale(1); }
+  90%, 100% { opacity: 0; transform: translateX(-50%) translateY(8px) scale(0.5); }
+}
+
+/* ════════════════════════════════════════════════════════
+   12. PARALLAX DEPTH LAYERS
+   ════════════════════════════════════════════════════════ */
+
+/* Distant mountains/castle silhouette */
+#castle-silhouette {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 35vh;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ════════════════════════════════════════════════════════
+   13. ACHIEVEMENT POPUP — Epic Reveal
+   ════════════════════════════════════════════════════════ */
+
+#ach-card {
+  animation: achievementReveal 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes achievementReveal {
+  0% { transform: scale(0.5) rotate(-5deg); opacity: 0; filter: brightness(3); }
+  60% { transform: scale(1.05) rotate(0.5deg); opacity: 1; filter: brightness(1.5); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; filter: brightness(1); }
+}
+
+/* Gold shimmer on achievement badge */
+#ach-badge {
+  background: linear-gradient(
+    90deg,
+    rgba(201,168,76,0.1) 0%,
+    rgba(201,168,76,0.3) 45%,
+    rgba(255,240,150,0.4) 50%,
+    rgba(201,168,76,0.3) 55%,
+    rgba(201,168,76,0.1) 100%
+  );
+  background-size: 200% 100%;
+  animation: goldShimmer 3s linear infinite;
+}
+
+@keyframes goldShimmer {
+  0% { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+/* ════════════════════════════════════════════════════════
+   14. NOTIFICATION — Dark Scroll Unfurl
+   ════════════════════════════════════════════════════════ */
+
+.notif {
+  background: linear-gradient(135deg,
+    rgba(12,10,22,0.98) 0%,
+    rgba(20,16,35,0.98) 100%
+  ) !important;
+  border-left: 3px solid var(--gold) !important;
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.8),
+    0 0 0 1px rgba(201,168,76,0.15),
+    0 0 20px rgba(201,168,76,0.08) !important;
+}
+
+/* ════════════════════════════════════════════════════════
+   15. FLOATING RUNE PARTICLES around active elements
+   ════════════════════════════════════════════════════════ */
+
+@keyframes runeFloat {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0.7; }
+  50% { transform: translateY(-15px) rotate(180deg); opacity: 0.3; }
+  100% { transform: translateY(-30px) rotate(360deg); opacity: 0; }
+}
+
+/* ════════════════════════════════════════════════════════
+   16. CUSTOM SCROLLBAR — Stone Carved
+   ════════════════════════════════════════════════════════ */
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track {
+  background: rgba(7,6,13,0.9);
+  border-left: 1px solid rgba(201,168,76,0.08);
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(201,168,76,0.5) 0%, rgba(139,26,26,0.4) 50%, rgba(201,168,76,0.5) 100%);
+  border-radius: 3px;
+  border: 1px solid rgba(201,168,76,0.2);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(201,168,76,0.8) 0%, rgba(180,30,30,0.6) 50%, rgba(201,168,76,0.8) 100%);
+}
+
+/* ════════════════════════════════════════════════════════
+   17. CURSOR — Magical Crosshair
+   ════════════════════════════════════════════════════════ */
+
+* { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='3' fill='none' stroke='%23c9a84c' stroke-width='1'/%3E%3Cline x1='10' y1='0' x2='10' y2='7' stroke='%23c9a84c' stroke-width='1'/%3E%3Cline x1='10' y1='13' x2='10' y2='20' stroke='%23c9a84c' stroke-width='1'/%3E%3Cline x1='0' y1='10' x2='7' y2='10' stroke='%23c9a84c' stroke-width='1'/%3E%3Cline x1='13' y1='10' x2='20' y2='10' stroke='%23c9a84c' stroke-width='1'/%3E%3C/svg%3E") 10 10, crosshair; }
+
+button, .tab, .btn, [onclick], a { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Cpolygon points='3,2 3,16 7,12 10,18 12,17 9,11 14,11' fill='%23c9a84c' stroke='%23a07020' stroke-width='0.5'/%3E%3C/svg%3E") 3 2, pointer; }
+
+/* ════════════════════════════════════════════════════════
+   18. LOADING SCREEN — Epic Fade In
+   ════════════════════════════════════════════════════════ */
+
+@keyframes pageLoad {
+  0% { opacity: 0; filter: brightness(0) blur(4px); }
+  100% { opacity: 1; filter: brightness(1) blur(0); }
+}
+
+body {
+  animation: pageLoad 1.2s ease-out forwards;
+}
+
+/* ════════════════════════════════════════════════════════
+   19. ENHANCED BUTTONS — Forge Glow
+   ════════════════════════════════════════════════════════ */
+
+.btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease !important;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.08) 50%, transparent 60%);
+  transform: translateX(-100%);
+  transition: transform 0.4s ease;
+}
+
+.btn:hover::before {
+  transform: translateX(200%);
+}
+
+.btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 20px rgba(201,168,76,0.3), 0 0 0 1px rgba(201,168,76,0.3) !important;
+}
+
+.btn:active {
+  transform: translateY(0px) scale(0.98) !important;
+}
+
+/* Primary button — golden forge */
+.btn.bcr {
+  background: linear-gradient(135deg, rgba(180,40,20,0.8) 0%, rgba(120,20,10,0.9) 100%) !important;
+  border-color: rgba(220,60,30,0.6) !important;
+}
+
+.btn.bcr:hover {
+  background: linear-gradient(135deg, rgba(220,50,25,0.9) 0%, rgba(160,25,15,0.95) 100%) !important;
+  box-shadow: 0 4px 20px rgba(200,40,20,0.4), 0 0 0 1px rgba(220,60,30,0.4) !important;
+}
+
+/* ════════════════════════════════════════════════════════
+   20. XP/HP BARS — Enhanced Animated
+   ════════════════════════════════════════════════════════ */
+
+.bar-hp {
+  background: linear-gradient(90deg,
+    #8b0000 0%,
+    #c0392b 30%,
+    #e74c3c 70%,
+    #ff6b6b 100%
+  ) !important;
+  position: relative;
+}
+
+.bar-xp {
+  background: linear-gradient(90deg,
+    #a07020 0%,
+    #c9a84c 40%,
+    #f5e098 70%,
+    #ffe066 100%
+  ) !important;
+}
+
+/* Animated shine on bars */
+.bf::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: rgba(255,255,255,0.1);
+  border-radius: inherit;
+}
+
+/* ════════════════════════════════════════════════════════
+   21. MODAL — Dark Portal Opening
+   ════════════════════════════════════════════════════════ */
+
+.mo.show .md {
+  animation: portalOpen 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+@keyframes portalOpen {
+  0% { transform: scale(0.8) translateY(20px); opacity: 0; filter: blur(4px); }
+  100% { transform: scale(1) translateY(0); opacity: 1; filter: blur(0); }
+}
+
+/* ════════════════════════════════════════════════════════
+   22. AMBIENT VIGNETTE — Edge darkness
+   ════════════════════════════════════════════════════════ */
+
+#ambient-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    transparent 40%,
+    rgba(5,4,10,0.3) 65%,
+    rgba(3,2,7,0.7) 85%,
+    rgba(2,1,5,0.9) 100%
+  );
+}
+
+/* ════════════════════════════════════════════════════════
+   23. RESPONSIVE — Keep effects on mobile
+   ════════════════════════════════════════════════════════ */
+
+@media (max-width: 600px) {
+  .cw-window { transform: scale(0.7); transform-origin: bottom center; }
+  #arcane-portal { width: 180px; height: 180px; }
+  .wraith svg { transform: scale(0.6); }
+}
