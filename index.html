@@ -1294,47 +1294,15 @@
   }
 </style>
 
-<!-- ══ ARENA: injeção de rota no sistema de navegação ══ -->
+<!-- ══ ARENA: garante renderArena ao abrir a aba diretamente ══ -->
 <script>
-(function(){
-  function patchNav(){
-    // Adiciona 'arena' à categoria 'combat' se CAT_TABS existir
-    if(typeof CAT_TABS !== 'undefined'){
-      if(CAT_TABS.combat && !CAT_TABS.combat.includes('arena'))
-        CAT_TABS.combat.push('arena');
-    }
-    // Garante que swT('arena') funciona mostrando panel-arena
-    const origSwT = typeof swT === 'function' ? swT : null;
-    if(origSwT){
-      window.swT = function(page){
-        origSwT(page);
-        if(page === 'arena' && typeof renderArena === 'function') renderArena();
-      };
-    }
-    // Estende renderAll para incluir renderArena
-    const origRenderAll = typeof renderAll === 'function' ? renderAll : null;
-    if(origRenderAll && !origRenderAll._arenaPatched){
-      window.renderAll = function(){
-        origRenderAll();
-        if(typeof renderArena === 'function') renderArena();
-      };
-      window.renderAll._arenaPatched = true;
-    }
-    // Clique direto na aba arena chama renderArena
-    const tabArena = document.getElementById('tab-arena');
-    if(tabArena && !tabArena._arenaBound){
-      tabArena.addEventListener('click', function(){
-        if(typeof renderArena === 'function') renderArena();
-      });
-      tabArena._arenaBound = true;
-    }
-  }
-  if(document.readyState === 'loading')
-    document.addEventListener('DOMContentLoaded', patchNav);
-  else
-    patchNav();
-  window.addEventListener('load', patchNav);
-})();
+window.addEventListener('load', function(){
+  // Fallback direto: clique na aba arena chama renderArena
+  const tab = document.getElementById('tab-arena');
+  if(tab) tab.addEventListener('click', function(){
+    if(typeof renderArena==='function') renderArena();
+  });
+});
 </script>
 
 

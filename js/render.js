@@ -529,6 +529,8 @@ function renderProg(){
 // =============== CALENDAR ===============
 let calViewYear=new Date().getFullYear();
 let calViewMonth=new Date().getMonth();
+// Alias: swT chama renderCalendar(), garantimos compatibilidade
+function renderCalendar(){ renderCal(); }
 
 function calNav(dir){
   calViewMonth+=dir;

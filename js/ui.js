@@ -2,6 +2,16 @@
 // ────────────────────────────────────────────────────────────
 "use strict";
 
+// Injeta arena no NAV_CATS assim que ele estiver disponível
+// (NAV_CATS é definido em outro arquivo carregado antes ou depois)
+function _patchArenaInNavCats(){
+  if(typeof NAV_CATS==='undefined') return;
+  if(!NAV_CATS.combat) return;
+  const already=NAV_CATS.combat.tabs.some(t=>t.p==='arena');
+  if(!already) NAV_CATS.combat.tabs.push({p:'arena',label:'⚔️ Arena'});
+}
+document.addEventListener('DOMContentLoaded',()=>{ setTimeout(_patchArenaInNavCats, 100); });
+
 function swT(p){
   document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
@@ -26,8 +36,9 @@ function swT(p){
   if(p==='inventory') renderInventory();
   if(p==='classe') renderClasse();
   if(p==='profile') renderProfile();
-  if(p==='calendar') renderCalendar();
+  if(p==='calendar'){ if(typeof renderCal==='function') renderCal(); else if(typeof renderCalendar==='function') renderCalendar(); }
   if(p==='guilds') renderGuilds();
+  if(p==='arena') { if(typeof renderArena==='function') renderArena(); }
   updateNavAlerts();
 }
 document.getElementById('tabs').addEventListener('click',e=>{const t=e.target.closest('.tab');if(!t)return;swT(t.dataset.p);});
