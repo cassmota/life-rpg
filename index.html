@@ -408,6 +408,7 @@
     <div class="tab" data-p="dark">Vícios</div>
     <div class="tab" data-p="boss">Boss</div>
     <div class="tab" data-p="events" id="tab-ev">Eventos</div>
+    <div class="tab" data-p="arena" id="tab-arena">⚔️ Arena</div>
     <div class="tab" data-p="smithy">Ferreiro</div>
     <div class="tab" data-p="shop">Loja</div>
     <div class="tab" data-p="quests">Quests</div>
@@ -699,6 +700,23 @@
     </div>
   </div>
   <div class="card" style="margin-top:12px"><div class="ct">📜 Eventos Completados</div><div id="ev-hist"></div></div>
+</div>
+
+<div class="panel" id="panel-arena">
+  <div class="card mb8" style="border-color:rgba(192,57,43,.35);background:linear-gradient(160deg,rgba(10,4,8,.99),rgba(22,10,14,.99));padding:0">
+    <!-- Header temático -->
+    <div style="padding:14px 14px 10px;border-bottom:1px solid rgba(192,57,43,.2)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="font-size:28px">⚔️</div>
+        <div>
+          <div style="font-family:'Cinzel Decorative',serif;font-size:14px;color:var(--red3);text-shadow:0 0 12px rgba(192,57,43,.4)">Arena de Ondas</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">5 ondas por semana · Inimigos crescentes · Reset toda segunda-feira</div>
+        </div>
+      </div>
+    </div>
+    <!-- Conteúdo dinâmico gerado por renderArena() -->
+    <div id="arena-panel" style="padding:12px 14px 14px"></div>
+  </div>
 </div>
 
 <div class="panel" id="panel-smithy">
@@ -1275,6 +1293,49 @@
     height: 62px !important;
   }
 </style>
+
+<!-- ══ ARENA: injeção de rota no sistema de navegação ══ -->
+<script>
+(function(){
+  function patchNav(){
+    // Adiciona 'arena' à categoria 'combat' se CAT_TABS existir
+    if(typeof CAT_TABS !== 'undefined'){
+      if(CAT_TABS.combat && !CAT_TABS.combat.includes('arena'))
+        CAT_TABS.combat.push('arena');
+    }
+    // Garante que swT('arena') funciona mostrando panel-arena
+    const origSwT = typeof swT === 'function' ? swT : null;
+    if(origSwT){
+      window.swT = function(page){
+        origSwT(page);
+        if(page === 'arena' && typeof renderArena === 'function') renderArena();
+      };
+    }
+    // Estende renderAll para incluir renderArena
+    const origRenderAll = typeof renderAll === 'function' ? renderAll : null;
+    if(origRenderAll && !origRenderAll._arenaPatched){
+      window.renderAll = function(){
+        origRenderAll();
+        if(typeof renderArena === 'function') renderArena();
+      };
+      window.renderAll._arenaPatched = true;
+    }
+    // Clique direto na aba arena chama renderArena
+    const tabArena = document.getElementById('tab-arena');
+    if(tabArena && !tabArena._arenaBound){
+      tabArena.addEventListener('click', function(){
+        if(typeof renderArena === 'function') renderArena();
+      });
+      tabArena._arenaBound = true;
+    }
+  }
+  if(document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', patchNav);
+  else
+    patchNav();
+  window.addEventListener('load', patchNav);
+})();
+</script>
 
 
 <!-- ══ DARK FANTASY MOTION ENGINE ══ -->

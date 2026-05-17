@@ -45,10 +45,11 @@ const DEF=()=>({
   skillsUnlocked:[],    // array de IDs de habilidades desbloqueadas
   hall:{},              // Hall dos Heróis: foto do ídolo + respostas
   comboHit:{},          // flags de combo por dia {_day, 3:bool, 5:bool, 8:bool}
+  arena:{week:null,wave:0,waveHp:0,waveMhp:0,waveLog:[],cleared:[],tasksDone:{},hist:[]},
 });
 
 let S=(()=>{
-  try{const s=localStorage.getItem('lrpg6');if(s){const p=JSON.parse(s);const d=DEF();for(const k in d)if(!(k in p))p[k]=d[k];if(!p.classLockedAt)p.classLockedAt=null;if(!p.bardBuff)p.bardBuff=null;if(!p.potions)p.potions={transform:0};if(!p.guildRank)p.guildRank={};if(!p.activeGuild&&p.activeGuild!==null)p.activeGuild=null;if(!p.profile)p.profile={name:'Herói',age:'',sex:'',weight:'',height:''};if(p.skillPts===undefined)p.skillPts=0;if(!p.skillsUnlocked)p.skillsUnlocked=[];if(!p.hall)p.hall={};if(!p.potionInv)p.potionInv={};if(!p.activePotions)p.activePotions=[];if(p.boss&&p.boss.phase===undefined)p.boss.phase=1;if(p.comboDmgToday===undefined)p.comboDmgToday=0;if(!p.comboHit)p.comboHit={};return p;}}catch(e){}
+  try{const s=localStorage.getItem('lrpg6');if(s){const p=JSON.parse(s);const d=DEF();for(const k in d)if(!(k in p))p[k]=d[k];if(!p.classLockedAt)p.classLockedAt=null;if(!p.bardBuff)p.bardBuff=null;if(!p.potions)p.potions={transform:0};if(!p.guildRank)p.guildRank={};if(!p.activeGuild&&p.activeGuild!==null)p.activeGuild=null;if(!p.profile)p.profile={name:'Herói',age:'',sex:'',weight:'',height:''};if(p.skillPts===undefined)p.skillPts=0;if(!p.skillsUnlocked)p.skillsUnlocked=[];if(!p.hall)p.hall={};if(!p.potionInv)p.potionInv={};if(!p.activePotions)p.activePotions=[];if(p.boss&&p.boss.phase===undefined)p.boss.phase=1;if(p.comboDmgToday===undefined)p.comboDmgToday=0;if(!p.comboHit)p.comboHit={};if(!p.arena)p.arena={week:null,wave:0,waveHp:0,waveMhp:0,waveLog:[],cleared:[],tasksDone:{},hist:[]};return p;}}catch(e){}
   return DEF();
 })();
 let uAch=JSON.parse(localStorage.getItem('lrpgAch5')||'[]');
@@ -435,7 +436,7 @@ function scheduleBossRespawn(){
   const remaining=Math.max(0, h24-(Date.now()-S.boss.defeatedAt));
   bossRespawnTimer=setTimeout(()=>{ checkBossRespawn(); },remaining);
 }
-function startEv(){checkEvExp();checkBossRespawn();scheduleBossRespawn();evTimer=setInterval(()=>{checkEvExp();if(!S.activeEv&&Math.random()<0.3)spawnEv();},10*60*1000);}
+function startEv(){checkEvExp();checkBossRespawn();scheduleBossRespawn();checkArenaWeekReset();renderArena();evTimer=setInterval(()=>{checkEvExp();if(!S.activeEv&&Math.random()<0.3)spawnEv();},10*60*1000);}
 function spawnEv(){
   const pool=EVENTS_DB;const ev=pool[Math.floor(Math.random()*pool.length)];
   const now=Date.now();
@@ -778,6 +779,347 @@ function grantRandomPotion(){
 
 // ═══════════════════════════════════════════════════════════════
 // END POTION SYSTEM
+// ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+// ⚔️  ARENA DE ONDAS
+// ═══════════════════════════════════════════════════════════════
+
+// ── Definição das 5 ondas ────────────────────────────────────────
+const ARENA_WAVES = [
+  {
+    wave:1, nm:'Goblin Ladrão', em:'👺', sub:'Soldado Raso',
+    hp:120, atk:8, elem:null,
+    tasks:[
+      {id:'aw1_1',nm:'Faça 20 flexões agora',ic:'💪',dmg:45,at:'vit'},
+      {id:'aw1_2',nm:'Beba 1L de água',ic:'💧',dmg:40,at:'ene'},
+      {id:'aw1_3',nm:'Escreva 1 meta do dia',ic:'📝',dmg:35,at:'sab'},
+    ],
+    rew:{xp:80,gold:50,cr:5},
+    lore:'Um goblin sorrateiro que rouba seus horários de treino. Fácil de derrubar, mas não o subestime.',
+  },
+  {
+    wave:2, nm:'Harpia Sombria', em:'🦅', sub:'Caçadora de Hábitos',
+    hp:220, atk:14, elem:'shadow',
+    tasks:[
+      {id:'aw2_1',nm:'Medite por 10 minutos',ic:'🧘',dmg:75,at:'men'},
+      {id:'aw2_2',nm:'Sem redes sociais por 2h',ic:'📵',dmg:70,at:'dis'},
+      {id:'aw2_3',nm:'Faça journaling agora',ic:'📓',dmg:75,at:'sab'},
+    ],
+    rew:{xp:160,gold:100,cr:12},
+    lore:'Ela ataca seus hábitos mentais. Shadow +14 — equipe-se com luz sagrada.',
+  },
+  {
+    wave:3, nm:'Ogro Insone', em:'👹', sub:'Destruidor do Sono',
+    hp:360, atk:20, elem:'poison',
+    tasks:[
+      {id:'aw3_1',nm:'Durma antes da meia-noite esta noite',ic:'🌙',dmg:120,at:'vit'},
+      {id:'aw3_2',nm:'10 min de mobilidade / alongamento',ic:'🤸',dmg:115,at:'vit'},
+      {id:'aw3_3',nm:'Sem celular 1h antes de dormir',ic:'📴',dmg:125,at:'dis'},
+    ],
+    rew:{xp:280,gold:180,cr:22},
+    lore:'Venenoso e lento — mas cada ataque sua derruba muito HP. Cuidado com os vícios aqui.',
+  },
+  {
+    wave:4, nm:'Quimera da Distração', em:'🐲', sub:'Mini-Boss Elemental',
+    hp:520, atk:28, elem:'fire',
+    tasks:[
+      {id:'aw4_1',nm:'1h de foco total (sem interrupções)',ic:'⏱️',dmg:175,at:'dis'},
+      {id:'aw4_2',nm:'Leia 20 páginas sem parar',ic:'📚',dmg:165,at:'sab'},
+      {id:'aw4_3',nm:'Liste suas 3 prioridades do dia',ic:'📋',dmg:180,at:'men'},
+      {id:'aw4_4',nm:'Treino de pelo menos 30min',ic:'🏋️',dmg:170,at:'vit'},
+    ],
+    rew:{xp:450,gold:280,cr:38},
+    lore:'Mini-Boss com elemento Fogo. Quatro tarefas — é o verdadeiro teste. Use gelo para vantagem elemental.',
+  },
+  {
+    wave:5, nm:'Lich da Procrastinação', em:'💀', sub:'Boss Final da Arena',
+    hp:800, atk:40, elem:'ice',
+    tasks:[
+      {id:'aw5_1',nm:'Complete sua tarefa mais difícil da semana',ic:'🏋️',dmg:270,at:'dis'},
+      {id:'aw5_2',nm:'Elimine 3 tarefas pendentes da sua lista',ic:'✅',dmg:260,at:'dis'},
+      {id:'aw5_3',nm:'Faça algo que adiava há semanas',ic:'⚡',dmg:270,at:'men'},
+      {id:'aw5_4',nm:'Escreva um plano para os próximos 7 dias',ic:'🗺️',dmg:265,at:'sab'},
+    ],
+    rew:{xp:700,gold:450,cr:65},
+    lore:'O guardião da Arena. Ice — use fogo para fraqueza elemental. Recompensa garantida de poção ao vencer.',
+  },
+];
+
+// ── Recompensa total da semana (ao limpar todas as ondas) ─────────
+const ARENA_CLEAR_BONUS = {xp:500, gold:300, cr:50};
+
+// ── Helpers ───────────────────────────────────────────────────────
+function arenaResetWeek(){
+  S.arena.week    = WS();
+  S.arena.wave    = 0;
+  S.arena.waveHp  = 0;
+  S.arena.waveMhp = 0;
+  S.arena.waveLog = [];
+  S.arena.cleared = [];
+  S.arena.tasksDone = {};
+}
+
+function checkArenaWeekReset(){
+  if(S.arena.week !== WS()) arenaResetWeek();
+}
+
+function aLog(h){
+  S.arena.waveLog = S.arena.waveLog || [];
+  S.arena.waveLog.push(h);
+  if(S.arena.waveLog.length > 60) S.arena.waveLog.shift();
+  const el = document.getElementById('arena-log');
+  if(el){ el.innerHTML = S.arena.waveLog.join('\n'); el.scrollTop = el.scrollHeight; }
+}
+
+// ── Iniciar onda ─────────────────────────────────────────────────
+function arenaStartWave(waveN){
+  checkArenaWeekReset();
+  const wDef = ARENA_WAVES.find(w=>w.wave===waveN);
+  if(!wDef) return;
+  // Verificar se onda anterior foi vencida
+  if(waveN > 1 && !S.arena.cleared.includes(waveN-1)){
+    notify('⚠️','Arena','Vença a onda anterior primeiro!','nr'); return;
+  }
+  if(S.arena.cleared.includes(waveN)){
+    notify('✅','Arena','Esta onda já foi vencida esta semana!','ng'); return;
+  }
+  if(S.arena.wave === waveN){
+    notify('⚔️','Arena','Esta onda já está em andamento!','nc'); return;
+  }
+  S.arena.wave    = waveN;
+  S.arena.waveHp  = wDef.hp;
+  S.arena.waveMhp = wDef.hp;
+  // Limpa apenas tarefas dessa onda
+  Object.keys(S.arena.tasksDone).forEach(k=>{ if(k.startsWith(`aw${waveN}_`)) delete S.arena.tasksDone[k]; });
+  save(); renderArena();
+  aLog(`<span style="color:var(--red3);font-weight:bold">⚔️ ONDA ${waveN}: ${wDef.em} ${wDef.nm} (${wDef.sub}) entrou na arena! HP: ${wDef.hp}</span>`);
+  if(wDef.lore) aLog(`<span style="color:var(--text3);font-style:italic">"${wDef.lore}"</span>`);
+  notify(`⚔️ Onda ${waveN}`,`${wDef.em} ${wDef.nm}`,wDef.lore||'','nr');
+}
+
+// ── Completar tarefa da onda ──────────────────────────────────────
+function arenaTogTask(taskId){
+  checkArenaWeekReset();
+  const wDef = ARENA_WAVES.find(w=>w.wave===S.arena.wave);
+  if(!wDef){ notify('⚠️','Arena','Nenhuma onda ativa. Inicie uma onda primeiro!','nr'); return; }
+  if(S.arena.cleared.includes(S.arena.wave)){ notify('✅','Arena','Onda já concluída!','ng'); return; }
+
+  const task = wDef.tasks.find(t=>t.id===taskId);
+  if(!task) return;
+
+  // Toggle: desmarcar
+  if(S.arena.tasksDone[taskId]){
+    delete S.arena.tasksDone[taskId];
+    S.arena.waveHp = Math.min(S.arena.waveMhp, S.arena.waveHp + task.dmg);
+    aLog(`<span style="color:var(--text2)">↩ ${task.nm} desmarcado.</span>`);
+    save(); renderArena(); return;
+  }
+
+  // Marcar e aplicar dano
+  S.arena.tasksDone[taskId] = true;
+  const bm  = (1 + eqPow()/100) * getClassDmgMult();
+  // Resistência/fraqueza elemental do inimigo
+  const elemMult = wDef.elem ? (()=>{
+    const equipped = Object.values(S.eq).filter(Boolean).map(id=>EDB.find(e=>e.id===id)).filter(Boolean);
+    // Se qualquer item equipado tem elemento que é fraqueza do inimigo, +30% bônus extra
+    const WAVE_ELEM_WEAK = {fire:'ice', ice:'fire', shadow:'holy', poison:'nature'};
+    const weakness = WAVE_ELEM_WEAK[wDef.elem];
+    const hasWeak  = equipped.some(eq=>eq.fx && eq.fx.type===weakness);
+    return hasWeak ? 1.3 : 1;
+  })() : 1;
+
+  const dmg = Math.max(1, Math.floor(task.dmg * bm * elemMult));
+  S.arena.waveHp = Math.max(0, S.arena.waveHp - dmg);
+
+  const elemTag = elemMult > 1 ? ` <span style="color:#f5e098">⚡ FRAQUEZA ELEMENTAL!</span>` : '';
+  aLog(`<span style="color:var(--ld,#c8a84b)">⚔️ ${task.ic} ${task.nm}: ${dmg} dano (×${bm.toFixed(2)})${elemTag}!</span>`);
+
+  // Atributo do jogador sobe
+  if(task.at && S.attrs[task.at]) S.attrs[task.at].v = Math.min(100, S.attrs[task.at].v + 1);
+
+  if(S.arena.waveHp <= 0){
+    arenaWaveCleared(wDef);
+    return;
+  }
+  save(); renderArena();
+}
+
+// ── Onda vencida ─────────────────────────────────────────────────
+function arenaWaveCleared(wDef){
+  S.arena.cleared.push(wDef.wave);
+  S.arena.wave   = 0;
+  S.arena.waveHp = 0;
+
+  const xp   = addXP(wDef.rew.xp);
+  const gold = addGold(wDef.rew.gold);
+  const cr   = addCr(wDef.rew.cr);
+
+  aLog(`<span style="color:var(--lw,#fff);font-weight:bold">🏆 ONDA ${wDef.wave} VENCIDA! ${wDef.em} ${wDef.nm} derrotado! +${xp}XP +${gold}Gold +${cr}💎!</span>`);
+  notify('🏆',`Onda ${wDef.wave} Vencida!`,`${wDef.em} ${wDef.nm}\n+${xp}XP +${gold}🪙 +${cr}💎`,'ng');
+
+  // Onda 5: drop de poção garantido
+  if(wDef.wave === 5) setTimeout(()=>grantRandomPotion(), 800);
+
+  // Arena zerada (todas as 5 ondas)
+  if(S.arena.cleared.length >= ARENA_WAVES.length){
+    arenaFullClear();
+    return;
+  }
+  save(); checkAch(); renderAll();
+}
+
+// ── Arena toda limpa (semana perfeita) ────────────────────────────
+function arenaFullClear(){
+  const xp   = addXP(ARENA_CLEAR_BONUS.xp);
+  const gold = addGold(ARENA_CLEAR_BONUS.gold);
+  const cr   = addCr(ARENA_CLEAR_BONUS.cr);
+  S.arena.hist.unshift({
+    week: WS(),
+    clearedWaves: ARENA_WAVES.length,
+    xp: ARENA_CLEAR_BONUS.xp,
+    gold: ARENA_CLEAR_BONUS.gold,
+    cr: ARENA_CLEAR_BONUS.cr,
+    dt: new Date().toLocaleDateString('pt-BR'),
+  });
+  if(S.arena.hist.length > 10) S.arena.hist.pop();
+  aLog(`<span style="color:var(--gold3);font-weight:bold">💥 ARENA LIMPA! Todas as 5 ondas vencidas! BÔNUS: +${xp}XP +${gold}Gold +${cr}💎!</span>`);
+  notify('💥','ARENA LIMPA!',`Todas as ondas vencidas!\nBônus: +${xp}XP +${gold}🪙 +${cr}💎`,'ng');
+  // Drop de poção extra pela clear total
+  setTimeout(()=>grantRandomPotion(), 1200);
+  save(); checkAch(); renderAll();
+}
+
+// ── Renderização da Arena ─────────────────────────────────────────
+function renderArena(){
+  const c = document.getElementById('arena-panel');
+  if(!c) return;
+  checkArenaWeekReset();
+
+  const ar   = S.arena;
+  const cleared = ar.cleared || [];
+  const activeW = ARENA_WAVES.find(w=>w.wave===ar.wave);
+  const allDone = cleared.length >= ARENA_WAVES.length;
+
+  // Header de status
+  let headerHtml = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div>
+        <div style="font-family:'Cinzel Decorative',serif;font-size:13px;color:var(--gold2)">⚔️ Arena de Ondas</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">${cleared.length}/${ARENA_WAVES.length} ondas vencidas esta semana</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--text3)">Bônus clear total</div>
+        <div style="font-size:11px;color:var(--gold2)">+${ARENA_CLEAR_BONUS.xp}XP +${ARENA_CLEAR_BONUS.gold}🪙 +${ARENA_CLEAR_BONUS.cr}💎</div>
+      </div>
+    </div>`;
+
+  if(allDone){
+    headerHtml += `<div style="text-align:center;padding:12px;background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.3);border-radius:8px;margin-bottom:12px">
+      <div style="font-size:24px;margin-bottom:4px">🏆</div>
+      <div style="font-family:'Cinzel',serif;font-size:12px;color:var(--gold2)">Arena Limpa esta semana!</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:3px">Retorna na próxima segunda-feira.</div>
+    </div>`;
+  }
+
+  // Grid das ondas
+  const waveGrid = ARENA_WAVES.map(wDef=>{
+    const isCleared = cleared.includes(wDef.wave);
+    const isActive  = ar.wave === wDef.wave;
+    const isLocked  = !isCleared && wDef.wave > 1 && !cleared.includes(wDef.wave-1);
+    const canStart  = !isCleared && !isActive && !isLocked && !allDone;
+
+    const hpPct   = isActive ? Math.max(0,Math.round(ar.waveHp/ar.waveMhp*100)) : 0;
+    const elemClr  = {fire:'#ff6b35',ice:'#7ecef4',shadow:'#b39ddb',poison:'#7bc67e'}[wDef.elem]||'var(--text2)';
+
+    const stateBadge = isCleared
+      ? `<span style="font-size:10px;background:rgba(39,174,96,.15);color:#27ae60;border:1px solid rgba(39,174,96,.3);border-radius:10px;padding:1px 7px">✓ Vencida</span>`
+      : isActive
+        ? `<span style="font-size:10px;background:rgba(192,57,43,.15);color:var(--red3);border:1px solid rgba(192,57,43,.3);border-radius:10px;padding:1px 7px">⚔️ Em curso</span>`
+        : isLocked
+          ? `<span style="font-size:10px;background:rgba(100,100,100,.15);color:var(--text3);border:1px solid rgba(100,100,100,.2);border-radius:10px;padding:1px 7px">🔒 Bloqueada</span>`
+          : `<span style="font-size:10px;background:rgba(201,168,76,.1);color:var(--gold2);border:1px solid rgba(201,168,76,.25);border-radius:10px;padding:1px 7px">Disponível</span>`;
+
+    const hpBar = isActive ? `
+      <div style="margin:6px 0 4px">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-bottom:2px">
+          <span>HP do inimigo</span><span>${ar.waveHp}/${ar.waveMhp}</span>
+        </div>
+        <div style="height:5px;background:rgba(0,0,0,.4);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${hpPct}%;background:var(--red3);border-radius:3px;transition:width .3s"></div>
+        </div>
+      </div>` : '';
+
+    // Tarefas da onda ativa
+    const tasksHtml = isActive ? wDef.tasks.map(t=>{
+      const done = !!ar.tasksDone[t.id];
+      return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid rgba(255,255,255,.05);cursor:pointer"
+        onclick="arenaTogTask('${t.id}')">
+        <div style="width:16px;height:16px;border-radius:4px;border:1px solid ${done?'rgba(39,174,96,.6)':'rgba(201,168,76,.3)'};
+          background:${done?'rgba(39,174,96,.2)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          ${done?'<span style="font-size:10px;color:#27ae60">✓</span>':''}
+        </div>
+        <span style="font-size:11px;color:${done?'var(--text3)':'var(--text1)'};text-decoration:${done?'line-through':'none'};flex:1">${t.ic} ${t.nm}</span>
+        <span style="font-size:10px;color:var(--gold2);flex-shrink:0">+${t.dmg}</span>
+      </div>`;
+    }).join('') : '';
+
+    const rewardsHtml = `<div style="font-size:10px;color:var(--text3);margin-top:${isActive?6:4}px">
+      Recompensa: <span style="color:var(--gold2)">+${wDef.rew.xp}XP +${wDef.rew.gold}🪙 +${wDef.rew.cr}💎${wDef.wave===5?' + 🧪Poção':''}</span>
+    </div>`;
+
+    const startBtn = canStart
+      ? `<button class="btn bsm" style="margin-top:8px;width:100%" onclick="arenaStartWave(${wDef.wave})">⚔️ Iniciar Onda ${wDef.wave}</button>`
+      : '';
+
+    return `<div style="background:rgba(0,0,0,.25);border:1px solid ${isActive?'rgba(192,57,43,.5)':isCleared?'rgba(39,174,96,.3)':'rgba(201,168,76,.1)'};
+      border-radius:8px;padding:10px 12px;margin-bottom:8px;opacity:${isLocked?'.5':'1'}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:20px">${wDef.em}</span>
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--text1)">Onda ${wDef.wave}: ${wDef.nm}</div>
+            <div style="font-size:10px;color:var(--text2)">${wDef.sub}</div>
+          </div>
+        </div>
+        ${stateBadge}
+      </div>
+      ${hpBar}
+      ${tasksHtml}
+      ${rewardsHtml}
+      ${startBtn}
+    </div>`;
+  }).join('');
+
+  // Log
+  const logHtml = `
+    <div style="margin-top:12px">
+      <div style="font-size:10px;font-family:'Cinzel',serif;color:var(--text3);margin-bottom:4px">LOG DE BATALHA</div>
+      <div id="arena-log" style="background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.06);border-radius:6px;
+        padding:8px;font-size:11px;line-height:1.7;max-height:140px;overflow-y:auto;color:var(--text2)">
+        ${(ar.waveLog||[]).join('\n') || '<em style="color:var(--text3)">Nenhuma batalha iniciada...</em>'}
+      </div>
+    </div>`;
+
+  // Histórico
+  const histHtml = ar.hist && ar.hist.length ? `
+    <div style="margin-top:12px">
+      <div style="font-size:10px;font-family:'Cinzel',serif;color:var(--text3);margin-bottom:6px">HISTÓRICO</div>
+      ${ar.hist.slice(0,3).map(h=>`
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);padding:3px 0;border-top:1px solid rgba(255,255,255,.05)">
+          <span>${h.dt} · ${h.clearedWaves}/5 ondas</span>
+          <span style="color:var(--gold2)">+${h.xp}XP +${h.gold}🪙 +${h.cr}💎</span>
+        </div>`).join('')}
+    </div>` : '';
+
+  c.innerHTML = headerHtml + waveGrid + logHtml + histHtml;
+}
+
+// ── Checar reset semanal no newDay ───────────────────────────────
+// (chamado automaticamente em checkArenaWeekReset a cada renderArena)
+
+// ═══════════════════════════════════════════════════════════════
+// END ARENA DE ONDAS
 // ═══════════════════════════════════════════════════════════════
 
 // =============== QUESTS ===============
