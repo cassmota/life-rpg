@@ -526,6 +526,187 @@ function renderProg(){
     }).join('');
   }
 }
-function renderAll(){renderStatus();renderDash();renderHabits();renderBadH();renderBoss();renderMini();renderEqPage();renderStrip();renderSmithy();renderShop();renderAttrs();renderProg();renderActiveQ();renderEvBanner();renderEvPanel();renderTavern();renderTavernPotion();renderClasse();renderProfile();renderCrafting();renderInventory();renderDotDisplay();}
+// =============== CALENDAR ===============
+let calViewYear=new Date().getFullYear();
+let calViewMonth=new Date().getMonth();
+
+function calNav(dir){
+  calViewMonth+=dir;
+  if(calViewMonth<0){calViewMonth=11;calViewYear--;}
+  if(calViewMonth>11){calViewMonth=0;calViewYear++;}
+  renderCal();
+}
+
+function renderCal(){
+  const grid=document.getElementById('cal-grid');
+  const label=document.getElementById('cal-month-label');
+  const stats=document.getElementById('cal-stats');
+  const rank=document.getElementById('cal-habits-rank');
+  const detail=document.getElementById('cal-detail');
+  if(!grid) return;
+
+  const today=new Date();
+  const yr=calViewYear, mo=calViewMonth;
+  const monthNames=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  if(label) label.textContent=`${monthNames[mo]} ${yr}`;
+
+  // Índice rápido: date ISO → entrada do hist
+  const histMap={};
+  (S.hist||[]).forEach(h=>{if(h.date)histMap[h.date]=h;});
+
+  // Streak corrente: calcular série de dias consecutivos até hoje
+  const todayISO=today.toISOString().substring(0,10);
+  const streakDates=new Set();
+  let cursor=new Date(today);cursor.setHours(0,0,0,0);
+  while(true){
+    const iso=cursor.toISOString().substring(0,10);
+    const entry=histMap[iso];
+    if(!entry||(entry.done===0&&entry.missed)) break;
+    streakDates.add(iso);
+    cursor.setDate(cursor.getDate()-1);
+  }
+
+  // Primeiro dia do mês e total de dias
+  const firstDay=new Date(yr,mo,1).getDay(); // 0=Dom
+  const daysInMonth=new Date(yr,mo+1,0).getDate();
+
+  // Grid: células vazias + dias do mês
+  let html='';
+  for(let i=0;i<firstDay;i++) html+=`<div></div>`;
+
+  for(let d=1;d<=daysInMonth;d++){
+    const dateISO=`${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const entry=histMap[dateISO];
+    const isToday=dateISO===todayISO;
+    const isFuture=dateISO>todayISO;
+    const inStreak=streakDates.has(dateISO);
+    const isMissed=entry&&entry.missed;
+    const done=entry?(entry.done||entry.dn||0):0;
+    const tot=entry?entry.tot:0;
+
+    // Cor de fundo baseada em missões feitas
+    let bg='rgba(201,168,76,.06)';
+    let border='rgba(201,168,76,.12)';
+    let textClr='var(--text3)';
+    let title='';
+
+    if(isFuture){
+      bg='transparent';border='rgba(255,255,255,.04)';textClr='var(--text3)';
+    } else if(isMissed){
+      bg='rgba(192,57,43,.15)';border='rgba(192,57,43,.4)';textClr='var(--red3)';
+      title=`${dateISO} — Dia pulado 💔`;
+    } else if(entry){
+      if(done===0){bg='rgba(192,57,43,.1)';border='rgba(192,57,43,.3)';textClr='rgba(192,57,43,.7)';}
+      else if(done<=2){bg='rgba(201,168,76,.15)';border='rgba(201,168,76,.3)';textClr='var(--text2)';}
+      else if(done<=4){bg='rgba(201,168,76,.35)';border='rgba(201,168,76,.5)';textClr='var(--gold2)';}
+      else{bg='rgba(201,168,76,.65)';border='var(--gold)';textClr='var(--gold3)';}
+      title=`${dateISO} — ${done}/${tot} missões · +${entry.xp||0}XP`;
+    }
+
+    // Anel de streak
+    const streakRing=inStreak?`box-shadow:0 0 0 2px var(--gold),0 0 8px rgba(201,168,76,.4);`:'';
+    // Marcador de hoje
+    const todayDot=isToday?`<div style="position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--gold)"></div>`:'';
+    // Ícone de dia pulado
+    const missedIcon=isMissed?`<div style="position:absolute;top:1px;right:2px;font-size:7px">💔</div>`:'';
+    // Pontos de missões (máx 5 bolinhas)
+    const dots=(!isFuture&&entry&&done>0)?`<div style="position:absolute;bottom:3px;left:50%;transform:translateX(-50%);display:flex;gap:1px">
+      ${Array.from({length:Math.min(done,5)},(_,i)=>`<div style="width:3px;height:3px;border-radius:50%;background:${i<done?'var(--gold)':'rgba(201,168,76,.2)'}"></div>`).join('')}
+    </div>`:'';
+
+    html+=`<div onclick="calClick('${dateISO}')" title="${title}"
+      style="position:relative;border-radius:5px;background:${bg};border:1px solid ${border};
+      display:flex;align-items:center;justify-content:center;cursor:${isFuture?'default':'pointer'};
+      ${streakRing}transition:transform .1s;font-family:'Cinzel',serif;font-size:10px;color:${textClr};
+      font-weight:${isToday?'700':'400'};">
+      ${d}${todayDot}${missedIcon}${dots}
+    </div>`;
+  }
+  grid.innerHTML=html;
+
+  // ── Estatísticas do mês ───────────────────────────────────────
+  const monthEntries=Object.entries(histMap)
+    .filter(([iso])=>iso.startsWith(`${yr}-${String(mo+1).padStart(2,'0')}-`))
+    .map(([,e])=>e);
+  const activeDays=monthEntries.filter(e=>!e.missed&&(e.done||e.dn)>0).length;
+  const missedDays=monthEntries.filter(e=>e.missed||(e.done===0&&e.dn===0&&!e.missed&&Object.keys(histMap).includes(e.date))).length;
+  const totalXp=monthEntries.reduce((a,e)=>a+(e.xp||0),0);
+  const bestDay=monthEntries.reduce((best,e)=>((e.done||e.dn||0)>(best.done||best.dn||0)?e:best),{done:0,dn:0,date:''});
+
+  if(stats) stats.innerHTML=[
+    {ic:'🔥',lb:'Streak atual',vl:`${S.streak} dia${S.streak!==1?'s':''}`},
+    {ic:'✅',lb:'Dias ativos',vl:`${activeDays}`},
+    {ic:'💔',lb:'Dias pulados',vl:`${missedDays}`},
+    {ic:'⚡',lb:'XP no mês',vl:totalXp.toLocaleString('pt-BR')},
+    {ic:'🏆',lb:'Melhor dia',vl:bestDay.date?`${(bestDay.done||bestDay.dn||0)} missões`:'—'},
+    {ic:'📅',lb:'Dias registrados',vl:`${monthEntries.length}`},
+  ].map(({ic,lb,vl})=>`
+    <div style="background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:6px;padding:8px 10px;display:flex;align-items:center;gap:8px">
+      <span style="font-size:16px">${ic}</span>
+      <div>
+        <div style="font-family:'Cinzel',serif;font-size:8px;color:var(--text3);letter-spacing:.06em">${lb}</div>
+        <div style="font-size:12px;color:var(--gold2);font-weight:600">${vl}</div>
+      </div>
+    </div>`).join('');
+
+  // ── Ranking de hábitos do mês ─────────────────────────────────
+  if(rank){
+    const habCount={};
+    (S.habits||[]).forEach(h=>{habCount[h.id]={nm:h.nm,ic:h.ic,count:h.sk||0,td:h.td||0};});
+    const sorted=Object.values(habCount).sort((a,b)=>b.td-a.td).slice(0,6);
+    rank.innerHTML=sorted.length?sorted.map((h,i)=>{
+      const bar=S.daysA>0?Math.min(100,Math.round(h.td/Math.max(1,S.daysA)*100)):0;
+      const medals=['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣'];
+      return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+        <span style="font-size:14px;min-width:20px">${medals[i]||'·'}</span>
+        <span style="font-size:14px">${h.ic}</span>
+        <div style="flex:1">
+          <div style="font-size:11px;color:var(--text1)">${h.nm}</div>
+          <div style="height:3px;background:rgba(0,0,0,.4);border-radius:2px;margin-top:3px;overflow:hidden">
+            <div style="height:100%;width:${bar}%;background:var(--gold);border-radius:2px"></div>
+          </div>
+        </div>
+        <span style="font-size:10px;color:var(--gold2)">${h.td}×</span>
+      </div>`;
+    }).join(''):'<div style="font-size:12px;color:var(--text2);font-style:italic">Nenhum hábito registrado.</div>';
+  }
+
+  // Esconder detalhe ao re-renderizar
+  if(detail) detail.style.display='none';
+}
+
+function calClick(dateISO){
+  const detail=document.getElementById('cal-detail');if(!detail)return;
+  const entry=(S.hist||[]).find(h=>h.date===dateISO);
+  if(!entry){detail.style.display='none';return;}
+  const today=new Date().toISOString().substring(0,10);
+  const inStreak=(()=>{
+    let cursor=new Date(today);
+    while(true){
+      const iso=cursor.toISOString().substring(0,10);
+      const e=(S.hist||[]).find(h=>h.date===iso);
+      if(!e||(e.done===0&&e.missed)) break;
+      if(iso===dateISO) return true;
+      cursor.setDate(cursor.getDate()-1);
+    }
+    return false;
+  })();
+  const streakBadge=inStreak?`<span style="background:rgba(201,168,76,.15);color:var(--gold2);border:1px solid rgba(201,168,76,.3);border-radius:10px;padding:1px 7px;font-size:9px">🔥 No streak</span>`:'';
+  const missedBadge=entry.missed?`<span style="background:rgba(192,57,43,.15);color:var(--red3);border:1px solid rgba(192,57,43,.3);border-radius:10px;padding:1px 7px;font-size:9px">💔 Dia pulado</span>`:'';
+  detail.style.display='block';
+  detail.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:4px">
+      <span style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold2)">${dateISO}</span>
+      <div style="display:flex;gap:4px">${streakBadge}${missedBadge}</div>
+    </div>
+    ${entry.missed?`<div style="color:var(--red3);font-size:11px">💔 Nenhuma missão registrada — streak perdido.</div>`:`
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+      <span>✅ <strong>${entry.done||entry.dn||0}/${entry.tot||0}</strong> missões</span>
+      <span>⚡ <strong>+${entry.xp||0}</strong> XP</span>
+      <span>🪙 <strong>+${entry.gold||entry.go||0}</strong> Gold</span>
+    </div>`}`;
+}
+
+function renderAll(){renderStatus();renderDash();renderHabits();renderBadH();renderBoss();renderMini();renderEqPage();renderStrip();renderSmithy();renderShop();renderAttrs();renderProg();renderActiveQ();renderEvBanner();renderEvPanel();renderTavern();renderTavernPotion();renderClasse();renderProfile();renderCrafting();renderInventory();renderDotDisplay();renderCal();}
 
 // =============== TABS ===============
