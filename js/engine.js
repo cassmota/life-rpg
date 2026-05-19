@@ -49,7 +49,8 @@ const DEF=()=>({
 });
 
 let S=(()=>{
-  try{const s=localStorage.getItem('lrpg6');if(s){const p=JSON.parse(s);const d=DEF();for(const k in d)if(!(k in p))p[k]=d[k];if(!p.classLockedAt)p.classLockedAt=null;if(!p.bardBuff)p.bardBuff=null;if(!p.potions)p.potions={transform:0};if(!p.guildRank)p.guildRank={};if(!p.activeGuild&&p.activeGuild!==null)p.activeGuild=null;if(!p.profile)p.profile={name:'Herói',age:'',sex:'',weight:'',height:''};if(p.skillPts===undefined)p.skillPts=0;if(!p.skillsUnlocked)p.skillsUnlocked=[];if(!p.hall)p.hall={};if(!p.potionInv)p.potionInv={};if(!p.activePotions)p.activePotions=[];if(p.boss&&p.boss.phase===undefined)p.boss.phase=1;if(p.comboDmgToday===undefined)p.comboDmgToday=0;if(!p.comboHit)p.comboHit={};if(!p.arena)p.arena={week:null,wave:0,waveHp:0,waveMhp:0,waveLog:[],cleared:[],tasksDone:{},hist:[]};return p;}}catch(e){}
+  try{const s=localStorage.getItem('lrpg6');if(s){const p=JSON.parse(s);const d=DEF();for(const k in d)if(!(k in p))p[k]=d[k];if(!p.classLockedAt)p.classLockedAt=null;if(!p.bardBuff)p.bardBuff=null;if(!p.potions)p.potions={transform:0};if(!p.guildRank)p.guildRank={};if(!p.activeGuild&&p.activeGuild!==null)p.activeGuild=null;if(!p.profile)p.profile={name:'Herói',age:'',sex:'',weight:'',height:''};if(p.skillPts===undefined)p.skillPts=0;if(!p.skillsUnlocked)p.skillsUnlocked=[];if(!p.hall)p.hall={};if(!p.potionInv)p.potionInv={};if(!p.activePotions)p.activePotions=[];if(p.boss&&p.boss.phase===undefined)p.boss.phase=1;
+if(p.boss&&p.boss.def&&!p.boss.defeatedAt)p.boss.defeatedAt=Date.now()-(25*60*60*1000);if(p.comboDmgToday===undefined)p.comboDmgToday=0;if(!p.comboHit)p.comboHit={};if(!p.arena)p.arena={week:null,wave:0,waveHp:0,waveMhp:0,waveLog:[],cleared:[],tasksDone:{},hist:[]};return p;}}catch(e){}
   return DEF();
 })();
 let uAch=JSON.parse(localStorage.getItem('lrpgAch5')||'[]');
@@ -97,44 +98,115 @@ function buyEquip(id){
   notify('💎','Adquirido!',`${eq.nm} adicionado ao inventário! (${getInventoryUsed()}/${INV_MAX} slots)`,'nc');
 }
 
+
 // =============== BOSS ===============
 const getBoss=()=>BOSSES[S.boss.idx];
-function checkBW(){if(S.boss.ws!==WS()){const ni=(S.boss.idx+1)%BOSSES.length;const b=BOSSES[ni];S.boss={idx:ni,hp:b.mh,mhp:b.mh,ws:WS(),def:false,phase:1};save();notify('🐉','Novo Boss!',b.nm,'nr');}}
+
+// ── Scaling por level do personagem ───────────────────────────────
+// HP e stats do boss crescem com o nível do jogador.
+// Fórmula: stat_final = stat_base * scalingMult
+// scalingMult = 1 + (kills * 0.08) + max(0, (lv-1) * 0.05)
+// Cada boss derrotado fica ~8% mais forte. Cada level do herói acrescenta +5%.
+function getBossScaledHP(baseMH){
+  const kills = S.kills || 0;
+  const lv    = S.lv    || 1;
+  const mult  = 1 + (kills * 0.08) + (Math.max(0, lv - 1) * 0.05);
+  return Math.round(baseMH * mult);
+}
+function getBossScaledATK(baseATK){
+  const kills = S.kills || 0;
+  const lv    = S.lv    || 1;
+  const mult  = 1 + (kills * 0.06) + (Math.max(0, lv - 1) * 0.04);
+  return Math.round(baseATK * mult);
+}
+function getBossScaledReward(base, isXp){
+  const kills = S.kills || 0;
+  const lv    = S.lv    || 1;
+  // Recompensas crescem mais devagar que o HP
+  const mult  = 1 + (kills * 0.05) + (Math.max(0, lv - 1) * 0.03);
+  return Math.round(base * mult);
+}
+
+// ── Troca de boss semanal ─────────────────────────────────────────
+function checkBW(){
+  if(S.boss.ws!==WS()){
+    const ni=(S.boss.idx+1)%BOSSES.length;
+    const b=BOSSES[ni];
+    const hp=getBossScaledHP(b.mh);
+    S.boss={idx:ni,hp,mhp:hp,ws:WS(),def:false,defeatedAt:null,phase:1};
+    save();notify('🐉','Novo Boss!',b.nm,'nr');
+  }
+}
+
+// ── Spawn do próximo boss (respawn imediato após derrota) ─────────
 function spawnNextBoss(){
   const ni=(S.boss.idx+1)%BOSSES.length;
   const b=BOSSES[ni];
-  S.boss={idx:ni,hp:b.mh,mhp:b.mh,ws:WS(),def:false,defeatedAt:null,phase:1};
+  const hp=getBossScaledHP(b.mh);
+  S.boss={idx:ni,hp,mhp:hp,ws:WS(),def:false,defeatedAt:null,phase:1};
+  const scaledXp =getBossScaledReward(b.xr,true);
+  const scaledGo =getBossScaledReward(b.gr,false);
   save();renderBoss();renderMini();
-  bLog(`<span style="color:var(--red3)">🐉 <strong>${b.em} ${b.nm}</strong> surgiu das sombras!</span>`);
-  notify('🐉','Novo Boss!',`${b.em} ${b.nm} chegou! Prepare-se!`,'nr');
+  const lvTag=S.lv>1?` <span style="color:var(--red3);font-size:10px">[Nv.${S.lv} · HP:${hp}]</span>`:'';
+  bLog(`<span style="color:var(--red3)">🐉 <strong>${b.em} ${b.nm}</strong> surgiu das sombras!${lvTag}</span>`);
+  notify('🐉','Novo Boss!',`${b.em} ${b.nm}\nHP: ${hp} · Recompensa: +${scaledXp}XP +${scaledGo}🪙`,'nr');
 }
-// Checa se o cooldown de 24h após derrota do boss já passou e faz o respawn
+
+// ── Checagem de respawn (agora respawna imediatamente após derrota) ─
 function checkBossRespawn(){
-  if(!S.boss.def) return; // boss ainda vivo, nada a fazer
-  const defeatedAt=S.boss.defeatedAt;
-  if(!defeatedAt) return; // sem timestamp (save antigo), aguarda próximo ciclo
-  const elapsed=Date.now()-defeatedAt;
-  const h24=24*60*60*1000;
-  if(elapsed>=h24) spawnNextBoss();
+  if(!S.boss.def) return;
+  spawnNextBoss(); // respawn direto, sem cooldown de 24h
 }
-// ══ LORE DOS BOSSES ══════════════════════════════════════════════════
+
+// ── Timer de respawn — 3s de delay para animação de morte ─────────
+let bossRespawnTimer=null;
+function scheduleBossRespawn(){
+  if(bossRespawnTimer){clearTimeout(bossRespawnTimer);bossRespawnTimer=null;}
+  // Respawna após 3s (tempo da animação de morte)
+  bossRespawnTimer=setTimeout(()=>{ if(S.boss.def) spawnNextBoss(); },3000);
+}
+
+// ══ LORE DOS BOSSES (16 bosses) ═══════════════════════════════════
 const BOSS_LORE=[
-  {lore:'Nas profundezas da Caverna do Amanhã, este ser ancestral aguarda. Alimentado por cada tarefa adiada e sonho engavetado, seu corpo cresce a cada hora desperdiçada. Sua respiração libera névoa do esquecimento — o veneno que apaga ambições e entorpece a vontade dos fracos.',weakness:'Ação imediata e consistência diária'},
-  {lore:'Nascido nas trevas da zona de conforto, o Demônio da Preguiça suga a energia vital de todos ao redor. Cada hora no sofá o alimenta; cada esforço resistido o fortalece. Suas correntes são invisíveis, mas prendem com força de ferro. Apenas o fogo da disciplina pode dissolver suas sombras pegajosas.',weakness:'Movimento constante e hábitos matinais'},
-  {lore:'Ela não tem forma definida — muda de rosto a cada instante, refletindo seus próprios medos. A Sombra da Ansiedade habita o espaço entre o que é e o que poderia ser ruim. Alimenta-se da ruminação e cresce no silêncio da noite. Só a presença plena e a gratidão pelo momento atual podem enfraquecê-la.',weakness:'Meditação, respiração e ação presente'},
-  {lore:'Construído tijolo a tijolo por anos de maus hábitos repetidos, o Golem é a manifestação física de rotinas destrutivas cristalizadas. Cada pedra de seu corpo é um vício não combatido. Lento mas imensamente resistente — ele não cede facilmente. A única forma de destruí-lo é partir as correntes hábito por hábito.',weakness:'Consistência de 21 dias e substituição de hábitos'},
-  {lore:'Imortal por definição — o Lich do Passado não pode ser morto pelo tempo, pois ele próprio controla o tempo. Coleciona memórias dolorosas e erros cometidos como troféus em sua torre. Enquanto você olhar para trás com arrependimento, ele se alimentará. Apenas o perdão a si mesmo pode quebrar o feitiço eterno.',weakness:'Autoaceitação e foco no crescimento futuro'},
-  {lore:'Sete cabeças — sete formas de distração. Redes sociais, notificações, conteúdo infinito e o canto sedutor do multitasking. Cortar uma cabeça faz crescerem duas. A Hidra da Distração só morre quando você mergulha em foco profundo e deliberado, ignorando o coro de suas vozes hipnóticas.',weakness:'Foco único e bloqueio total de distrações'},
+  // 1-6 originais
+  {lore:'Nas profundezas da Caverna do Amanhã, este ser ancestral aguarda. Alimentado por cada tarefa adiada e sonho engavetado, seu corpo cresce a cada hora desperdiçada.',weakness:'Ação imediata e consistência diária'},
+  {lore:'Nascido nas trevas da zona de conforto, o Demônio da Preguiça suga a energia vital de todos ao redor. Suas correntes são invisíveis, mas prendem com força de ferro.',weakness:'Movimento constante e hábitos matinais'},
+  {lore:'Ela não tem forma definida — muda de rosto a cada instante, refletindo seus próprios medos. Alimenta-se da ruminação e cresce no silêncio da noite.',weakness:'Meditação, respiração e ação presente'},
+  {lore:'Construído tijolo a tijolo por anos de maus hábitos repetidos. Cada pedra de seu corpo é um vício não combatido. Lento mas imensamente resistente.',weakness:'Consistência de 21 dias e substituição de hábitos'},
+  {lore:'Imortal por definição — o Lich do Passado não pode ser morto pelo tempo. Coleciona memórias dolorosas como troféus. Apenas o perdão a si mesmo pode quebrar o feitiço.',weakness:'Autoaceitação e foco no crescimento futuro'},
+  {lore:'Sete cabeças — sete formas de distração. Cortar uma faz crescerem duas. A Hidra só morre quando você mergulha em foco profundo e deliberado.',weakness:'Foco único e bloqueio total de distrações'},
+  // 7-16 novos
+  {lore:'O Senhor do Ego alimenta-se de comparações e de aprovação alheia. Cada like não recebido o fortalece. Cada crítica o faz crescer. Apenas a autossuficiência genuína pode derrotá-lo.',weakness:'Gratidão, humildade e validação interna'},
+  {lore:'O Devorador do Tempo é invisível — você nunca o vê chegando. Ele aparece como "só mais um episódio", "só mais cinco minutos". Quando percebe, horas sumiram.',weakness:'Blocos de foco, timer e intenção clara'},
+  {lore:'O Leviatã do Caos vive no desorganizado. Cresce em cada gaveta bagunçada, em cada plano sem estrutura. Ordem é seu único predador natural.',weakness:'Sistemas, rotinas e planejamento semanal'},
+  {lore:'A Fênix da Autossabotagem renasce de cada tentativa fracassada — mais forte, mais ardente. Ela é você destruindo suas próprias conquistas por medo do sucesso.',weakness:'Consciência dos padrões e celebração das vitórias'},
+  {lore:'O Espectro do Vazio é o sentimento de que nada importa. Alimenta-se da indiferença e da ausência de propósito. Cresce no silêncio dos objetivos não definidos.',weakness:'Propósito claro, comunidade e contribuição'},
+  {lore:'A Tempestade da Mente nunca para — pensamentos em espiral, ansiedade, catastrofização. Ela transforma problemas pequenos em tsunamis mentais que paralisam qualquer ação.',weakness:'Mindfulness, journaling e perspectiva'},
+  {lore:'O Caminhante Eterno não tem destino — caminha por caminhar. Representa a falta de direção, o movimento sem propósito. Cada passo dado sem intenção o fortalece.',weakness:'Metas claras, marcos e celebração de progresso'},
+  {lore:'O Abismo Consciente sabe que você o está olhando — e sorri. É a autoconsciência doentia, a ruminação infinita sobre a própria existência que paralisa ao invés de libertar.',weakness:'Ação sem perfeição e aceitação radical'},
+  {lore:'O Titã Primordial existia antes dos conceitos. Ele é a resistência bruta da inércia — o peso de um corpo que prefere o repouso. Milênios de imobilidade o tornaram colossal.',weakness:'Movimento mínimo viável e momentum crescente'},
+  {lore:'O Criador de Mundos é o chefe final — ele não criou monstros, criou os mundos onde eles vivem. Cada zona de conforto, cada bolha mental, cada narrativa limitante é sua criação.',weakness:'Expansão consciente de limites e recriação da identidade'},
 ];
 // ── ELEMENTAL RESISTANCE/WEAKNESS TABLE ─────────────────────────────────────
 // resist: elemento recebe 50% do dano  |  weak: elemento recebe 175% do dano
 const BOSS_ELEM = {
-  dragao:  { weak:['ice','holy'],      resist:['fire','lightning'] },
-  demonio: { weak:['holy','fire'],     resist:['shadow','poison']  },
-  sombra:  { weak:['holy','lightning'],resist:['shadow','ice']     },
-  golem:   { weak:['lightning','fire'],resist:['bleed','poison']   },
-  lich:    { weak:['fire','holy'],     resist:['ice','shadow']     },
-  hidra:   { weak:['ice','poison'],   resist:['holy','fire']      },
+  dragao:     { weak:['ice','holy'],       resist:['fire','lightning'] },
+  demonio:    { weak:['holy','fire'],      resist:['shadow','poison']  },
+  sombra:     { weak:['holy','lightning'], resist:['shadow','ice']     },
+  golem:      { weak:['lightning','fire'], resist:['bleed','poison']   },
+  lich:       { weak:['fire','holy'],      resist:['ice','shadow']     },
+  hidra:      { weak:['ice','poison'],     resist:['holy','fire']      },
+  // Novos
+  ego:        { weak:['shadow','poison'],  resist:['holy','lightning'] },
+  tempo:      { weak:['fire','bleed'],     resist:['ice','shadow']     },
+  caos:       { weak:['holy','lightning'], resist:['poison','bleed']   },
+  fenix:      { weak:['ice','lightning'],  resist:['fire','shadow']    },
+  vazio:      { weak:['holy','fire'],      resist:['shadow','ice']     },
+  tempestade: { weak:['lightning','holy'], resist:['ice','poison']     },
+  caminhante: { weak:['bleed','fire'],     resist:['holy','lightning'] },
+  abismo:     { weak:['holy','lightning'], resist:['shadow','poison']  },
+  tita:       { weak:['lightning','ice'],  resist:['fire','bleed']     },
+  criador:    { weak:['shadow','poison'],  resist:['holy','fire']      },
 };
 
 function getElemMult(fxType){
@@ -272,6 +344,47 @@ const BOSS_PHASES = {
     p2:{ label:'🐍 Cabeça Dupla',    msg:'A Hidra revela CABEÇA DUPLA! Ataques de vício agora acertam duas vezes!',                       atkMult:1.6, hint:'Veneno e gelo congelam as cabeças!' },
     p3:{ label:'🌊 Veneno Mortal',   msg:'A Hidra cospe VENENO MORTAL! Você perde 8 HP por turno pelos próximos 4 hábitos!',              atkMult:2.0, dotDmg:8, dotTurns:4, hint:'Reta final — tudo ou nada!' },
   },
+  // ── Novos bosses ────────────────────────────────────────────────
+  ego: {
+    p2:{ label:'👑 Narcisismo Extremo', msg:'O Senhor do Ego entra em MODO NARCÍSICO! Cada vício cometido agora cura ele em 10 HP!',   atkMult:1.5, hint:'Shadow e Poison rompem o ego!' },
+    p3:{ label:'💢 Colapso do Ego',    msg:'COLAPSO DO EGO! O boss ataca em frenesi — 3× de velocidade por 2 turnos!',                  atkMult:2.2, hint:'Holy ignora a blindagem do ego!'},
+  },
+  tempo: {
+    p2:{ label:'⏳ Distorção Temporal', msg:'O Devorador do TEMPO distorce a realidade! Seus hábitos causam 25% menos dano!',           atkMult:1.4, dmgDebuff:0.75, hint:'Fogo e Sangramento quebram a distorção!' },
+    p3:{ label:'⌛ Inversão do Tempo',  msg:'INVERSÃO DO TEMPO! Cada hábito feito custa 15 HP — o tempo virou contra você!',            atkMult:1.9, sismoDmg:15, hint:'Dano em rajada para romper o loop!'},
+  },
+  caos: {
+    p2:{ label:'🌀 Vórtice do Caos',   msg:'O Leviatã abre um VÓRTICE! Efeitos elemental são invertidos por 3 turnos!',                atkMult:1.5, dmgDebuff:0.8, hint:'Holy e Lightning cortam o vórtice!'},
+    p3:{ label:'💥 Implosão do Caos',  msg:'IMPLOSÃO DO CAOS! O boss absorve 20% de todo dano e cria DoT de 12 HP/turno!',             atkMult:2.0, absorbPct:0.20, dotDmg:12, dotTurns:3, hint:'Burst de dano máximo agora!'},
+  },
+  fenix: {
+    p2:{ label:'🔥 Renascimento',      msg:'A Fênix RENASCE com 20% do HP! Fique alerta — ela pode fazer isso duas vezes!',             atkMult:1.6, hint:'Ice e Lightning impedem o renascimento!'},
+    p3:{ label:'☄️ Chama Final',       msg:'CHAMA FINAL! A Fênix explode em chamas — 20 de dano a você a cada hábito por 3 turnos!',   atkMult:2.1, sismoDmg:20, dotDmg:0, dotTurns:0, hint:'Últimos ataques — dê tudo agora!'},
+  },
+  vazio: {
+    p2:{ label:'🖤 Absorção do Vazio', msg:'O Espectro do VAZIO absorve sua energia! Você perde 10 XP a cada hábito feito!',            atkMult:1.4, hint:'Holy e Fire iluminam o vazio!'},
+    p3:{ label:'🌑 Colapso Existencial',msg:'COLAPSO EXISTENCIAL! O Vazio drena 12 HP por turno e reduz dano em 30%!',                  atkMult:1.8, absorbPct:0.15, dotDmg:12, dotTurns:4, hint:'Burst — ele está se dissolvendo!'},
+  },
+  tempestade: {
+    p2:{ label:'⛈️ Tempestade Plena',  msg:'A TEMPESTADE atinge força máxima! Ataques de vício acertam duas vezes com raio!',           atkMult:1.7, hint:'Lightning para contra-atacar!' },
+    p3:{ label:'🌪️ Olho da Tempestade',msg:'OLHO DA TEMPESTADE! Você fica preso — cada hábito feito causa 18 de dano a você também!', atkMult:2.3, sismoDmg:18, hint:'Última rajada — não olhe para trás!'},
+  },
+  caminhante: {
+    p2:{ label:'👣 Passo Eterno',      msg:'O Caminhante acelera! Velocidade infinita — cada turno ele ataca duas vezes!',              atkMult:1.6, hint:'Bleed e Fire travam os passos!'},
+    p3:{ label:'🌍 Caminho Sem Fim',   msg:'CAMINHO SEM FIM! O boss regenera 20 HP por hábito por 3 turnos seguidos!',                  atkMult:2.0, regenHp:20, regenTurns:3, hint:'Dano massivo agora — antes que regenere!'},
+  },
+  abismo: {
+    p2:{ label:'☠️ Olhar do Abismo',   msg:'O ABISMO te olha de volta! Cada hábito feito tem 40% de chance de curar o boss!',          atkMult:1.5, dmgDebuff:0.7, hint:'Holy e Lightning rasgam o abismo!'},
+    p3:{ label:'🕳️ Queda Livre',       msg:'QUEDA LIVRE! O Abismo drena 15 HP por turno e absorve 25% do dano!',                       atkMult:2.1, absorbPct:0.25, dotDmg:15, dotTurns:4, hint:'Tudo ou nada — agora!'},
+  },
+  tita: {
+    p2:{ label:'🌍 Tremor Sísmico',    msg:'O TITÃ PRIMORDIAL sacode o chão! Cada hábito causa 25 de dano a você!',                    atkMult:1.5, sismoDmg:25, hint:'Lightning e Ice penetram a armadura!'},
+    p3:{ label:'💀 Colosso Final',     msg:'COLOSSO FINAL! O Titã reduz todo dano recebido em 50% e ATK triplica!',                    atkMult:3.0, dmgDebuff:0.5, hint:'Dano elemental é a única saída!'},
+  },
+  criador: {
+    p2:{ label:'🌌 Criação de Escudos', msg:'O CRIADOR faz escudos de realidade! Dano reduzido em 40% e absorve 20% como cura!',       atkMult:1.8, dmgDebuff:0.6, absorbPct:0.20, hint:'Shadow e Poison dissolvem as criações!'},
+    p3:{ label:'💥 FIM DO MUNDO',      msg:'FIM DO MUNDO! O Criador usa poder máximo — 30 de dano por turno, absorção de 30%!',        atkMult:2.8, absorbPct:0.30, dotDmg:30, dotTurns:5, hint:'Você chegou até aqui. Termine isso!'},
+  },
 };
 
 function checkBossPhase(){
@@ -354,7 +467,12 @@ function bossDmg(amt,src){
   // Verificar transição de fase ANTES de checar morte
   checkBossPhase();
   if(S.boss.hp<=0){animBossDeath();
-    S.boss.def=true;S.kills++;addXP(boss.xr);addGold(boss.gr);addCr(boss.cr);
+    S.boss.def=true;S.kills++;
+    // Recompensas escaladas pelo nível e número de kills
+    const scaledXp =getBossScaledReward(boss.xr,true);
+    const scaledGo =getBossScaledReward(boss.gr,false);
+    const scaledCr =Math.round(getBossScaledReward(boss.cr,false));
+    addXP(scaledXp);addGold(scaledGo);addCr(scaledCr);
     let bRewardNm='';
     if(boss.rewardItem){
       const ri=EDB.find(e=>e.id===boss.rewardItem);
@@ -363,13 +481,15 @@ function bossDmg(amt,src){
         bLog(`<span class="lw">🎁 ITEM LENDÁRIO: ${ri.nm} desbloqueado!</span>`);
       }
     }
-    S.bkHist.unshift({nm:boss.nm,em:boss.em,svk:boss.svk,dt:new Date().toLocaleDateString('pt-BR'),xp:boss.xr,go:boss.gr,cr:boss.cr,ri:bRewardNm});
-    bLog(`<span class="lw">🏆 BOSS DERROTADO! +${boss.xr}XP +${boss.gr}Gold +${boss.cr}💎!</span>`);
-    notify('🏆','Boss Derrotado!',`${boss.em} ${boss.nm}\n+${boss.xr}XP +${boss.gr}Gold +${boss.cr}💎${bRewardNm?'\n🎁 '+bRewardNm:''}!`,'ng');
+    const killTag=S.kills>1?` (kill #${S.kills})`:'';
+    S.bkHist.unshift({nm:boss.nm,em:boss.em,svk:boss.svk,dt:new Date().toLocaleDateString('pt-BR'),xp:scaledXp,go:scaledGo,cr:scaledCr,ri:bRewardNm});
+    bLog(`<span class="lw">🏆 BOSS DERROTADO${killTag}! +${scaledXp}XP +${scaledGo}Gold +${scaledCr}💎!</span>`);
+    bLog(`<span style="color:var(--text2);font-size:11px">⬆ Próximo boss chegará mais forte (kill ×${S.kills}, Nv.${S.lv})</span>`);
+    notify('🏆','Boss Derrotado!',`${boss.em} ${boss.nm}\n+${scaledXp}XP +${scaledGo}🪙 +${scaledCr}💎${bRewardNm?'\n🎁 '+bRewardNm:''}!`,'ng');
     if(Math.random()<0.4) setTimeout(()=>grantRandomPotion(),800);
     checkAch();
-    S.boss.defeatedAt=Date.now();
     save();
+    // Respawn imediato após 3s (tempo da animação de morte)
     scheduleBossRespawn();
   }
   save();renderBoss();renderMini();
@@ -427,16 +547,7 @@ function bLog(h){const l=document.getElementById('b-log');if(!l)return;l.innerHT
 
 // =============== EVENTS ===============
 let evTimer=null;
-let bossRespawnTimer=null;
-function scheduleBossRespawn(){
-  // Cancela qualquer timer anterior
-  if(bossRespawnTimer){clearTimeout(bossRespawnTimer);bossRespawnTimer=null;}
-  if(!S.boss.def||!S.boss.defeatedAt) return;
-  const h24=24*60*60*1000;
-  const remaining=Math.max(0, h24-(Date.now()-S.boss.defeatedAt));
-  bossRespawnTimer=setTimeout(()=>{ checkBossRespawn(); },remaining);
-}
-function startEv(){checkEvExp();checkBossRespawn();scheduleBossRespawn();checkArenaWeekReset();renderArena();evTimer=setInterval(()=>{checkEvExp();if(!S.activeEv&&Math.random()<0.3)spawnEv();},10*60*1000);}
+function startEv(){checkEvExp();checkBossRespawn();checkArenaWeekReset();renderArena();evTimer=setInterval(()=>{checkEvExp();if(!S.activeEv&&Math.random()<0.3)spawnEv();},10*60*1000);}
 function spawnEv(){
   const pool=EVENTS_DB;const ev=pool[Math.floor(Math.random()*pool.length)];
   const now=Date.now();
