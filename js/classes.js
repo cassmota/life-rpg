@@ -1544,8 +1544,10 @@ function setActiveSubtab(p){
   if(p==='skilltree')  renderSkillTree();
   if(p==='hallherois') renderHall();
   if(p==='potions')    renderPotions();
-  if(p==='arena')      { if(typeof renderArena==='function')   renderArena(); }
-  if(p==='calendar')   { if(typeof renderCal==='function')     renderCal();   }
+  if(p==='arena')      { if(typeof renderArena==='function')   renderArena();   }
+  if(p==='calendar')   { if(typeof renderCal==='function')     renderCal();     }
+  if(p==='events')     { if(typeof renderEvPanel==='function') renderEvPanel(); if(typeof renderEvBanner==='function') renderEvBanner(); }
+  if(p==='boss')       { if(typeof renderBoss==='function')    renderBoss();    }
 }
 
 // ═══════════════════════════════════════════════════════════════
