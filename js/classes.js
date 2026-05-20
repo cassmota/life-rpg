@@ -1502,6 +1502,7 @@ const NAV_CATS = {
 let currentCat = 'main';
 
 function switchCat(cat){
+  const wasAlready = currentCat === cat;
   currentCat = cat;
   // Update bottom nav active state
   document.querySelectorAll('.nav-cat').forEach(el=>{
@@ -1509,9 +1510,12 @@ function switchCat(cat){
   });
   // Rebuild subtab pills
   renderSubtabs(cat);
-  // Auto-navigate to first tab of category
-  const first = NAV_CATS[cat]?.tabs[0];
-  if(first) swT(first.p);
+  // Auto-navigate to first tab ONLY when switching to a new category
+  // (não força Boss quando usuário já está em Combate e clica em Eventos)
+  if(!wasAlready){
+    const first = NAV_CATS[cat]?.tabs[0];
+    if(first) swT(first.p);
+  }
   // Update category label
   const lbl = document.getElementById('cat-label-text');
   if(lbl) lbl.textContent = NAV_CATS[cat]?.label || '';
