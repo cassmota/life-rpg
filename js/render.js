@@ -251,13 +251,22 @@ function renderEvBanner(){
 function renderEvPanel(){
   const area=document.getElementById('ev-area');if(!area)return;
   if(!S.activeEv){
+    // Renderiza ev-area PRIMEIRO, depois ev-hist
     area.innerHTML=`<div class="card" style="text-align:center;padding:34px 18px">
       <div style="font-size:42px;margin-bottom:10px">🌙</div>
       <div style="font-family:'Cinzel Decorative',serif;font-size:14px;color:var(--gold3);margin-bottom:6px">Mundo Tranquilo</div>
       <div style="font-size:13px;color:var(--text2);font-style:italic;margin-bottom:13px">Nenhuma criatura à vista. Continue suas missões!</div>
       <button class="btn bsm bev" onclick="forceEv()">⚄ Invocar Evento (Teste)</button>
     </div>`;
-    const eh=document.getElementById('ev-hist');if(eh){if(!S.evHist.length){eh.innerHTML='<div style="font-size:12px;color:var(--text2);font-style:italic">Nenhum completado.</div>';return;}eh.innerHTML=S.evHist.slice(0,8).map(e=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:16px">${e.em}</span><div style="flex:1"><div style="font-family:'Cinzel',serif;font-size:11px">${e.nm}</div><div style="font-size:10px;color:var(--text2)">${e.dt}</div></div><div style="text-align:right"><div style="font-size:10px;color:var(--gold)">+${e.xp}XP</div><div style="font-size:10px;color:var(--amber2)">+${e.go}🪙</div><div style="font-size:10px;color:var(--crystal)">+${e.cr}💎</div>${e.itm?`<div style="font-size:9px;color:var(--red3)">🎁${e.itm}</div>`:''}</div></div>`).join('');}
+    // Renderiza histórico (sem return prematuro)
+    const eh=document.getElementById('ev-hist');
+    if(eh){
+      if(!S.evHist.length){
+        eh.innerHTML='<div style="font-size:12px;color:var(--text2);font-style:italic">Nenhum completado.</div>';
+      } else {
+        eh.innerHTML=S.evHist.slice(0,8).map(e=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:16px">${e.em}</span><div style="flex:1"><div style="font-family:'Cinzel',serif;font-size:11px">${e.nm}</div><div style="font-size:10px;color:var(--text2)">${e.dt}</div></div><div style="text-align:right"><div style="font-size:10px;color:var(--gold)">+${e.xp}XP</div><div style="font-size:10px;color:var(--amber2)">+${e.go}🪙</div><div style="font-size:10px;color:var(--crystal)">+${e.cr}💎</div>${e.itm?`<div style="font-size:9px;color:var(--red3)">🎁${e.itm}</div>`:''}</div></div>`).join('');
+      }
+    }
     return;
   }
   const ev=EVENTS_DB.find(e=>e.id===S.activeEv.eid);if(!ev)return;
