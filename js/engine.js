@@ -553,6 +553,7 @@ function bLog(h){const l=document.getElementById('b-log');if(!l)return;l.innerHT
 let evTimer=null;
 function startEv(){checkEvExp();checkBossRespawn();checkArenaWeekReset();renderArena();evTimer=setInterval(()=>{checkEvExp();if(!S.activeEv&&Math.random()<0.3)spawnEv();},10*60*1000);}
 function spawnEv(){
+  if(typeof EVENTS_DB==='undefined'||!EVENTS_DB.length){ setTimeout(spawnEv,500); return; }
   const pool=EVENTS_DB;const ev=pool[Math.floor(Math.random()*pool.length)];
   const now=Date.now();
   S.activeEv={eid:ev.id,hp:ev.mh,mhp:ev.mh,done:{},start:now,exp:now+(ev.hrs*3600000)};
@@ -573,7 +574,8 @@ function checkEvExp(){
 }
 function togEvTask(tid){
   if(!S.activeEv)return;
-  const ev=EVENTS_DB.find(e=>e.id===S.activeEv.eid);if(!ev)return;
+  const ev=EVENTS_DB.find(e=>e.id===S.activeEv.eid);
+  if(!ev){ S.activeEv=null; save(); renderEvPanel(); renderEvBanner(); return; }
   const task=ev.tasks.find(t=>t.id===tid);if(!task)return;
   if(S.activeEv.done[tid]){delete S.activeEv.done[tid];S.activeEv.hp=Math.min(S.activeEv.mhp,S.activeEv.hp+task.dmg);eLog(`<span style="color:var(--text2)">↩ ${task.nm} desmarcado.</span>`);}
   else{

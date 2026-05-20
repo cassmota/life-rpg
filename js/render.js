@@ -241,7 +241,8 @@ function renderMini(){
 function renderEvBanner(){
   const bn=document.getElementById('ev-banner');
   if(!S.activeEv){bn.classList.remove('on');const tab=document.getElementById('tab-ev');if(tab){tab.style.color='';tab.style.borderBottomColor='';}updateNavAlerts();return;}
-  const ev=EVENTS_DB.find(e=>e.id===S.activeEv.eid);if(!ev)return;
+  const ev=EVENTS_DB.find(e=>e.id===S.activeEv.eid);
+  if(!ev){ S.activeEv=null; save(); bn.classList.remove('on'); updateNavAlerts(); return; }
   bn.classList.add('on');
   s('ev-em',ev.em);s('ev-ttl',ev.cr+' Detectada!');s('ev-desc',ev.sub);
   const rem=Math.max(0,S.activeEv.exp-Date.now());const hrs=Math.floor(rem/3600000);const mins=Math.floor((rem%3600000)/60000);
@@ -269,7 +270,19 @@ function renderEvPanel(){
     }
     return;
   }
-  const ev=EVENTS_DB.find(e=>e.id===S.activeEv.eid);if(!ev)return;
+  const ev=EVENTS_DB.find(e=>e.id===S.activeEv.eid);
+  if(!ev){
+    // Evento não encontrado no DB — state corrompido ou EVENTS_DB ainda carregando
+    // Limpa activeEv e mostra Mundo Tranquilo
+    S.activeEv=null; save();
+    area.innerHTML=`<div class="card" style="text-align:center;padding:34px 18px">
+      <div style="font-size:42px;margin-bottom:10px">🌙</div>
+      <div style="font-family:'Cinzel Decorative',serif;font-size:14px;color:var(--gold3);margin-bottom:6px">Mundo Tranquilo</div>
+      <div style="font-size:13px;color:var(--text2);font-style:italic;margin-bottom:13px">Nenhuma criatura à vista. Continue suas missões!</div>
+      <button class="btn bsm bev" onclick="forceEv()">⚄ Invocar Evento (Teste)</button>
+    </div>`;
+    return;
+  }
   const pct=(S.activeEv.hp/S.activeEv.mhp*100).toFixed(1);
   const rem=Math.max(0,S.activeEv.exp-Date.now());const hrs=Math.floor(rem/3600000);const mins=Math.floor((rem%3600000)/60000);
   const dn=Object.keys(S.activeEv.done).length;const tot=ev.tasks.length;const pw=eqPow();
