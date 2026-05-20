@@ -2,16 +2,6 @@
 // ────────────────────────────────────────────────────────────
 "use strict";
 
-// Injeta arena no NAV_CATS assim que ele estiver disponível
-// (NAV_CATS é definido em outro arquivo carregado antes ou depois)
-function _patchArenaInNavCats(){
-  if(typeof NAV_CATS==='undefined') return;
-  if(!NAV_CATS.combat) return;
-  const already=NAV_CATS.combat.tabs.some(t=>t.p==='arena');
-  if(!already) NAV_CATS.combat.tabs.push({p:'arena',label:'⚔️ Arena'});
-}
-document.addEventListener('DOMContentLoaded',()=>{ setTimeout(_patchArenaInNavCats, 100); });
-
 function swT(p){
   document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));

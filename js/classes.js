@@ -1482,6 +1482,7 @@ const NAV_CATS = {
   combat:{ label:'🐉 Combate', tabs:[
     {p:'boss',    icon:'🐉', label:'Boss'},
     {p:'events',  icon:'👹', label:'Eventos'},
+    {p:'arena',   icon:'⚔️', label:'Arena'},
   ]},
   forge: { label:'🔨 Arsenal', tabs:[
     {p:'smithy',    icon:'🔨', label:'Ferreiro'},
@@ -1540,9 +1541,11 @@ function setActiveSubtab(p){
   document.querySelectorAll('.subtab').forEach(el=>{
     el.classList.toggle('active', el.dataset.p===p);
   });
-  if(p==='skilltree') renderSkillTree();
+  if(p==='skilltree')  renderSkillTree();
   if(p==='hallherois') renderHall();
-  if(p==='potions') renderPotions();
+  if(p==='potions')    renderPotions();
+  if(p==='arena')      { if(typeof renderArena==='function')   renderArena(); }
+  if(p==='calendar')   { if(typeof renderCal==='function')     renderCal();   }
 }
 
 // ═══════════════════════════════════════════════════════════════

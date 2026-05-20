@@ -155,15 +155,18 @@ function spawnNextBoss(){
 // ── Checagem de respawn (agora respawna imediatamente após derrota) ─
 function checkBossRespawn(){
   if(!S.boss.def) return;
-  spawnNextBoss(); // respawn direto, sem cooldown de 24h
+  // Usa scheduleBossRespawn para garantir delay mínimo de 500ms
+  // evitando race condition com renderização no carregamento inicial
+  scheduleBossRespawn();
 }
 
-// ── Timer de respawn — 3s de delay para animação de morte ─────────
+// ── Timer de respawn — delay para animação de morte e carregamento ─
 let bossRespawnTimer=null;
 function scheduleBossRespawn(){
   if(bossRespawnTimer){clearTimeout(bossRespawnTimer);bossRespawnTimer=null;}
-  // Respawna após 3s (tempo da animação de morte)
-  bossRespawnTimer=setTimeout(()=>{ if(S.boss.def) spawnNextBoss(); },3000);
+  // 500ms no startup (para DOM carregar), 3s após derrota em combate
+  const delay = S.boss.defeatedAt ? 3000 : 500;
+  bossRespawnTimer=setTimeout(()=>{ if(S.boss.def) spawnNextBoss(); }, delay);
 }
 
 // ══ LORE DOS BOSSES (16 bosses) ═══════════════════════════════════
@@ -488,8 +491,9 @@ function bossDmg(amt,src){
     notify('🏆','Boss Derrotado!',`${boss.em} ${boss.nm}\n+${scaledXp}XP +${scaledGo}🪙 +${scaledCr}💎${bRewardNm?'\n🎁 '+bRewardNm:''}!`,'ng');
     if(Math.random()<0.4) setTimeout(()=>grantRandomPotion(),800);
     checkAch();
+    S.boss.defeatedAt = Date.now(); // marca momento da derrota → delay de 3s no respawn
     save();
-    // Respawn imediato após 3s (tempo da animação de morte)
+    // Respawn após 3s (tempo da animação de morte)
     scheduleBossRespawn();
   }
   save();renderBoss();renderMini();
