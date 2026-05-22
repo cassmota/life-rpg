@@ -1,0 +1,53 @@
+/* ══════════════════════════════════════════════════
+   NAV FIX — Viking Edition
+   Barra de navegação sempre visível
+   ══════════════════════════════════════════════════ */
+
+body {
+  filter: none !important;
+  transform: none !important;
+  animation: none !important;
+}
+
+.container {
+  animation: containerFadeIn 0.8s ease-out forwards;
+}
+
+@keyframes containerFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Nav: fixada com força máxima — madeira e ouro forjado */
+.nav-bottom {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: auto !important;
+  z-index: 99999 !important;
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: none !important;
+  pointer-events: all !important;
+
+  background:
+    linear-gradient(180deg, rgba(10,7,3,.99), rgba(6,4,2,.99)) !important;
+  border-top: 1px solid transparent !important;
+  border-image: linear-gradient(90deg,
+    transparent,
+    rgba(201,168,76,.45),
+    rgba(245,224,152,.65),
+    rgba(201,168,76,.45),
+    transparent) 1 0 0 0 !important;
+  box-shadow:
+    0 -6px 40px rgba(0,0,0,.9),
+    inset 0 1px 0 rgba(201,168,76,.18) !important;
+  height: 62px !important;
+}
+
+.container,
+.panel.active {
+  padding-bottom: 80px !important;
+}

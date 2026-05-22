@@ -1,0 +1,453 @@
+/* ═══════════════════════════════════════════════════════════════════
+   LIFE RPG — VIKING NÓRDICO MOTION  v1
+   Pinheiros do Norte · Aurora Boreal · Brasas de Fogueira
+   Dragkars nas ondas · Runas vivas · Escudos giratórios
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════
+   1. PINHEIROS NÓRDICOS (substitui janelas góticas)
+   ════════════════════════════════════════════════════════ */
+
+#castle-windows {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Pinheiros como silhuetas */
+.cw-window {
+  position: absolute;
+  bottom: 0;
+}
+
+/* Forma de pinheiro via border-trick */
+.cw-arch {
+  position: absolute;
+  bottom: 0;
+}
+
+.cw-glass { display: none; }
+.cw-pane  { display: none; }
+.cw-tracery { display: none; }
+.cw-stone-frame { display: none; }
+
+/* Pinheiro 1 — esquerda extrema */
+.cw-w1 {
+  left: 2%;
+  bottom: 0;
+  width: 0; height: 0;
+  border-left: 22px solid transparent;
+  border-right: 22px solid transparent;
+  border-bottom: 130px solid rgba(4,8,4,.95);
+  opacity: 0.9;
+  animation: treeSway 8s ease-in-out infinite;
+}
+.cw-w1 .cw-arch,
+.cw-w1 .cw-inner-glow { display: none; }
+
+/* Pinheiro 2 */
+.cw-w2 {
+  left: 7%;
+  bottom: 0;
+  width: 0; height: 0;
+  border-left: 16px solid transparent;
+  border-right: 16px solid transparent;
+  border-bottom: 95px solid rgba(3,7,3,.92);
+  opacity: 0.75;
+  animation: treeSway 11s ease-in-out infinite reverse;
+}
+.cw-w2 .cw-arch,
+.cw-w2 .cw-inner-glow { display: none; }
+
+/* Pinheiro 3 */
+.cw-w3 {
+  left: 17%;
+  bottom: 0;
+  width: 0; height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-bottom: 110px solid rgba(4,8,4,.9);
+  opacity: 0.8;
+  animation: treeSway 9s ease-in-out infinite;
+  animation-delay: -3s;
+}
+.cw-w3 .cw-arch,
+.cw-w3 .cw-inner-glow { display: none; }
+
+/* Pinheiro 4 — centro */
+.cw-w4 {
+  left: 47%;
+  bottom: 0;
+  width: 0; height: 0;
+  border-left: 26px solid transparent;
+  border-right: 26px solid transparent;
+  border-bottom: 150px solid rgba(3,7,4,.97);
+  opacity: 0.85;
+  animation: treeSway 7s ease-in-out infinite;
+  animation-delay: -2s;
+}
+.cw-w4 .cw-arch,
+.cw-w4 .cw-inner-glow { display: none; }
+
+/* Pinheiro 5 */
+.cw-w5 {
+  right: 19%;
+  bottom: 0;
+  width: 0; height: 0;
+  border-left: 24px solid transparent;
+  border-right: 24px solid transparent;
+  border-bottom: 125px solid rgba(4,8,4,.9);
+  opacity: 0.8;
+  animation: treeSway 10s ease-in-out infinite reverse;
+  animation-delay: -1.5s;
+}
+.cw-w5 .cw-arch,
+.cw-w5 .cw-inner-glow { display: none; }
+
+/* Pinheiro 6 */
+.cw-w6 {
+  right: 4%;
+  bottom: 0;
+  width: 0; height: 0;
+  border-left: 18px solid transparent;
+  border-right: 18px solid transparent;
+  border-bottom: 100px solid rgba(3,6,3,.88);
+  opacity: 0.72;
+  animation: treeSway 13s ease-in-out infinite;
+  animation-delay: -5s;
+}
+.cw-w6 .cw-arch,
+.cw-w6 .cw-inner-glow { display: none; }
+
+/* Pinheiro 7 */
+.cw-w7 {
+  right: 9%;
+  bottom: 0;
+  width: 0; height: 0;
+  border-left: 14px solid transparent;
+  border-right: 14px solid transparent;
+  border-bottom: 80px solid rgba(4,7,4,.85);
+  opacity: 0.6;
+  animation: treeSway 15s ease-in-out infinite reverse;
+  animation-delay: -4s;
+}
+.cw-w7 .cw-arch,
+.cw-w7 .cw-inner-glow { display: none; }
+
+@keyframes treeSway {
+  0%, 100% { transform: rotate(0deg); transform-origin: bottom center; }
+  25%       { transform: rotate(.8deg); }
+  75%       { transform: rotate(-.6deg); }
+}
+
+/* Reflexo de fogueira no chão abaixo das árvores */
+.cw-cast-light { position: absolute; bottom: 0; pointer-events: none; }
+.cw-light-w1 { left: 3%;  width: 60px; height: 4px; background: radial-gradient(ellipse at center, rgba(200,120,20,.06), transparent 80%); border-radius: 50%; animation: castLightFlicker1 3.2s ease-in-out infinite; }
+.cw-light-w3 { left: 18%; width: 55px; height: 4px; background: radial-gradient(ellipse at center, rgba(200,120,20,.05), transparent 80%); border-radius: 50%; animation: castLightFlicker3 4.1s ease-in-out infinite; }
+.cw-light-w4 { left: 47%; width: 70px; height: 4px; background: radial-gradient(ellipse at center, rgba(200,120,20,.06), transparent 80%); border-radius: 50%; animation: castLightFlicker2 3.8s ease-in-out infinite; }
+.cw-light-w5 { right: 19%;width: 60px; height: 4px; background: radial-gradient(ellipse at center, rgba(200,120,20,.05), transparent 80%); border-radius: 50%; animation: castLightFlicker1 2.9s ease-in-out infinite; }
+
+/* ════════════════════════════════════════════════════════
+   2. AURORA BOREAL (substitui portal arcano)
+   ════════════════════════════════════════════════════════ */
+
+#arcane-portal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 45vh;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+/* Faixas de aurora */
+.ap-ring {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  height: 60px;
+  border-radius: 50%;
+  filter: blur(18px);
+  opacity: 0;
+}
+
+.ap-ring-1 {
+  top: 8%;
+  background: linear-gradient(90deg, transparent 5%, rgba(20,120,60,.55) 30%, rgba(40,160,80,.65) 50%, rgba(20,120,60,.55) 70%, transparent 95%);
+  animation: auroraWave1 12s ease-in-out infinite;
+  animation-delay: 0s;
+}
+.ap-ring-2 {
+  top: 14%;
+  height: 80px;
+  background: linear-gradient(90deg, transparent 10%, rgba(10,80,100,.4) 35%, rgba(20,140,120,.5) 55%, rgba(10,80,100,.4) 75%, transparent 90%);
+  animation: auroraWave2 16s ease-in-out infinite;
+  animation-delay: -4s;
+}
+.ap-ring-3 {
+  top: 20%;
+  background: linear-gradient(90deg, transparent 0%, rgba(40,100,50,.35) 25%, rgba(60,180,80,.45) 50%, rgba(40,100,50,.35) 75%, transparent 100%);
+  animation: auroraWave1 20s ease-in-out infinite;
+  animation-delay: -8s;
+}
+.ap-ring-4 {
+  top: 10%;
+  height: 100px;
+  background: linear-gradient(90deg, transparent 15%, rgba(20,60,120,.3) 40%, rgba(40,80,160,.4) 60%, rgba(20,60,120,.3) 80%, transparent 100%);
+  animation: auroraWave2 14s ease-in-out infinite;
+  animation-delay: -2s;
+}
+.ap-ring-5 {
+  top: 16%;
+  background: linear-gradient(90deg, transparent 20%, rgba(60,140,70,.3) 45%, rgba(80,180,90,.4) 55%, rgba(60,140,70,.3) 70%, transparent 100%);
+  animation: auroraWave1 18s ease-in-out infinite;
+  animation-delay: -10s;
+}
+
+/* Ocultar ornamentos do portal arcano original */
+.ap-glyph, .ap-rune, .ap-spark, .ap-center, .ap-sigil { display: none !important; }
+
+@keyframes auroraWave1 {
+  0%   { opacity: 0;    transform: translateX(-5%) scaleY(1)   skewX(0deg);   }
+  15%  { opacity: .55;  transform: translateX(2%)  scaleY(1.1) skewX(1deg);   }
+  40%  { opacity: .75;  transform: translateX(6%)  scaleY(1.3) skewX(-1.5deg);}
+  60%  { opacity: .5;   transform: translateX(3%)  scaleY(1.1) skewX(.8deg);  }
+  80%  { opacity: .65;  transform: translateX(-2%) scaleY(1.2) skewX(-1deg);  }
+  100% { opacity: 0;    transform: translateX(-5%) scaleY(1)   skewX(0deg);   }
+}
+@keyframes auroraWave2 {
+  0%   { opacity: 0;    transform: translateX(5%)  scaleY(1)   skewX(0deg);   }
+  20%  { opacity: .45;  transform: translateX(-3%) scaleY(1.2) skewX(-1deg);  }
+  50%  { opacity: .6;   transform: translateX(-7%) scaleY(1.4) skewX(1.5deg); }
+  70%  { opacity: .4;   transform: translateX(-4%) scaleY(1.1) skewX(-.8deg); }
+  100% { opacity: 0;    transform: translateX(5%)  scaleY(1)   skewX(0deg);   }
+}
+
+/* ════════════════════════════════════════════════════════
+   3. RUNAS VIVAS (substitui runas de sangue)
+   ════════════════════════════════════════════════════════ */
+
+#blood-runes {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.br-rune {
+  position: absolute;
+  font-size: 14px;
+  font-family: serif;
+  color: rgba(201,168,76,.12);
+  animation: runeFloat 18s ease-in-out infinite;
+  user-select: none;
+}
+
+/* Runas posicionadas — nórdicas em vez de góticas */
+.br-r1  { top:  8%; left:  4%; animation-delay: 0s;   animation-duration: 22s; }
+.br-r2  { top: 18%; left: 92%; animation-delay:-5s;   animation-duration: 19s; }
+.br-r3  { top: 45%; left:  2%; animation-delay:-10s;  animation-duration: 24s; }
+.br-r4  { top: 60%; left: 96%; animation-delay:-3s;   animation-duration: 20s; }
+.br-r5  { top: 75%; left:  6%; animation-delay:-8s;   animation-duration: 17s; }
+.br-r6  { top: 32%; left: 50%; animation-delay:-15s;  animation-duration: 26s; }
+.br-r7  { top: 85%; left: 88%; animation-delay:-12s;  animation-duration: 21s; }
+.br-r8  { top: 12%; left: 78%; animation-delay:-7s;   animation-duration: 23s; }
+
+@keyframes runeFloat {
+  0%,100% { opacity: .06; transform: translateY(0) rotate(0deg);    }
+  25%      { opacity: .18; transform: translateY(-8px) rotate(3deg); }
+  50%      { opacity: .1;  transform: translateY(-14px) rotate(-2deg); }
+  75%      { opacity: .2;  transform: translateY(-5px) rotate(4deg); }
+}
+
+/* Ocultar wraiths/sombras do estilo original */
+.br-wraith { display: none !important; }
+
+/* ════════════════════════════════════════════════════════
+   4. BRASAS DA FOGUEIRA (substitui embers da forja)
+   ════════════════════════════════════════════════════════ */
+
+#forge-embers {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 35vh;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.fe-ember {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(255,160,40,.9);
+  box-shadow: 0 0 5px 2px rgba(230,120,20,.6), 0 0 12px 4px rgba(200,80,10,.25);
+  animation: emberRise linear infinite;
+}
+
+/* Posições e tempos variados para brasas */
+.fe-ember:nth-child(1)  { left: 8%;  animation-duration: 4.2s; animation-delay: 0s;    --ex: 5px;  }
+.fe-ember:nth-child(2)  { left: 15%; animation-duration: 5.8s; animation-delay: -1.5s; --ex: -7px; }
+.fe-ember:nth-child(3)  { left: 28%; animation-duration: 3.9s; animation-delay: -2.8s; --ex: 4px;  }
+.fe-ember:nth-child(4)  { left: 40%; animation-duration: 6.2s; animation-delay: -0.7s; --ex: -5px; }
+.fe-ember:nth-child(5)  { left: 52%; animation-duration: 4.5s; animation-delay: -3.2s; --ex: 8px;  }
+.fe-ember:nth-child(6)  { left: 63%; animation-duration: 5.1s; animation-delay: -1.9s; --ex: -6px; }
+.fe-ember:nth-child(7)  { left: 75%; animation-duration: 4.8s; animation-delay: -4.1s; --ex: 5px;  }
+.fe-ember:nth-child(8)  { left: 85%; animation-duration: 3.7s; animation-delay: -0.4s; --ex: -4px; }
+.fe-ember:nth-child(9)  { left: 22%; animation-duration: 6.5s; animation-delay: -2.2s; --ex: 7px;  }
+.fe-ember:nth-child(10) { left: 70%; animation-duration: 4.0s; animation-delay: -5.0s; --ex: -3px; }
+
+@keyframes emberRise {
+  0%   { transform: translate(0, 0) scale(1); opacity: .9; }
+  30%  { transform: translate(var(--ex, 4px), -60px) scale(.8); opacity: .7; }
+  70%  { transform: translate(calc(var(--ex, 4px) * -1), -130px) scale(.5); opacity: .3; }
+  100% { transform: translate(0, -200px) scale(.2); opacity: 0; }
+}
+
+/* Ocultar elementos de corrente da forja original */
+.fe-chain, .fe-gear { display: none !important; }
+
+/* ════════════════════════════════════════════════════════
+   5. ESCUDOS E RUNAS GIRATÓRIAS (substitui correntes góticas)
+   ════════════════════════════════════════════════════════ */
+
+#cursed-chains {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+/* Escudo nórdico — círculo rúnico giratório sutil */
+.cc-shield {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 1px solid rgba(201,168,76,.06);
+  animation: shieldRotate linear infinite;
+}
+.cc-shield::before {
+  content: 'ᚠ ᚢ ᚦ ᚨ';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 8px;
+  letter-spacing: 3px;
+  color: rgba(201,168,76,.08);
+  white-space: nowrap;
+}
+
+.cc-shield-1 { top: 15%; left: 3%;   animation-duration: 40s; width: 60px; height: 60px; }
+.cc-shield-2 { top: 50%; right: 2%;  animation-duration: 55s; animation-direction: reverse; width: 70px; height: 70px; }
+.cc-shield-3 { top: 78%; left: 8%;   animation-duration: 48s; width: 50px; height: 50px; }
+
+@keyframes shieldRotate {
+  from { transform: rotate(0deg);   }
+  to   { transform: rotate(360deg); }
+}
+
+/* Ocultar correntes do original */
+.cc-chain { display: none !important; }
+
+/* ════════════════════════════════════════════════════════
+   6. DRAGKARS (substitui arquitetura gótica animada)
+   ════════════════════════════════════════════════════════ */
+
+#gothic-architecture {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 25vh;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+/* Ondas do mar nórdico — linha ondulante na base */
+.ga-arch {
+  position: absolute;
+  bottom: 60px;
+  left: -5%;
+  right: -5%;
+  height: 3px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(126,184,212,.06) 20%,
+    rgba(126,184,212,.1) 50%,
+    rgba(126,184,212,.06) 80%,
+    transparent 100%
+  );
+  border-radius: 50%;
+  animation: waveFlow 8s ease-in-out infinite;
+}
+.ga-arch:nth-child(2) {
+  bottom: 50px;
+  animation-delay: -3s;
+  animation-duration: 11s;
+  opacity: .6;
+}
+.ga-arch:nth-child(3) {
+  bottom: 40px;
+  animation-delay: -6s;
+  animation-duration: 9s;
+  opacity: .4;
+}
+
+@keyframes waveFlow {
+  0%,100% { transform: translateX(0) scaleY(1);   opacity: .5; }
+  50%      { transform: translateX(3%) scaleY(1.4); opacity: .8; }
+}
+
+/* Ocultar os pinnacles/arcos originais */
+.ga-pinnacle, .ga-gargoyle, .ga-flying-buttress { display: none !important; }
+
+/* ════════════════════════════════════════════════════════
+   ANIMAÇÕES COMPARTILHADAS (mesmos nomes do original)
+   ════════════════════════════════════════════════════════ */
+
+@keyframes candleFlicker1 {
+  0%,100% { opacity: .55; transform: scaleY(1);    }
+  33%      { opacity: .75; transform: scaleY(1.08); }
+  66%      { opacity: .45; transform: scaleY(.94);  }
+}
+@keyframes candleFlicker2 {
+  0%,100% { opacity: .4;  transform: scaleY(1);    }
+  40%      { opacity: .65; transform: scaleY(1.1);  }
+  70%      { opacity: .3;  transform: scaleY(.92);  }
+}
+@keyframes candleFlicker3 {
+  0%,100% { opacity: .5;  transform: scaleY(1);    }
+  25%      { opacity: .7;  transform: scaleY(1.06); }
+  75%      { opacity: .35; transform: scaleY(.96);  }
+}
+@keyframes magicFlicker {
+  0%,100% { opacity: .45; }
+  50%      { opacity: .65; }
+}
+@keyframes windowBobble {
+  0%,100% { transform: translateY(0);   }
+  50%      { transform: translateY(-3px); }
+}
+@keyframes castLightFlicker1 {
+  0%,100% { opacity: .7; transform: scaleX(1);    }
+  50%      { opacity: 1;  transform: scaleX(1.12); }
+}
+@keyframes castLightFlicker2 {
+  0%,100% { opacity: .6; transform: scaleX(1);    }
+  50%      { opacity: .9; transform: scaleX(1.08); }
+}
+@keyframes castLightFlicker3 {
+  0%,100% { opacity: .5; transform: scaleX(1);    }
+  50%      { opacity: .8; transform: scaleX(1.1);  }
+}
