@@ -22,7 +22,12 @@
       border-top:none;
       padding:5px 16px;display:flex;align-items:center;justify-content:flex-end;
       min-height:34px;backdrop-filter:blur(8px);
+      /* Não pode cobrir o conteúdo dos panels */
+      pointer-events:auto;
     }
+    /* Garante que o container e panels ficam acima do fb-login-bar */
+    .container { position:relative; z-index:10000 !important; }
+    .panel.active { position:relative; z-index:10000 !important; }
   </style>
 </head>
 <body style="padding-top:34px">
@@ -1395,7 +1400,24 @@ window.addEventListener('load', function(){
   const obs = new IntersectionObserver(entries => {
     entries.forEach(e => { if (e.isIntersecting) { e.target.style.animation='cardReveal 0.45s ease-out forwards'; obs.unobserve(e.target); } });
   }, { threshold: 0.08 });
-  setTimeout(() => document.querySelectorAll('.card').forEach((c,i) => { c.style.animationDelay=`${i*0.04}s`; obs.observe(c); }), 200);
+  function revealCards(root){
+    (root||document).querySelectorAll('.card').forEach((c,i) => {
+      if(c.style.opacity==='0'||c.style.animation===''){
+        c.style.animationDelay=`${i*0.04}s`;
+        obs.observe(c);
+      }
+    });
+  }
+  setTimeout(() => revealCards(), 200);
+  // Revelar cards quando panels ficam ativos
+  const cardRevealObs = new MutationObserver(muts => {
+    muts.forEach(m => {
+      if(m.type==='attributes' && m.attributeName==='class' && m.target.classList.contains('active')){
+        setTimeout(()=>revealCards(m.target), 50);
+      }
+    });
+  });
+  document.querySelectorAll('.panel').forEach(p => cardRevealObs.observe(p, {attributes:true, attributeFilter:['class']}));
 
   /* 5. TAB FLASH */
   const fs = document.createElement('style');

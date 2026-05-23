@@ -715,6 +715,8 @@ html::after{
 
 /* Panel anim */
 .panel{display:none;animation:fi .25s ease;}.panel.active{display:block;padding-bottom:80px;}
+/* Garantir que cards em panels ativos nunca fiquem com opacity:0 */
+.panel.active .card { opacity:1 !important; }
 @keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 
 /* Legacy tab hidden (keep for JS compat) */
