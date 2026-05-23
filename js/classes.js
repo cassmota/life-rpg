@@ -1504,28 +1504,24 @@ let currentCat = 'main';
 function switchCat(cat){
   const wasAlready = currentCat === cat;
   currentCat = cat;
-  // Update bottom nav active state
   document.querySelectorAll('.nav-cat').forEach(el=>{
     el.classList.toggle('active', el.dataset.cat===cat);
   });
-  // Rebuild subtab pills
-  renderSubtabs(cat);
-  // Auto-navigate to first tab ONLY when switching to a new category
-  // (não força Boss quando usuário já está em Combate e clica em Eventos)
+  // Passa skipActivateFirst=true quando já estava na categoria
+  // para não sobrescrever a aba que o usuário acabou de clicar
+  renderSubtabs(cat, wasAlready);
   if(!wasAlready){
     const first = NAV_CATS[cat]?.tabs[0];
     if(first) swT(first.p);
   }
-  // Update category label
   const lbl = document.getElementById('cat-label-text');
   if(lbl) lbl.textContent = NAV_CATS[cat]?.label || '';
 }
 
-function renderSubtabs(cat){
+function renderSubtabs(cat, skipActivateFirst){
   const wrap = document.getElementById('subtabs');
   if(!wrap) return;
   const tabs = NAV_CATS[cat]?.tabs || [];
-  // Single tab = hide subtab bar
   const subtabWrap = document.getElementById('subtab-wrap');
   if(tabs.length <= 1){
     if(subtabWrap) subtabWrap.style.display = 'none';
@@ -1536,9 +1532,11 @@ function renderSubtabs(cat){
     <div class="subtab" data-p="${t.p}" onclick="swT('${t.p}');setActiveSubtab('${t.p}')">
       ${t.icon} ${t.label}
     </div>`).join('');
-  // Activate first
-  const first = tabs[0];
-  if(first) setActiveSubtab(first.p);
+  // Só ativa a primeira aba se não for uma reconstrução pós-clique
+  if(!skipActivateFirst){
+    const first = tabs[0];
+    if(first) setActiveSubtab(first.p);
+  }
 }
 
 function setActiveSubtab(p){

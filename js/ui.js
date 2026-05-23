@@ -28,9 +28,10 @@ function swT(p){
   if(p==='profile') renderProfile();
   if(p==='calendar'){ if(typeof renderCal==='function') renderCal(); else if(typeof renderCalendar==='function') renderCalendar(); }
   if(p==='guilds') renderGuilds();
-  if(p==='arena')  { if(typeof renderArena==='function')   renderArena();   }
-  if(p==='events') { if(typeof renderEvPanel==='function') renderEvPanel(); if(typeof renderEvBanner==='function') renderEvBanner(); }
-  if(p==='boss')   { if(typeof renderBoss==='function')    renderBoss();    }
+  if(p==='arena')   { if(typeof renderArena==='function')    renderArena();    }
+  if(p==='events')  { if(typeof renderEvPanel==='function')  renderEvPanel();  if(typeof renderEvBanner==='function') renderEvBanner(); }
+  if(p==='boss')    { if(typeof renderBoss==='function')     renderBoss();     }
+  if(p==='potions') { if(typeof renderPotions==='function')  renderPotions();  }
   updateNavAlerts();
 }
 document.getElementById('tabs').addEventListener('click',e=>{const t=e.target.closest('.tab');if(!t)return;swT(t.dataset.p);});
