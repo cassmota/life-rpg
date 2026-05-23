@@ -1310,6 +1310,29 @@ window.addEventListener('load', function(){
   if(tab) tab.addEventListener('click', function(){
     if(typeof renderArena==='function') renderArena();
   });
+
+  // MutationObserver: garante render quando panels ficam ativos
+  // Cobre casos onde swT não chama o render correto
+  const panelRenders = {
+    'panel-potions': ()=>{ if(typeof renderPotions==='function') renderPotions(); },
+    'panel-events':  ()=>{ if(typeof renderEvPanel==='function') renderEvPanel(); if(typeof renderEvBanner==='function') renderEvBanner(); },
+    'panel-arena':   ()=>{ if(typeof renderArena==='function')   renderArena();   },
+  };
+  const observer = new MutationObserver(function(mutations){
+    mutations.forEach(function(m){
+      if(m.type==='attributes' && m.attributeName==='class'){
+        const el = m.target;
+        const id = el.id;
+        if(el.classList.contains('active') && panelRenders[id]){
+          panelRenders[id]();
+        }
+      }
+    });
+  });
+  Object.keys(panelRenders).forEach(function(id){
+    const el = document.getElementById(id);
+    if(el) observer.observe(el, {attributes:true, attributeFilter:['class']});
+  });
 });
 </script>
 
