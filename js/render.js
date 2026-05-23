@@ -135,6 +135,76 @@ function renderBadH(){
   }).join('');
   const st=document.getElementById('dk-st');if(st){const tot=Object.values(S.badLog).reduce((a,b)=>a+b,0);st.innerHTML=`Vícios hoje:<strong style="color:var(--red3)">${tot}</strong> · Streak limpo:<strong style="color:var(--gold2)">${S.cStr} dias</strong>`;}
 }
+
+// ── GRUPOS DE VÍCIOS para o Dashboard ───────────────────────────
+const BAD_H_GROUPS=[
+  {id:'grp-proc',label:'Procrastinação',ic:'⏳',ids:['b13','b14','b15','b16','b17']},
+  {id:'grp-tech', label:'Tecnologia',   ic:'📱',ids:['b3','b10','b22','b23']},
+  {id:'grp-corp', label:'Corpo & Saúde',ic:'🍔',ids:['b1','b7','b8','b9','b18','b19','b20','b21']},
+  {id:'grp-ment', label:'Mente & Emoções',ic:'🧠',ids:['b4','b5','b12','b24','b25']},
+  {id:'grp-vici', label:'Vícios Pesados',ic:'💀',ids:['b2','b6','b11','b26']},
+];
+
+function toggleBadGrp(grpId){
+  const body=document.getElementById(grpId+'-body');
+  const arrow=document.getElementById(grpId+'-arrow');
+  if(!body)return;
+  const open=body.style.display!=='none';
+  body.style.display=open?'none':'block';
+  if(arrow)arrow.textContent=open?'▸':'▾';
+}
+
+function renderBadHDash(){
+  const container=document.getElementById('bh-dash-list');if(!container)return;
+  const st=document.getElementById('bh-dash-st');
+  const tot=Object.values(S.badLog).reduce((a,b)=>a+b,0);
+  const totDmg=BAD_H.filter(b=>S.badLog[b.id]).reduce((a,b)=>a+b.hp*(S.badLog[b.id]||0),0);
+
+  container.innerHTML=BAD_H_GROUPS.map(grp=>{
+    const items=BAD_H.filter(b=>grp.ids.includes(b.id));
+    const grpDone=items.filter(b=>(S.badLog[b.id]||0)>0).length;
+    const startOpen=grpDone>0;
+
+    const itemsHtml=items.map(bh=>{
+      const c=S.badLog[bh.id]||0;
+      return `<div class="hb-item bh ${c>0?'pun':''}" onclick="togBad('${bh.id}')"
+        style="margin-bottom:4px;padding:7px 11px">
+        <div class="hchk" style="width:18px;height:18px;font-size:9px">${c>0?'✕':''}</div>
+        <div class="hi">
+          <div class="hn" style="font-size:13px">${bh.ic} ${bh.nm}</div>
+          ${c>0?`<div class="hm" style="color:var(--red3);font-size:9px">${c}× hoje · -${bh.hp*c}HP · -${Math.round(bh.gp*c*100)}%🪙</div>`:''}
+        </div>
+        <div class="hr2" style="gap:1px">
+          <div class="hpn" style="font-size:9px">-${bh.hp}HP</div>
+          <div style="font-size:9px;color:var(--amber2);font-family:'Cinzel',serif">-${Math.round(bh.gp*100)}%🪙</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    const badge=grpDone>0
+      ?`<span style="background:rgba(192,57,43,.2);color:var(--red3);font-size:9px;border-radius:10px;padding:1px 7px;margin-left:auto;font-family:'Cinzel',serif">${grpDone}✗</span>`
+      :'';
+
+    return `<div style="margin-bottom:5px">
+      <div onclick="toggleBadGrp('${grp.id}')"
+        style="display:flex;align-items:center;gap:7px;padding:6px 10px;background:rgba(192,57,43,.06);border:1px solid rgba(192,57,43,${grpDone>0?'.3':'.12'});border-radius:5px;cursor:pointer;user-select:none">
+        <span style="font-size:13px">${grp.ic}</span>
+        <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:${grpDone>0?'var(--red3)':'var(--text2)'}">${grp.label}</span>
+        ${badge}
+        <span id="${grp.id}-arrow" style="font-size:9px;color:var(--text3);${badge?'':'margin-left:auto'}">${startOpen?'▾':'▸'}</span>
+      </div>
+      <div id="${grp.id}-body" style="display:${startOpen?'block':'none'};padding:6px 0 0">
+        ${itemsHtml}
+      </div>
+    </div>`;
+  }).join('');
+
+  if(st){
+    st.innerHTML=tot===0
+      ?`<span style="color:var(--gold2)">✨ Nenhum vício hoje — Streak limpo: <strong>${S.cStr} dias</strong></span>`
+      :`Vícios hoje: <strong style="color:var(--red3)">${tot}</strong> · -${totDmg}HP total · Streak limpo: <strong style="color:var(--gold2)">${S.cStr} dias</strong>`;
+  }
+}
 function renderBoss(){
   const boss=getBoss();const pct=(S.boss.hp/S.boss.mhp*100).toFixed(1);
   const lore=BOSS_LORE[S.boss.idx]||BOSS_LORE[0];
@@ -731,6 +801,6 @@ function calClick(dateISO){
     </div>`}`;
 }
 
-function renderAll(){renderStatus();renderDash();renderHabits();renderBadH();renderBoss();renderMini();renderEqPage();renderStrip();renderSmithy();renderShop();renderAttrs();renderProg();renderActiveQ();renderEvBanner();renderEvPanel();renderTavern();renderTavernPotion();renderClasse();renderProfile();renderCrafting();renderInventory();renderDotDisplay();renderCal();}
+function renderAll(){renderStatus();renderDash();renderHabits();renderBadH();renderBadHDash();renderBoss();renderMini();renderEqPage();renderStrip();renderSmithy();renderShop();renderAttrs();renderProg();renderActiveQ();renderEvBanner();renderEvPanel();renderTavern();renderTavernPotion();renderClasse();renderProfile();renderCrafting();renderInventory();renderDotDisplay();renderCal();}
 
 // =============== TABS ===============
