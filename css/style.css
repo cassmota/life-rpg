@@ -2147,16 +2147,18 @@ input[type="file"]{display:none;}
    POTION CARDS
    ═══════════════════════════════════════════════════════════════ */
 .pot-card{
-  background:linear-gradient(160deg,rgba(0,0,0,.6),rgba(20,15,35,.7));
-  border:1px solid color-mix(in srgb, var(--pot-color,#c9a84c) 30%, transparent);
+  background:linear-gradient(160deg,rgba(10,8,20,.85),rgba(20,15,35,.9));
+  border:1px solid rgba(201,168,76,.25);
   border-radius:10px;padding:10px 10px 12px;
   display:flex;flex-direction:column;align-items:center;
   text-align:center;gap:4px;
   transition:transform .2s,box-shadow .2s;
+  box-shadow:0 2px 12px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.05);
 }
 .pot-card:hover{
   transform:translateY(-3px);
-  box-shadow:0 6px 24px color-mix(in srgb, var(--pot-color,#c9a84c) 20%, transparent);
+  border-color:rgba(201,168,76,.5);
+  box-shadow:0 6px 24px rgba(201,168,76,.15),inset 0 1px 0 rgba(255,255,255,.05);
 }
 .pot-img-wrap{ position:relative;width:64px;height:64px;margin-bottom:4px; }
 .pot-img{ width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,.6)); }
@@ -2170,20 +2172,20 @@ input[type="file"]{display:none;}
 .pot-desc{ font-size:9px;color:var(--text3);line-height:1.4;min-height:28px;font-style:italic; }
 .pot-use-btn{
   margin-top:4px;padding:4px 12px;cursor:pointer;
-  background:color-mix(in srgb, var(--pot-color,#c9a84c) 15%, transparent);
+  background:rgba(201,168,76,.12);
   border:1px solid var(--pot-color,#c9a84c);border-radius:12px;
   font-family:'Cinzel',serif;font-size:9px;color:var(--pot-color,var(--gold2));
   transition:background .2s;
 }
-.pot-use-btn:hover{ background:color-mix(in srgb, var(--pot-color,#c9a84c) 30%, transparent); }
+.pot-use-btn:hover{ background:rgba(201,168,76,.25); }
 .pot-buy-btn{
   margin-top:6px;padding:5px 10px;width:100%;
-  background:color-mix(in srgb, var(--pot-color,#c9a84c) 12%, transparent);
+  background:rgba(201,168,76,.1);
   border:1px solid var(--pot-color,#c9a84c);border-radius:12px;
   font-family:'Cinzel',serif;font-size:9px;color:var(--pot-color,var(--gold2));
   letter-spacing:.04em;cursor:pointer;transition:background .2s;
 }
-.pot-buy-btn:hover{ background:color-mix(in srgb, var(--pot-color,#c9a84c) 25%, transparent); }
+.pot-buy-btn:hover{ background:rgba(201,168,76,.22); }
 
 /* ═══════════════════════════════════════════════════════════════
    ELITE / EPIC ITEM BADGES
