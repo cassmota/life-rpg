@@ -7,7 +7,7 @@ function swT(p){
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   const pn=document.getElementById('panel-'+p);if(pn)pn.classList.add('active');
   const tn=document.querySelector(`[data-p="${p}"]`);if(tn)tn.classList.add('active');
-  // sync subtab pills
+  // sync subtab pills — passa skipActivateFirst=true para não sobrescrever p
   setActiveSubtab(p);
   // sync bottom nav category
   for(const [cat,cfg] of Object.entries(NAV_CATS)){
@@ -15,10 +15,13 @@ function swT(p){
       if(cat!==currentCat){
         currentCat=cat;
         document.querySelectorAll('.nav-cat').forEach(el=>el.classList.toggle('active',el.dataset.cat===cat));
-        renderSubtabs(cat);
         const lbl=document.getElementById('cat-label-text');
         if(lbl) lbl.textContent=cfg.label;
       }
+      // Sempre reconstrói as pills marcando p como ativo, sem forçar a primeira
+      renderSubtabs(cat, true);
+      // Marcar a pill correta como active
+      document.querySelectorAll('.subtab').forEach(el=>el.classList.toggle('active',el.dataset.p===p));
       break;
     }
   }

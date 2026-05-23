@@ -1543,13 +1543,9 @@ function setActiveSubtab(p){
   document.querySelectorAll('.subtab').forEach(el=>{
     el.classList.toggle('active', el.dataset.p===p);
   });
+  // Renders específicos só para abas chamadas diretamente (não via swT)
   if(p==='skilltree')  renderSkillTree();
   if(p==='hallherois') renderHall();
-  if(p==='potions')    renderPotions();
-  if(p==='arena')      { if(typeof renderArena==='function')   renderArena();   }
-  if(p==='calendar')   { if(typeof renderCal==='function')     renderCal();     }
-  if(p==='events')     { if(typeof renderEvPanel==='function') renderEvPanel(); if(typeof renderEvBanner==='function') renderEvBanner(); }
-  if(p==='boss')       { if(typeof renderBoss==='function')    renderBoss();    }
 }
 
 // ═══════════════════════════════════════════════════════════════
