@@ -7,7 +7,7 @@ function swT(p){
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   const pn=document.getElementById('panel-'+p);if(pn)pn.classList.add('active');
   const tn=document.querySelector(`[data-p="${p}"]`);if(tn)tn.classList.add('active');
-  // sync subtab pills — passa skipActivateFirst=true para não sobrescrever p
+  // sync subtab pills
   setActiveSubtab(p);
   // sync bottom nav category
   for(const [cat,cfg] of Object.entries(NAV_CATS)){
@@ -15,13 +15,10 @@ function swT(p){
       if(cat!==currentCat){
         currentCat=cat;
         document.querySelectorAll('.nav-cat').forEach(el=>el.classList.toggle('active',el.dataset.cat===cat));
+        renderSubtabs(cat);
         const lbl=document.getElementById('cat-label-text');
         if(lbl) lbl.textContent=cfg.label;
       }
-      // Sempre reconstrói as pills marcando p como ativo, sem forçar a primeira
-      renderSubtabs(cat, true);
-      // Marcar a pill correta como active
-      document.querySelectorAll('.subtab').forEach(el=>el.classList.toggle('active',el.dataset.p===p));
       break;
     }
   }
@@ -29,12 +26,8 @@ function swT(p){
   if(p==='inventory') renderInventory();
   if(p==='classe') renderClasse();
   if(p==='profile') renderProfile();
-  if(p==='calendar'){ if(typeof renderCal==='function') renderCal(); else if(typeof renderCalendar==='function') renderCalendar(); }
+  if(p==='calendar') renderCalendar();
   if(p==='guilds') renderGuilds();
-  if(p==='arena')   { if(typeof renderArena==='function')    renderArena();    }
-  if(p==='events')  { if(typeof renderEvPanel==='function')  renderEvPanel();  if(typeof renderEvBanner==='function') renderEvBanner(); }
-  if(p==='boss')    { if(typeof renderBoss==='function')     renderBoss();     }
-  if(p==='potions') { if(typeof renderPotions==='function')  renderPotions();  }
   updateNavAlerts();
 }
 document.getElementById('tabs').addEventListener('click',e=>{const t=e.target.closest('.tab');if(!t)return;swT(t.dataset.p);});
@@ -351,6 +344,30 @@ function expData(){
   a.click();
   notify('📤','Backup Exportado!','Guarde o arquivo em local seguro!','ng');
 }
-function confReset(){showMo('⚠️ Resetar?','TODO o progresso será perdido.',null,[{lb:'Cancelar',ac:'closeMo()'},{lb:'Resetar!',ac:'doReset()',cl:'btn bred'}]);}
-function doReset(){closeMo();localStorage.removeItem('lrpg6');localStorage.removeItem('lrpgAch5');S=DEF();uAch=[];genQ();renderAll();notify('🔄','Reset!','Nova jornada!','ng');}
+function confReset(){showMo('⚠️ Resetar?','TODO o progresso será perdido permanentemente, inclusive o save na nuvem.',null,[{lb:'Cancelar',ac:'closeMo()'},{lb:'Resetar!',ac:'doReset()',cl:'btn bred'}]);}
+function doReset(){
+  closeMo();
+  // Marca flag ANTES de tudo — firebase.js lê isso ao recarregar
+  localStorage.setItem('lrpg_reset','1');
+  // Limpar localStorage
+  localStorage.removeItem('lrpg6');
+  localStorage.removeItem('lrpgAch5');
+  // Resetar estado em memória
+  S=DEF();uAch=[];genQ();
+  // Apagar save na nuvem (deleteCloudSave vem do firebase.js)
+  if(typeof window.deleteCloudSave==='function'){
+    window.deleteCloudSave().then(()=>{
+      // Salvar estado zerado no localStorage após delete
+      try{localStorage.setItem('lrpg6',JSON.stringify(S));}catch(e){}
+      try{localStorage.setItem('lrpgAch5',JSON.stringify(uAch));}catch(e){}
+    });
+  } else {
+    // Fallback: sobrescrever nuvem com estado zerado
+    if(typeof window.cloudSave==='function') window.cloudSave(S, uAch);
+    try{localStorage.setItem('lrpg6',JSON.stringify(S));}catch(e){}
+    try{localStorage.setItem('lrpgAch5',JSON.stringify(uAch));}catch(e){}
+  }
+  renderAll();
+  notify('🔄','Reset!','Nova jornada iniciada! Recarregue a página.','ng');
+}
 

@@ -6,7 +6,7 @@
 import { initializeApp }          from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
                                    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc }
+import { getFirestore, doc, getDoc, setDoc, deleteDoc }
                                    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // ── Suas credenciais Firebase ─────────────────────────────────────
@@ -69,8 +69,26 @@ window.cloudLoad = async (uid) => {
 };
 
 // ─────────────────────────────────────────────────────────────────
-// LOGIN — abre popup Google
+// DELETE — apaga o documento do jogador no Firestore (usado no reset)
 // ─────────────────────────────────────────────────────────────────
+window.deleteCloudSave = async () => {
+  if (!window.FB_USER) return;
+  clearTimeout(_saveTimer); // cancela qualquer save pendente
+  try {
+    await deleteDoc(doc(db, "players", window.FB_USER.uid));
+    console.log("[Firebase] Save na nuvem apagado.");
+  } catch (e) {
+    console.warn("[Firebase] Erro ao apagar save:", e.message);
+    // Fallback: sobrescrever com estado zerado
+    try {
+      const empty = DEF();
+      await setDoc(
+        doc(db, "players", window.FB_USER.uid),
+        { state: JSON.stringify(empty), ach: JSON.stringify([]), ts: Date.now() }
+      );
+    } catch(e2) { console.warn("[Firebase] Erro no fallback:", e2.message); }
+  }
+};
 window.fbLogin = async () => {
   try {
     await signInWithPopup(auth, provider);
@@ -100,6 +118,16 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
     window.FB_USER = user;
     renderLoginBar();
+
+    // Se o usuário acabou de fazer reset, não restaurar da nuvem
+    const justReset = localStorage.getItem('lrpg_reset') === '1';
+    if (justReset) {
+      localStorage.removeItem('lrpg_reset');
+      // Salva o estado zerado na nuvem para limpar definitivamente
+      window.cloudSave(S, uAch);
+      notify("☁️", "Conta vinculada!", `Olá, ${user.displayName?.split(" ")[0] || "Herói"}! Save reiniciado na nuvem.`, "ng");
+      return;
+    }
 
     // Tenta carregar dados da nuvem
     const cloud = await window.cloudLoad(user.uid);
