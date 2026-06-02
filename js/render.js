@@ -114,11 +114,17 @@ function renderHabits(){
   if(l)l.innerHTML=S.habits.map(h=>{
     const avail=isHabitAvailable(h);
     const locked=!h.dn&&!avail;
-    return `<div class="hb-item ${h.dn?'done':''} ${locked?'bh':''}" onclick="togH('${h.id}')" style="${locked?'opacity:.5;cursor:not-allowed':''}">
-      <div class="hchk">${h.dn?'✓':locked?'🔒':''}</div>
-      <div class="hi"><div class="hn">${h.ic} ${h.nm} ${getHabitTypeLabel(h.tp)}</div><div class="hm">${S.attrs[h.at].ic} ${S.attrs[h.at].nm} · 🔥${h.sk}d · ✅${h.td}${locked?' · '+( h.tp==='unique'?'Concluída':'Esta semana'):''}
-      </div></div>
-      <div class="hr2"><div class="hxp">+${Math.floor(h.xb*m)}XP</div><div class="hgd">+${Math.floor(h.gb*m)}🪙</div>${m>1?`<div style="font-size:9px;color:var(--amber2)">×${m.toFixed(1)}</div>`:''}</div>
+    return `<div class="hb-item ${h.dn?'done':''} ${locked?'bh':''}" style="position:relative;${locked?'opacity:.55;':''}">
+      <div onclick="${locked?'void(0)':''}" style="display:flex;align-items:center;gap:9px;flex:1;cursor:${locked?'not-allowed':'pointer'}" onclick="${locked?'':` togH('${h.id}')` }">
+        <div class="hchk" onclick="event.stopPropagation();${locked?'':` togH('${h.id}')` }">${h.dn?'✓':locked?'🔒':''}</div>
+        <div class="hi" onclick="event.stopPropagation();${locked?'':` togH('${h.id}')` }"><div class="hn">${h.ic} ${h.nm} ${getHabitTypeLabel(h.tp)}</div><div class="hm">${S.attrs[h.at].ic} ${S.attrs[h.at].nm} · 🔥${h.sk}d · ✅${h.td}${locked?' · '+(h.tp==='unique'?'Concluída':'Esta semana'):''}
+        </div></div>
+        <div class="hr2" style="padding-right:28px"><div class="hxp">+${Math.floor(h.xb*m)}XP</div><div class="hgd">+${Math.floor(h.gb*m)}🪙</div>${m>1?`<div style="font-size:9px;color:var(--amber2)">×${m.toFixed(1)}</div>`:''}</div>
+      </div>
+      <button onclick="event.stopPropagation();confDelHabit('${h.id}')" title="Deletar missão"
+        style="position:absolute;top:50%;right:8px;transform:translateY(-50%);background:transparent;border:none;color:rgba(192,57,43,.2);font-size:14px;cursor:pointer;padding:4px 6px;border-radius:4px;line-height:1;transition:all .15s"
+        onmouseover="this.style.color='var(--red3)';this.style.background='rgba(192,57,43,.15)'"
+        onmouseout="this.style.color='rgba(192,57,43,.2)';this.style.background='transparent'">✕</button>
     </div>`;}).join('');
   const dn=S.habits.filter(h=>h.dn).length;
   s('xp-td',S.xpTd);s('go-td',S.goTd);s('dn-ct',dn);s('tt-ct',S.habits.length);
@@ -134,76 +140,6 @@ function renderBadH(){
     </div>`;
   }).join('');
   const st=document.getElementById('dk-st');if(st){const tot=Object.values(S.badLog).reduce((a,b)=>a+b,0);st.innerHTML=`Vícios hoje:<strong style="color:var(--red3)">${tot}</strong> · Streak limpo:<strong style="color:var(--gold2)">${S.cStr} dias</strong>`;}
-}
-
-// ── GRUPOS DE VÍCIOS para o Dashboard ───────────────────────────
-const BAD_H_GROUPS=[
-  {id:'grp-proc',label:'Procrastinação',ic:'⏳',ids:['b13','b14','b15','b16','b17']},
-  {id:'grp-tech', label:'Tecnologia',   ic:'📱',ids:['b3','b10','b22','b23']},
-  {id:'grp-corp', label:'Corpo & Saúde',ic:'🍔',ids:['b1','b7','b8','b9','b18','b19','b20','b21']},
-  {id:'grp-ment', label:'Mente & Emoções',ic:'🧠',ids:['b4','b5','b12','b24','b25']},
-  {id:'grp-vici', label:'Vícios Pesados',ic:'💀',ids:['b2','b6','b11','b26']},
-];
-
-function toggleBadGrp(grpId){
-  const body=document.getElementById(grpId+'-body');
-  const arrow=document.getElementById(grpId+'-arrow');
-  if(!body)return;
-  const open=body.style.display!=='none';
-  body.style.display=open?'none':'block';
-  if(arrow)arrow.textContent=open?'▸':'▾';
-}
-
-function renderBadHDash(){
-  const container=document.getElementById('bh-dash-list');if(!container)return;
-  const st=document.getElementById('bh-dash-st');
-  const tot=Object.values(S.badLog).reduce((a,b)=>a+b,0);
-  const totDmg=BAD_H.filter(b=>S.badLog[b.id]).reduce((a,b)=>a+b.hp*(S.badLog[b.id]||0),0);
-
-  container.innerHTML=BAD_H_GROUPS.map(grp=>{
-    const items=BAD_H.filter(b=>grp.ids.includes(b.id));
-    const grpDone=items.filter(b=>(S.badLog[b.id]||0)>0).length;
-    const startOpen=grpDone>0;
-
-    const itemsHtml=items.map(bh=>{
-      const c=S.badLog[bh.id]||0;
-      return `<div class="hb-item bh ${c>0?'pun':''}" onclick="togBad('${bh.id}')"
-        style="margin-bottom:4px;padding:7px 11px">
-        <div class="hchk" style="width:18px;height:18px;font-size:9px">${c>0?'✕':''}</div>
-        <div class="hi">
-          <div class="hn" style="font-size:13px">${bh.ic} ${bh.nm}</div>
-          ${c>0?`<div class="hm" style="color:var(--red3);font-size:9px">${c}× hoje · -${bh.hp*c}HP · -${Math.round(bh.gp*c*100)}%🪙</div>`:''}
-        </div>
-        <div class="hr2" style="gap:1px">
-          <div class="hpn" style="font-size:9px">-${bh.hp}HP</div>
-          <div style="font-size:9px;color:var(--amber2);font-family:'Cinzel',serif">-${Math.round(bh.gp*100)}%🪙</div>
-        </div>
-      </div>`;
-    }).join('');
-
-    const badge=grpDone>0
-      ?`<span style="background:rgba(192,57,43,.2);color:var(--red3);font-size:9px;border-radius:10px;padding:1px 7px;margin-left:auto;font-family:'Cinzel',serif">${grpDone}✗</span>`
-      :'';
-
-    return `<div style="margin-bottom:5px">
-      <div onclick="toggleBadGrp('${grp.id}')"
-        style="display:flex;align-items:center;gap:7px;padding:6px 10px;background:rgba(192,57,43,.06);border:1px solid rgba(192,57,43,${grpDone>0?'.3':'.12'});border-radius:5px;cursor:pointer;user-select:none">
-        <span style="font-size:13px">${grp.ic}</span>
-        <span style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:${grpDone>0?'var(--red3)':'var(--text2)'}">${grp.label}</span>
-        ${badge}
-        <span id="${grp.id}-arrow" style="font-size:9px;color:var(--text3);${badge?'':'margin-left:auto'}">${startOpen?'▾':'▸'}</span>
-      </div>
-      <div id="${grp.id}-body" style="display:${startOpen?'block':'none'};padding:6px 0 0">
-        ${itemsHtml}
-      </div>
-    </div>`;
-  }).join('');
-
-  if(st){
-    st.innerHTML=tot===0
-      ?`<span style="color:var(--gold2)">✨ Nenhum vício hoje — Streak limpo: <strong>${S.cStr} dias</strong></span>`
-      :`Vícios hoje: <strong style="color:var(--red3)">${tot}</strong> · -${totDmg}HP total · Streak limpo: <strong style="color:var(--gold2)">${S.cStr} dias</strong>`;
-  }
 }
 function renderBoss(){
   const boss=getBoss();const pct=(S.boss.hp/S.boss.mhp*100).toFixed(1);
@@ -311,8 +247,7 @@ function renderMini(){
 function renderEvBanner(){
   const bn=document.getElementById('ev-banner');
   if(!S.activeEv){bn.classList.remove('on');const tab=document.getElementById('tab-ev');if(tab){tab.style.color='';tab.style.borderBottomColor='';}updateNavAlerts();return;}
-  const ev=EVENTS_DB.find(e=>e.id===S.activeEv.eid);
-  if(!ev){ S.activeEv=null; save(); bn.classList.remove('on'); updateNavAlerts(); return; }
+  const ev=EVENTS_DB.find(e=>e.id===S.activeEv.eid);if(!ev)return;
   bn.classList.add('on');
   s('ev-em',ev.em);s('ev-ttl',ev.cr+' Detectada!');s('ev-desc',ev.sub);
   const rem=Math.max(0,S.activeEv.exp-Date.now());const hrs=Math.floor(rem/3600000);const mins=Math.floor((rem%3600000)/60000);
@@ -322,37 +257,16 @@ function renderEvBanner(){
 function renderEvPanel(){
   const area=document.getElementById('ev-area');if(!area)return;
   if(!S.activeEv){
-    // Renderiza ev-area PRIMEIRO, depois ev-hist
     area.innerHTML=`<div class="card" style="text-align:center;padding:34px 18px">
       <div style="font-size:42px;margin-bottom:10px">🌙</div>
       <div style="font-family:'Cinzel Decorative',serif;font-size:14px;color:var(--gold3);margin-bottom:6px">Mundo Tranquilo</div>
       <div style="font-size:13px;color:var(--text2);font-style:italic;margin-bottom:13px">Nenhuma criatura à vista. Continue suas missões!</div>
       <button class="btn bsm bev" onclick="forceEv()">⚄ Invocar Evento (Teste)</button>
     </div>`;
-    // Renderiza histórico (sem return prematuro)
-    const eh=document.getElementById('ev-hist');
-    if(eh){
-      if(!S.evHist.length){
-        eh.innerHTML='<div style="font-size:12px;color:var(--text2);font-style:italic">Nenhum completado.</div>';
-      } else {
-        eh.innerHTML=S.evHist.slice(0,8).map(e=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:16px">${e.em}</span><div style="flex:1"><div style="font-family:'Cinzel',serif;font-size:11px">${e.nm}</div><div style="font-size:10px;color:var(--text2)">${e.dt}</div></div><div style="text-align:right"><div style="font-size:10px;color:var(--gold)">+${e.xp}XP</div><div style="font-size:10px;color:var(--amber2)">+${e.go}🪙</div><div style="font-size:10px;color:var(--crystal)">+${e.cr}💎</div>${e.itm?`<div style="font-size:9px;color:var(--red3)">🎁${e.itm}</div>`:''}</div></div>`).join('');
-      }
-    }
+    const eh=document.getElementById('ev-hist');if(eh){if(!S.evHist.length){eh.innerHTML='<div style="font-size:12px;color:var(--text2);font-style:italic">Nenhum completado.</div>';return;}eh.innerHTML=S.evHist.slice(0,8).map(e=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:16px">${e.em}</span><div style="flex:1"><div style="font-family:'Cinzel',serif;font-size:11px">${e.nm}</div><div style="font-size:10px;color:var(--text2)">${e.dt}</div></div><div style="text-align:right"><div style="font-size:10px;color:var(--gold)">+${e.xp}XP</div><div style="font-size:10px;color:var(--amber2)">+${e.go}🪙</div><div style="font-size:10px;color:var(--crystal)">+${e.cr}💎</div>${e.itm?`<div style="font-size:9px;color:var(--red3)">🎁${e.itm}</div>`:''}</div></div>`).join('');}
     return;
   }
-  const ev=EVENTS_DB.find(e=>e.id===S.activeEv.eid);
-  if(!ev){
-    // Evento não encontrado no DB — state corrompido ou EVENTS_DB ainda carregando
-    // Limpa activeEv e mostra Mundo Tranquilo
-    S.activeEv=null; save();
-    area.innerHTML=`<div class="card" style="text-align:center;padding:34px 18px">
-      <div style="font-size:42px;margin-bottom:10px">🌙</div>
-      <div style="font-family:'Cinzel Decorative',serif;font-size:14px;color:var(--gold3);margin-bottom:6px">Mundo Tranquilo</div>
-      <div style="font-size:13px;color:var(--text2);font-style:italic;margin-bottom:13px">Nenhuma criatura à vista. Continue suas missões!</div>
-      <button class="btn bsm bev" onclick="forceEv()">⚄ Invocar Evento (Teste)</button>
-    </div>`;
-    return;
-  }
+  const ev=EVENTS_DB.find(e=>e.id===S.activeEv.eid);if(!ev)return;
   const pct=(S.activeEv.hp/S.activeEv.mhp*100).toFixed(1);
   const rem=Math.max(0,S.activeEv.exp-Date.now());const hrs=Math.floor(rem/3600000);const mins=Math.floor((rem%3600000)/60000);
   const dn=Object.keys(S.activeEv.done).length;const tot=ev.tasks.length;const pw=eqPow();
@@ -618,189 +532,6 @@ function renderProg(){
     }).join('');
   }
 }
-// =============== CALENDAR ===============
-let calViewYear=new Date().getFullYear();
-let calViewMonth=new Date().getMonth();
-// Alias: swT chama renderCalendar(), garantimos compatibilidade
-function renderCalendar(){ renderCal(); }
-
-function calNav(dir){
-  calViewMonth+=dir;
-  if(calViewMonth<0){calViewMonth=11;calViewYear--;}
-  if(calViewMonth>11){calViewMonth=0;calViewYear++;}
-  renderCal();
-}
-
-function renderCal(){
-  const grid=document.getElementById('cal-grid');
-  const label=document.getElementById('cal-month-label');
-  const stats=document.getElementById('cal-stats');
-  const rank=document.getElementById('cal-habits-rank');
-  const detail=document.getElementById('cal-detail');
-  if(!grid) return;
-
-  const today=new Date();
-  const yr=calViewYear, mo=calViewMonth;
-  const monthNames=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  if(label) label.textContent=`${monthNames[mo]} ${yr}`;
-
-  // Índice rápido: date ISO → entrada do hist
-  const histMap={};
-  (S.hist||[]).forEach(h=>{if(h.date)histMap[h.date]=h;});
-
-  // Streak corrente: calcular série de dias consecutivos até hoje
-  const todayISO=today.toISOString().substring(0,10);
-  const streakDates=new Set();
-  let cursor=new Date(today);cursor.setHours(0,0,0,0);
-  while(true){
-    const iso=cursor.toISOString().substring(0,10);
-    const entry=histMap[iso];
-    if(!entry||(entry.done===0&&entry.missed)) break;
-    streakDates.add(iso);
-    cursor.setDate(cursor.getDate()-1);
-  }
-
-  // Primeiro dia do mês e total de dias
-  const firstDay=new Date(yr,mo,1).getDay(); // 0=Dom
-  const daysInMonth=new Date(yr,mo+1,0).getDate();
-
-  // Grid: células vazias + dias do mês
-  let html='';
-  for(let i=0;i<firstDay;i++) html+=`<div></div>`;
-
-  for(let d=1;d<=daysInMonth;d++){
-    const dateISO=`${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const entry=histMap[dateISO];
-    const isToday=dateISO===todayISO;
-    const isFuture=dateISO>todayISO;
-    const inStreak=streakDates.has(dateISO);
-    const isMissed=entry&&entry.missed;
-    const done=entry?(entry.done||entry.dn||0):0;
-    const tot=entry?entry.tot:0;
-
-    // Cor de fundo baseada em missões feitas
-    let bg='rgba(201,168,76,.06)';
-    let border='rgba(201,168,76,.12)';
-    let textClr='var(--text3)';
-    let title='';
-
-    if(isFuture){
-      bg='transparent';border='rgba(255,255,255,.04)';textClr='var(--text3)';
-    } else if(isMissed){
-      bg='rgba(192,57,43,.15)';border='rgba(192,57,43,.4)';textClr='var(--red3)';
-      title=`${dateISO} — Dia pulado 💔`;
-    } else if(entry){
-      if(done===0){bg='rgba(192,57,43,.1)';border='rgba(192,57,43,.3)';textClr='rgba(192,57,43,.7)';}
-      else if(done<=2){bg='rgba(201,168,76,.15)';border='rgba(201,168,76,.3)';textClr='var(--text2)';}
-      else if(done<=4){bg='rgba(201,168,76,.35)';border='rgba(201,168,76,.5)';textClr='var(--gold2)';}
-      else{bg='rgba(201,168,76,.65)';border='var(--gold)';textClr='var(--gold3)';}
-      title=`${dateISO} — ${done}/${tot} missões · +${entry.xp||0}XP`;
-    }
-
-    // Anel de streak
-    const streakRing=inStreak?`box-shadow:0 0 0 2px var(--gold),0 0 8px rgba(201,168,76,.4);`:'';
-    // Marcador de hoje
-    const todayDot=isToday?`<div style="position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--gold)"></div>`:'';
-    // Ícone de dia pulado
-    const missedIcon=isMissed?`<div style="position:absolute;top:1px;right:2px;font-size:7px">💔</div>`:'';
-    // Pontos de missões (máx 5 bolinhas)
-    const dots=(!isFuture&&entry&&done>0)?`<div style="position:absolute;bottom:3px;left:50%;transform:translateX(-50%);display:flex;gap:1px">
-      ${Array.from({length:Math.min(done,5)},(_,i)=>`<div style="width:3px;height:3px;border-radius:50%;background:${i<done?'var(--gold)':'rgba(201,168,76,.2)'}"></div>`).join('')}
-    </div>`:'';
-
-    html+=`<div onclick="calClick('${dateISO}')" title="${title}"
-      style="position:relative;border-radius:5px;background:${bg};border:1px solid ${border};
-      display:flex;align-items:center;justify-content:center;cursor:${isFuture?'default':'pointer'};
-      ${streakRing}transition:transform .1s;font-family:'Cinzel',serif;font-size:10px;color:${textClr};
-      font-weight:${isToday?'700':'400'};">
-      ${d}${todayDot}${missedIcon}${dots}
-    </div>`;
-  }
-  grid.innerHTML=html;
-
-  // ── Estatísticas do mês ───────────────────────────────────────
-  const monthEntries=Object.entries(histMap)
-    .filter(([iso])=>iso.startsWith(`${yr}-${String(mo+1).padStart(2,'0')}-`))
-    .map(([,e])=>e);
-  const activeDays=monthEntries.filter(e=>!e.missed&&(e.done||e.dn)>0).length;
-  const missedDays=monthEntries.filter(e=>e.missed||(e.done===0&&e.dn===0&&!e.missed&&Object.keys(histMap).includes(e.date))).length;
-  const totalXp=monthEntries.reduce((a,e)=>a+(e.xp||0),0);
-  const bestDay=monthEntries.reduce((best,e)=>((e.done||e.dn||0)>(best.done||best.dn||0)?e:best),{done:0,dn:0,date:''});
-
-  if(stats) stats.innerHTML=[
-    {ic:'🔥',lb:'Streak atual',vl:`${S.streak} dia${S.streak!==1?'s':''}`},
-    {ic:'✅',lb:'Dias ativos',vl:`${activeDays}`},
-    {ic:'💔',lb:'Dias pulados',vl:`${missedDays}`},
-    {ic:'⚡',lb:'XP no mês',vl:totalXp.toLocaleString('pt-BR')},
-    {ic:'🏆',lb:'Melhor dia',vl:bestDay.date?`${(bestDay.done||bestDay.dn||0)} missões`:'—'},
-    {ic:'📅',lb:'Dias registrados',vl:`${monthEntries.length}`},
-  ].map(({ic,lb,vl})=>`
-    <div style="background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:6px;padding:8px 10px;display:flex;align-items:center;gap:8px">
-      <span style="font-size:16px">${ic}</span>
-      <div>
-        <div style="font-family:'Cinzel',serif;font-size:8px;color:var(--text3);letter-spacing:.06em">${lb}</div>
-        <div style="font-size:12px;color:var(--gold2);font-weight:600">${vl}</div>
-      </div>
-    </div>`).join('');
-
-  // ── Ranking de hábitos do mês ─────────────────────────────────
-  if(rank){
-    const habCount={};
-    (S.habits||[]).forEach(h=>{habCount[h.id]={nm:h.nm,ic:h.ic,count:h.sk||0,td:h.td||0};});
-    const sorted=Object.values(habCount).sort((a,b)=>b.td-a.td).slice(0,6);
-    rank.innerHTML=sorted.length?sorted.map((h,i)=>{
-      const bar=S.daysA>0?Math.min(100,Math.round(h.td/Math.max(1,S.daysA)*100)):0;
-      const medals=['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣'];
-      return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-        <span style="font-size:14px;min-width:20px">${medals[i]||'·'}</span>
-        <span style="font-size:14px">${h.ic}</span>
-        <div style="flex:1">
-          <div style="font-size:11px;color:var(--text1)">${h.nm}</div>
-          <div style="height:3px;background:rgba(0,0,0,.4);border-radius:2px;margin-top:3px;overflow:hidden">
-            <div style="height:100%;width:${bar}%;background:var(--gold);border-radius:2px"></div>
-          </div>
-        </div>
-        <span style="font-size:10px;color:var(--gold2)">${h.td}×</span>
-      </div>`;
-    }).join(''):'<div style="font-size:12px;color:var(--text2);font-style:italic">Nenhum hábito registrado.</div>';
-  }
-
-  // Esconder detalhe ao re-renderizar
-  if(detail) detail.style.display='none';
-}
-
-function calClick(dateISO){
-  const detail=document.getElementById('cal-detail');if(!detail)return;
-  const entry=(S.hist||[]).find(h=>h.date===dateISO);
-  if(!entry){detail.style.display='none';return;}
-  const today=new Date().toISOString().substring(0,10);
-  const inStreak=(()=>{
-    let cursor=new Date(today);
-    while(true){
-      const iso=cursor.toISOString().substring(0,10);
-      const e=(S.hist||[]).find(h=>h.date===iso);
-      if(!e||(e.done===0&&e.missed)) break;
-      if(iso===dateISO) return true;
-      cursor.setDate(cursor.getDate()-1);
-    }
-    return false;
-  })();
-  const streakBadge=inStreak?`<span style="background:rgba(201,168,76,.15);color:var(--gold2);border:1px solid rgba(201,168,76,.3);border-radius:10px;padding:1px 7px;font-size:9px">🔥 No streak</span>`:'';
-  const missedBadge=entry.missed?`<span style="background:rgba(192,57,43,.15);color:var(--red3);border:1px solid rgba(192,57,43,.3);border-radius:10px;padding:1px 7px;font-size:9px">💔 Dia pulado</span>`:'';
-  detail.style.display='block';
-  detail.innerHTML=`
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:4px">
-      <span style="font-family:'Cinzel',serif;font-size:11px;color:var(--gold2)">${dateISO}</span>
-      <div style="display:flex;gap:4px">${streakBadge}${missedBadge}</div>
-    </div>
-    ${entry.missed?`<div style="color:var(--red3);font-size:11px">💔 Nenhuma missão registrada — streak perdido.</div>`:`
-    <div style="display:flex;gap:16px;flex-wrap:wrap">
-      <span>✅ <strong>${entry.done||entry.dn||0}/${entry.tot||0}</strong> missões</span>
-      <span>⚡ <strong>+${entry.xp||0}</strong> XP</span>
-      <span>🪙 <strong>+${entry.gold||entry.go||0}</strong> Gold</span>
-    </div>`}`;
-}
-
-function renderAll(){renderStatus();renderDash();renderHabits();renderBadH();renderBadHDash();renderBoss();renderMini();renderEqPage();renderStrip();renderSmithy();renderShop();renderAttrs();renderProg();renderActiveQ();renderEvBanner();renderEvPanel();renderTavern();renderTavernPotion();renderClasse();renderProfile();renderCrafting();renderInventory();renderDotDisplay();renderCal();}
+function renderAll(){renderStatus();renderDash();renderHabits();renderBadH();renderBoss();renderMini();renderEqPage();renderStrip();renderSmithy();renderShop();renderAttrs();renderProg();renderActiveQ();renderEvBanner();renderEvPanel();renderTavern();renderTavernPotion();renderClasse();renderProfile();renderCrafting();renderInventory();renderDotDisplay();}
 
 // =============== TABS ===============

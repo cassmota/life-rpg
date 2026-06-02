@@ -450,59 +450,51 @@ function addHabit(){
 }
 
 // =============== NEW DAY ===============
-function confDay(){showMo('🌅 Novo Dia?','Registrar progresso, aplicar streak e resetar missões.',null,[{lb:'Cancelar',ac:'closeMo()'},{lb:'Sim!',ac:'newDay()',cl:'btn'}]);}
+function confDelHabit(id){
+  const h=S.habits.find(x=>x.id===id);if(!h)return;
+  showMo(`🗑 Deletar missão?`,`"${h.ic} ${h.nm}" será removida permanentemente. Streak e progresso desta missão serão perdidos.`,null,
+    [{lb:'Cancelar',ac:'closeMo()'},{lb:'Deletar',ac:`delHabit('${id}')`,cl:'btn bred'}]);
+}
+function delHabit(id){
+  closeMo();
+  S.habits=S.habits.filter(h=>h.id!==id);
+  save();renderHabits();renderDash();
+  notify('🗑','Missão deletada','A missão foi removida.','nc');
+}
+function confDelHab(id){
+  const h=S.habits.find(x=>x.id===id);if(!h)return;
+  showMo(`🗑 Deletar Missão?`,`"${h.ic} ${h.nm}" será removida permanentemente. XP e progresso já conquistados são mantidos.`,null,[
+    {lb:'Cancelar',ac:'closeMo()'},
+    {lb:'Deletar',ac:`delHab('${id}')`,cl:'btn bred'}
+  ]);
+}
+function delHab(id){
+  S.habits=S.habits.filter(h=>h.id!==id);
+  closeMo();save();renderHabits();
+  notify('🗑','Missão removida','','ng');
+}
 function newDay(){
   closeMo();
   const today=new Date().toDateString();
   const todayISO=new Date().toISOString().substring(0,10);
   const done=S.habits.filter(h=>h.dn).length;
-
-  // ── Detectar dias pulados e quebrar streak ──────────────────────
-  if(S.lastDay){
-    const last=new Date(S.lastDay);
-    const now=new Date();
-    last.setHours(0,0,0,0);now.setHours(0,0,0,0);
-    const diffDays=Math.round((now-last)/(1000*60*60*24));
-    if(diffDays>1){
-      for(let i=1;i<diffDays;i++){
-        const missed=new Date(last);missed.setDate(last.getDate()+i);
-        const missedISO=missed.toISOString().substring(0,10);
-        if(!S.hist.find(h=>h.date===missedISO))
-          S.hist.push({day:missed.toDateString(),date:missedISO,xp:0,gold:0,go:0,done:0,dn:0,tot:S.habits.length,missed:true});
-      }
-      if(S.hist.length>60)S.hist=S.hist.slice(-60);
-      const lost=S.streak;
-      S.streak=0;S.cStr=0;
-      S.habits.forEach(h=>{h.sk=0;});
-      if(lost>0){
-        bLog(`<span style="color:var(--red3)">💔 Streak perdido! ${diffDays-1} dia(s) sem missões. Streak zerado (era ${lost} dias). Recomece hoje!</span>`);
-        notify('💔','Streak Perdido!',`${diffDays-1} dia(s) sem missões.\nStreak era ${lost} dias — zerado.\nRecomece agora!`,'nr');
-      }
-    }
-  }
-
-  // ── Registrar hoje ──────────────────────────────────────────────
-  if(!S.hist.find(h=>h.date===todayISO))
-    S.hist.push({day:today,date:todayISO,xp:S.xpTd,gold:S.goTd,go:S.goTd,done:done,dn:done,tot:S.habits.length});
-  if(S.hist.length>60)S.hist=S.hist.slice(-60);
-
-  // ── Remover missões únicas já completadas ───────────────────────
-  S.habits=S.habits.filter(h=>!(h.tp==='unique'&&h.completed));
-
-  // ── Aplicar streak ──────────────────────────────────────────────
+  S.hist.push({
+    day:today,
+    date:todayISO,
+    xp:S.xpTd,
+    gold:S.goTd,
+    go:S.goTd,
+    done:done,
+    dn:done,
+    tot:S.habits.length
+  });
+  if(S.hist.length>60)S.hist.shift();
   if(done>0){S.streak++;S.daysA++;S.cStr++;
     if(S.streak%7===0){for(const k in S.attrs)S.attrs[k].v=Math.min(100,S.attrs[k].v+5);notify('✨','Streak!','7 dias! +5 atribs!','ng');}
-    S.habits.forEach(h=>{
-      if(h.dn){h.sk++;S.attrs[h.at].sk++;}
-      else if(h.tp!=='weekly') h.sk=0;
-      // Reset dn: diárias sempre, semanais nunca, únicas nunca (já foram removidas)
-      if(h.tp!=='weekly') h.dn=false;
-    });
-  } else {
-    S.streak=0;S.cStr=0;
-    S.habits.forEach(h=>{h.dn=false;h.sk=0;});
-  }
+    S.habits.forEach(h=>{if(h.dn){h.sk++;S.attrs[h.at].sk++;}else if(h.tp!=='unique'&&h.tp!=='weekly') h.sk=0;if(h.tp!=='unique'&&h.tp!=='weekly') h.dn=false; else if(h.tp==='daily') h.dn=false;});}
+  else{S.streak=0;S.cStr=0;S.habits.forEach(h=>{h.dn=false;h.sk=0;});}
   S.xpTd=0;S.goTd=0;S.dnTd=0;S.bdTd=0;S.badLog={};S.lastDay=today;
+  // Check quest triggers after streaks are updated
   if(typeof checkQuestTriggers==='function') checkQuestTriggers();
   checkBW();checkAch();save();renderAll();
   if(Math.random()<0.4&&!S.activeEv)setTimeout(spawnEv,2000);
