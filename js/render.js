@@ -121,7 +121,7 @@ function renderHabits(){
         </div></div>
         <div class="hr2" style="padding-right:28px"><div class="hxp">+${Math.floor(h.xb*m)}XP</div><div class="hgd">+${Math.floor(h.gb*m)}🪙</div>${m>1?`<div style="font-size:9px;color:var(--amber2)">×${m.toFixed(1)}</div>`:''}</div>
       </div>
-      <button onclick="event.stopPropagation();confDelHabit('${h.id}')" title="Deletar missão"
+      <button onclick="event.stopPropagation();confDelHab('${h.id}')" title="Deletar missão"
         style="position:absolute;top:50%;right:8px;transform:translateY(-50%);background:transparent;border:none;color:rgba(192,57,43,.2);font-size:14px;cursor:pointer;padding:4px 6px;border-radius:4px;line-height:1;transition:all .15s"
         onmouseover="this.style.color='var(--red3)';this.style.background='rgba(192,57,43,.15)'"
         onmouseout="this.style.color='rgba(192,57,43,.2)';this.style.background='transparent'">✕</button>

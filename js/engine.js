@@ -450,17 +450,7 @@ function addHabit(){
 }
 
 // =============== NEW DAY ===============
-function confDelHabit(id){
-  const h=S.habits.find(x=>x.id===id);if(!h)return;
-  showMo(`🗑 Deletar missão?`,`"${h.ic} ${h.nm}" será removida permanentemente. Streak e progresso desta missão serão perdidos.`,null,
-    [{lb:'Cancelar',ac:'closeMo()'},{lb:'Deletar',ac:`delHabit('${id}')`,cl:'btn bred'}]);
-}
-function delHabit(id){
-  closeMo();
-  S.habits=S.habits.filter(h=>h.id!==id);
-  save();renderHabits();renderDash();
-  notify('🗑','Missão deletada','A missão foi removida.','nc');
-}
+function confDay(){showMo('🌅 Novo Dia?','Registrar progresso, aplicar streak e resetar missões.',null,[{lb:'Cancelar',ac:'closeMo()'},{lb:'Sim!',ac:'newDay()',cl:'btn'}]);}
 function confDelHab(id){
   const h=S.habits.find(x=>x.id===id);if(!h)return;
   showMo(`🗑 Deletar Missão?`,`"${h.ic} ${h.nm}" será removida permanentemente. XP e progresso já conquistados são mantidos.`,null,[
