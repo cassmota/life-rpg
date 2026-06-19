@@ -22,12 +22,7 @@
       border-top:none;
       padding:5px 16px;display:flex;align-items:center;justify-content:flex-end;
       min-height:34px;backdrop-filter:blur(8px);
-      /* Não pode cobrir o conteúdo dos panels */
-      pointer-events:auto;
     }
-    /* Garante que o container e panels ficam acima do fb-login-bar */
-    .container { position:relative; z-index:10000 !important; }
-    .panel.active { position:relative; z-index:10000 !important; }
   </style>
 </head>
 <body style="padding-top:34px">
@@ -413,7 +408,6 @@
     <div class="tab" data-p="dark">Vícios</div>
     <div class="tab" data-p="boss">Boss</div>
     <div class="tab" data-p="events" id="tab-ev">Eventos</div>
-    <div class="tab" data-p="arena" id="tab-arena">⚔️ Arena</div>
     <div class="tab" data-p="smithy">Ferreiro</div>
     <div class="tab" data-p="shop">Loja</div>
     <div class="tab" data-p="quests">Quests</div>
@@ -489,14 +483,6 @@
   <div class="card mb12"><div class="ct">📜 Missões de Hoje</div>
     <div id="d-prev"></div>
     <button class="btn bsm" onclick="swT('habits')" style="margin-top:7px">Ver todas →</button>
-  </div>
-  <div class="card mb12">
-    <div class="ct" style="color:var(--red3)">💀 Grimório das Sombras</div>
-    <div style="font-size:11px;color:var(--text2);margin-bottom:10px;font-style:italic">Cada vício drena ouro, reduz vida e alimenta o Boss. Seja honesto.</div>
-    <!-- Categorias colapsáveis -->
-    <div id="bh-dash-list"></div>
-    <div class="dv"></div>
-    <div id="bh-dash-st" style="font-size:11px;color:var(--text2)"></div>
   </div>
   <div class="g3">
     <div class="card"><div class="ct">💪 Top Atrib.</div><div id="d-ta" style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold2)">—</div><div id="d-tv" style="font-size:10px;color:var(--text2)"></div></div>
@@ -713,23 +699,6 @@
     </div>
   </div>
   <div class="card" style="margin-top:12px"><div class="ct">📜 Eventos Completados</div><div id="ev-hist"></div></div>
-</div>
-
-<div class="panel" id="panel-arena">
-  <div class="card mb8" style="border-color:rgba(192,57,43,.35);background:linear-gradient(160deg,rgba(10,4,8,.99),rgba(22,10,14,.99));padding:0">
-    <!-- Header temático -->
-    <div style="padding:14px 14px 10px;border-bottom:1px solid rgba(192,57,43,.2)">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="font-size:28px">⚔️</div>
-        <div>
-          <div style="font-family:'Cinzel Decorative',serif;font-size:14px;color:var(--red3);text-shadow:0 0 12px rgba(192,57,43,.4)">Arena de Ondas</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:2px">5 ondas por semana · Inimigos crescentes · Reset toda segunda-feira</div>
-        </div>
-      </div>
-    </div>
-    <!-- Conteúdo dinâmico gerado por renderArena() -->
-    <div id="arena-panel" style="padding:12px 14px 14px"></div>
-  </div>
 </div>
 
 <div class="panel" id="panel-smithy">
@@ -1307,40 +1276,6 @@
   }
 </style>
 
-<!-- ══ ARENA: garante renderArena ao abrir a aba diretamente ══ -->
-<script>
-window.addEventListener('load', function(){
-  // Fallback direto: clique na aba arena chama renderArena
-  const tab = document.getElementById('tab-arena');
-  if(tab) tab.addEventListener('click', function(){
-    if(typeof renderArena==='function') renderArena();
-  });
-
-  // MutationObserver: garante render quando panels ficam ativos
-  // Cobre casos onde swT não chama o render correto
-  const panelRenders = {
-    'panel-potions': ()=>{ if(typeof renderPotions==='function') renderPotions(); },
-    'panel-events':  ()=>{ if(typeof renderEvPanel==='function') renderEvPanel(); if(typeof renderEvBanner==='function') renderEvBanner(); },
-    'panel-arena':   ()=>{ if(typeof renderArena==='function')   renderArena();   },
-  };
-  const observer = new MutationObserver(function(mutations){
-    mutations.forEach(function(m){
-      if(m.type==='attributes' && m.attributeName==='class'){
-        const el = m.target;
-        const id = el.id;
-        if(el.classList.contains('active') && panelRenders[id]){
-          panelRenders[id]();
-        }
-      }
-    });
-  });
-  Object.keys(panelRenders).forEach(function(id){
-    const el = document.getElementById(id);
-    if(el) observer.observe(el, {attributes:true, attributeFilter:['class']});
-  });
-});
-</script>
-
 
 <!-- ══ DARK FANTASY MOTION ENGINE ══ -->
 <script>
@@ -1400,24 +1335,7 @@ window.addEventListener('load', function(){
   const obs = new IntersectionObserver(entries => {
     entries.forEach(e => { if (e.isIntersecting) { e.target.style.animation='cardReveal 0.45s ease-out forwards'; obs.unobserve(e.target); } });
   }, { threshold: 0.08 });
-  function revealCards(root){
-    (root||document).querySelectorAll('.card').forEach((c,i) => {
-      if(c.style.opacity==='0'||c.style.animation===''){
-        c.style.animationDelay=`${i*0.04}s`;
-        obs.observe(c);
-      }
-    });
-  }
-  setTimeout(() => revealCards(), 200);
-  // Revelar cards quando panels ficam ativos
-  const cardRevealObs = new MutationObserver(muts => {
-    muts.forEach(m => {
-      if(m.type==='attributes' && m.attributeName==='class' && m.target.classList.contains('active')){
-        setTimeout(()=>revealCards(m.target), 50);
-      }
-    });
-  });
-  document.querySelectorAll('.panel').forEach(p => cardRevealObs.observe(p, {attributes:true, attributeFilter:['class']}));
+  setTimeout(() => document.querySelectorAll('.card').forEach((c,i) => { c.style.animationDelay=`${i*0.04}s`; obs.observe(c); }), 200);
 
   /* 5. TAB FLASH */
   const fs = document.createElement('style');
@@ -1433,6 +1351,54 @@ window.addEventListener('load', function(){
   });
 
   console.log('%c⚔ LIFE RPG — Dark Fantasy Engine ⚔', 'color:#c9a84c;font-family:serif;font-size:14px;');
+})();
+</script>
+
+<!-- ══════════════════════════════════════════════════════════
+     NAV-BOTTOM CLICK FIX — DEFINITIVO
+     Garante que a barra de navegação NUNCA seja bloqueada por
+     panels com z-index alto, independente de qual CSS está ativo.
+     ══════════════════════════════════════════════════════════ -->
+<style>
+  /* Remove qualquer z-index conflitante dos panels — eles não precisam
+     de z-index próprio, só a nav-bottom precisa estar acima de tudo */
+  .panel.active { z-index: auto !important; }
+  .panel { z-index: auto !important; }
+  /* Garante isolamento e prioridade máxima da nav-bottom */
+  .nav-bottom {
+    z-index: 2147483647 !important; /* maior valor de z-index possível em 32-bit */
+    isolation: isolate !important;
+    position: fixed !important;
+    pointer-events: auto !important;
+  }
+  .nav-bottom * { pointer-events: auto !important; }
+</style>
+<script>
+(function(){
+  // Reforço via JS: a cada navegação de painel, garante que a nav-bottom
+  // está fisicamente movida para o final do <body> no DOM — isso elimina
+  // qualquer disputa de stacking context, pois o último elemento do DOM
+  // com position:fixed sempre ganha em empate de z-index.
+  function enforceNavOnTop(){
+    const nav = document.querySelector('.nav-bottom');
+    if(nav && nav.parentElement && nav !== document.body.lastElementChild){
+      document.body.appendChild(nav);
+    }
+  }
+  // Roda imediatamente e a cada clique em qualquer painel/aba
+  document.addEventListener('DOMContentLoaded', enforceNavOnTop);
+  document.addEventListener('click', function(e){
+    // Pequeno delay para rodar depois do clique processar a troca de aba
+    setTimeout(enforceNavOnTop, 50);
+  }, true);
+  // Também roda quando qualquer panel muda de classe (fica active)
+  const navFixObserver = new MutationObserver(function(){ enforceNavOnTop(); });
+  document.querySelectorAll('.panel').forEach(function(p){
+    navFixObserver.observe(p, {attributes:true, attributeFilter:['class']});
+  });
+  window.addEventListener('load', enforceNavOnTop);
+  setTimeout(enforceNavOnTop, 500);
+  setTimeout(enforceNavOnTop, 1500);
 })();
 </script>
 
