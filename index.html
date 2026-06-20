@@ -1355,51 +1355,106 @@
 </script>
 
 <!-- ══════════════════════════════════════════════════════════
-     NAV-BOTTOM CLICK FIX — DEFINITIVO
-     Garante que a barra de navegação NUNCA seja bloqueada por
-     panels com z-index alto, independente de qual CSS está ativo.
+     PATCH PERMANENTE — swT + NAV + CARD REVEAL
+     Corrige: poções, eventos, arena, nav travada, cards invisíveis
+     Independente da versão do ui.js em produção
      ══════════════════════════════════════════════════════════ -->
 <style>
-  /* Remove qualquer z-index conflitante dos panels — eles não precisam
-     de z-index próprio, só a nav-bottom precisa estar acima de tudo */
-  .panel.active { z-index: auto !important; }
-  .panel { z-index: auto !important; }
-  /* Garante isolamento e prioridade máxima da nav-bottom */
+  /* Remove z-index de panels que bloqueiam a nav */
+  .panel, .panel.active { z-index: auto !important; }
+  /* Nav com prioridade máxima absoluta */
   .nav-bottom {
-    z-index: 2147483647 !important; /* maior valor de z-index possível em 32-bit */
-    isolation: isolate !important;
+    z-index: 2147483647 !important;
     position: fixed !important;
     pointer-events: auto !important;
   }
   .nav-bottom * { pointer-events: auto !important; }
+  .nav-bottom::before, .nav-bottom::after { pointer-events: none !important; }
+  /* Badge não bloqueia cliques */
+  .nav-cat .nav-badge { pointer-events: none !important; }
+  /* Modal acima de tudo */
+  .mo { z-index: 2147483646 !important; }
+  /* Notificações e achievements */
+  .notif { z-index: 2147483645 !important; }
+  #ach-popup { z-index: 2147483644 !important; }
 </style>
+
 <script>
-(function(){
-  // Reforço via JS: a cada navegação de painel, garante que a nav-bottom
-  // está fisicamente movida para o final do <body> no DOM — isso elimina
-  // qualquer disputa de stacking context, pois o último elemento do DOM
-  // com position:fixed sempre ganha em empate de z-index.
-  function enforceNavOnTop(){
-    const nav = document.querySelector('.nav-bottom');
-    if(nav && nav.parentElement && nav !== document.body.lastElementChild){
+window.addEventListener('load', function() {
+
+  // ── 1. PATCH DO swT ────────────────────────────────────────────
+  // Estende o swT existente para chamar renders que faltam
+  const _orig = typeof swT === 'function' ? swT : null;
+  if(_orig && !_orig._patched) {
+    window.swT = function(p) {
+      _orig(p);
+      if(p==='potions') { if(typeof renderPotions==='function') renderPotions(); }
+      if(p==='events')  { if(typeof renderEvPanel==='function')  renderEvPanel();  if(typeof renderEvBanner==='function') renderEvBanner(); }
+      if(p==='boss')    { if(typeof renderBoss==='function')     renderBoss();     }
+      if(p==='arena')   { if(typeof renderArena==='function')    renderArena();    }
+      if(p==='calendar'){ if(typeof renderCal==='function')      renderCal();      else if(typeof renderCalendar==='function') renderCalendar(); }
+    };
+    window.swT._patched = true;
+  }
+
+  // ── 2. CARD REVEAL — corrige opacity:0 em cards de panels ocultos
+  function revealCards(root) {
+    (root || document).querySelectorAll('.card').forEach(function(c) {
+      if(getComputedStyle(c).opacity === '0') {
+        c.style.setProperty('opacity', '1', 'important');
+        c.style.animation = 'cardReveal 0.35s ease-out forwards';
+      }
+    });
+  }
+  // Observer: revela cards quando panel fica active
+  const cardObs = new MutationObserver(function(muts) {
+    muts.forEach(function(m) {
+      if(m.type==='attributes' && m.target.classList.contains('active')) {
+        setTimeout(function(){ revealCards(m.target); }, 60);
+      }
+    });
+  });
+  document.querySelectorAll('.panel').forEach(function(p) {
+    cardObs.observe(p, { attributes: true, attributeFilter: ['class'] });
+  });
+  // Revela cards já visíveis agora
+  setTimeout(revealCards, 300);
+  setTimeout(revealCards, 800);
+
+  // ── 3. NAV-BOTTOM SEMPRE NO TOPO DO DOM ────────────────────────
+  function enforceNav() {
+    var nav = document.querySelector('.nav-bottom');
+    if(nav && nav !== document.body.lastElementChild) {
       document.body.appendChild(nav);
     }
   }
-  // Roda imediatamente e a cada clique em qualquer painel/aba
-  document.addEventListener('DOMContentLoaded', enforceNavOnTop);
-  document.addEventListener('click', function(e){
-    // Pequeno delay para rodar depois do clique processar a troca de aba
-    setTimeout(enforceNavOnTop, 50);
-  }, true);
-  // Também roda quando qualquer panel muda de classe (fica active)
-  const navFixObserver = new MutationObserver(function(){ enforceNavOnTop(); });
-  document.querySelectorAll('.panel').forEach(function(p){
-    navFixObserver.observe(p, {attributes:true, attributeFilter:['class']});
+  enforceNav();
+  setInterval(enforceNav, 2000);
+  document.addEventListener('click', function(){ setTimeout(enforceNav, 50); }, true);
+
+  // ── 4. MutationObserver para panels → render automático ─────────
+  var panelRenders = {
+    'panel-potions': function(){ if(typeof renderPotions==='function') renderPotions(); },
+    'panel-events':  function(){ if(typeof renderEvPanel==='function') renderEvPanel(); if(typeof renderEvBanner==='function') renderEvBanner(); },
+    'panel-arena':   function(){ if(typeof renderArena==='function')   renderArena();   },
+  };
+  var panelObs = new MutationObserver(function(muts) {
+    muts.forEach(function(m) {
+      if(m.type==='attributes' && m.attributeName==='class') {
+        var el = m.target;
+        if(el.classList.contains('active') && panelRenders[el.id]) {
+          panelRenders[el.id]();
+        }
+      }
+    });
   });
-  window.addEventListener('load', enforceNavOnTop);
-  setTimeout(enforceNavOnTop, 500);
-  setTimeout(enforceNavOnTop, 1500);
-})();
+  Object.keys(panelRenders).forEach(function(id) {
+    var el = document.getElementById(id);
+    if(el) panelObs.observe(el, { attributes: true, attributeFilter: ['class'] });
+  });
+
+  console.log('%c✅ Life RPG patches aplicados', 'color:#27ae60;font-weight:bold');
+});
 </script>
 
 </body>
