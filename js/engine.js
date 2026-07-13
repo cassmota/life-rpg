@@ -97,7 +97,35 @@ function buyEquip(id){
 
 // =============== BOSS ===============
 const getBoss=()=>BOSSES[S.boss.idx];
-function checkBW(){if(S.boss.ws!==WS()){const ni=(S.boss.idx+1)%BOSSES.length;const b=BOSSES[ni];S.boss={idx:ni,hp:b.mh,mhp:b.mh,ws:WS(),def:false};save();notify('🐉','Novo Boss!',b.nm,'nr');}}
+
+// ── Scaling do Boss por poder real do jogador ─────────────────────
+// Usa: nível, kills, soma de atributos, equipamentos (eqPow)
+// Resultado: boss sempre desafia o jogador no patamar atual
+function getBossScaleMult(){
+  const lv       = S.lv    || 1;
+  const kills    = S.kills || 0;
+  // Soma dos atributos normalizados (0-100 cada, total máx 600)
+  const attrSum  = Object.values(S.attrs||{}).reduce((a,v)=>a+(v.v||0),0);
+  const attrMult = 1 + (attrSum / 600) * 1.5;   // até +150% por atributos
+  const lvMult   = 1 + (lv - 1) * 0.12;          // +12% por nível
+  const killMult = 1 + kills * 0.10;              // +10% por boss derrotado
+  return lvMult * killMult * attrMult;
+}
+function getBossScaledHP(baseMH){
+  return Math.round(baseMH * getBossScaleMult());
+}
+function getBossScaledATK(baseATK){
+  // ATK escala mais devagar que HP para ser desafiador mas não impossível
+  const lv    = S.lv    || 1;
+  const kills = S.kills || 0;
+  const mult  = 1 + (lv-1)*0.08 + kills*0.07;
+  return Math.round(baseATK * mult);
+}
+function getBossScaledReward(base){
+  // Recompensas acompanham o scaling para valer a pena
+  const mult = 1 + ((S.lv||1)-1)*0.08 + (S.kills||0)*0.06;
+  return Math.round(base * mult);
+}
 // ══ LORE DOS BOSSES ══════════════════════════════════════════════════
 const BOSS_LORE=[
   {lore:'Nas profundezas da Caverna do Amanhã, este ser ancestral aguarda. Alimentado por cada tarefa adiada e sonho engavetado, seu corpo cresce a cada hora desperdiçada. Sua respiração libera névoa do esquecimento — o veneno que apaga ambições e entorpece a vontade dos fracos.',weakness:'Ação imediata e consistência diária'},
@@ -451,40 +479,63 @@ function addHabit(){
 
 // =============== NEW DAY ===============
 function confDay(){showMo('🌅 Novo Dia?','Registrar progresso, aplicar streak e resetar missões.',null,[{lb:'Cancelar',ac:'closeMo()'},{lb:'Sim!',ac:'newDay()',cl:'btn'}]);}
-function confDelHab(id){
-  const h=S.habits.find(x=>x.id===id);if(!h)return;
-  showMo(`🗑 Deletar Missão?`,`"${h.ic} ${h.nm}" será removida permanentemente. XP e progresso já conquistados são mantidos.`,null,[
-    {lb:'Cancelar',ac:'closeMo()'},
-    {lb:'Deletar',ac:`delHab('${id}')`,cl:'btn bred'}
-  ]);
-}
-function delHab(id){
-  S.habits=S.habits.filter(h=>h.id!==id);
-  closeMo();save();renderHabits();
-  notify('🗑','Missão removida','','ng');
-}
 function newDay(){
   closeMo();
   const today=new Date().toDateString();
   const todayISO=new Date().toISOString().substring(0,10);
   const done=S.habits.filter(h=>h.dn).length;
-  S.hist.push({
-    day:today,
-    date:todayISO,
-    xp:S.xpTd,
-    gold:S.goTd,
-    go:S.goTd,
-    done:done,
-    dn:done,
-    tot:S.habits.length
-  });
-  if(S.hist.length>60)S.hist.shift();
-  if(done>0){S.streak++;S.daysA++;S.cStr++;
-    if(S.streak%7===0){for(const k in S.attrs)S.attrs[k].v=Math.min(100,S.attrs[k].v+5);notify('✨','Streak!','7 dias! +5 atribs!','ng');}
-    S.habits.forEach(h=>{if(h.dn){h.sk++;S.attrs[h.at].sk++;}else if(h.tp!=='unique'&&h.tp!=='weekly') h.sk=0;if(h.tp!=='unique'&&h.tp!=='weekly') h.dn=false; else if(h.tp==='daily') h.dn=false;});}
-  else{S.streak=0;S.cStr=0;S.habits.forEach(h=>{h.dn=false;h.sk=0;});}
+
+  // ── Detectar dias pulados e quebrar streak ──────────────────────
+  if(S.lastDay){
+    const last=new Date(S.lastDay);
+    const now=new Date();
+    last.setHours(0,0,0,0);now.setHours(0,0,0,0);
+    const diffDays=Math.round((now-last)/(1000*60*60*24));
+    if(diffDays>1){
+      // Preenche dias perdidos no histórico com missed:true
+      for(let i=1;i<diffDays;i++){
+        const missed=new Date(last);missed.setDate(last.getDate()+i);
+        const missedISO=missed.toISOString().substring(0,10);
+        if(!S.hist.find(h=>h.date===missedISO))
+          S.hist.push({day:missed.toDateString(),date:missedISO,xp:0,gold:0,go:0,done:0,dn:0,tot:S.habits.length,missed:true});
+      }
+      const lost=S.streak;
+      S.streak=0;S.cStr=0;
+      S.habits.forEach(h=>{h.sk=0;});
+      if(lost>0){
+        bLog(`<span style="color:var(--red3)">💔 Streak perdido! ${diffDays-1} dia(s) sem missões. Streak era ${lost} dias — zerado.</span>`);
+        notify('💔','Streak Perdido!',`${diffDays-1} dia(s) sem missões.\nStreak zerado (era ${lost} dias).\nRecomece hoje!`,'nr');
+      }
+    }
+  }
+
+  // ── Registrar hoje ──────────────────────────────────────────────
+  if(!S.hist.find(h=>h.date===todayISO))
+    S.hist.push({day:today,date:todayISO,xp:S.xpTd,gold:S.goTd,go:S.goTd,done:done,dn:done,tot:S.habits.length});
+  if(S.hist.length>60)S.hist=S.hist.slice(-60);
+
+  // ── Remover missões únicas concluídas ───────────────────────────
+  S.habits=S.habits.filter(h=>!(h.tp==='unique'&&h.completed));
+
+  // ── Aplicar streak ──────────────────────────────────────────────
+  if(done>0){
+    S.streak++;S.daysA++;S.cStr++;
+    if(S.streak%7===0){for(const k in S.attrs)S.attrs[k].v=Math.min(100,S.attrs[k].v+5);notify('✨','Streak!',`${S.streak} dias! +5 em todos os atributos!`,'ng');}
+    S.habits.forEach(h=>{
+      if(h.dn){h.sk++;S.attrs[h.at].sk++;}else if(h.tp!=='weekly') h.sk=0;
+      if(h.tp!=='weekly') h.dn=false;
+    });
+  } else {
+    // Nenhuma missão completada hoje → quebra streak
+    const lost=S.streak;
+    S.streak=0;S.cStr=0;
+    S.habits.forEach(h=>{h.dn=false;h.sk=0;});
+    if(lost>0){
+      bLog(`<span style="color:var(--red3)">💔 Nenhuma missão completada. Streak zerado (era ${lost} dias).</span>`);
+      notify('💔','Streak Zerado!',`Nenhuma missão hoje.\nStreak era ${lost} dias.\nAmanhã é um novo começo!`,'nr');
+    }
+  }
   S.xpTd=0;S.goTd=0;S.dnTd=0;S.bdTd=0;S.badLog={};S.lastDay=today;
-  // Check quest triggers after streaks are updated
   if(typeof checkQuestTriggers==='function') checkQuestTriggers();
   checkBW();checkAch();save();renderAll();
   if(Math.random()<0.4&&!S.activeEv)setTimeout(spawnEv,2000);
