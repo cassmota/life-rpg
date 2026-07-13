@@ -634,11 +634,7 @@ html::after{
     inset 0 1px 0 rgba(201,168,76,.2),
     inset 0 2px 8px rgba(0,0,0,.5);
   height:62px;
-  pointer-events:auto;
 }
-.nav-bottom * { pointer-events:auto; }
-.nav-bottom::before,
-.nav-bottom::after { pointer-events:none; }
 /* Linha dourada topo da nav — fina e brilhante */
 .nav-bottom::before{
   content:'';position:absolute;top:0;left:4%;right:4%;height:1px;
@@ -665,12 +661,9 @@ html::after{
 .nav-cat-label{ font-family:'Cinzel',serif;font-size:7.5px;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;text-align:center; }
 .nav-cat.active .nav-cat-label{ color:var(--gold2); }
 .nav-cat .nav-badge{
-  position:absolute;top:4px;left:50%;
-  transform:translateX(6px);
+  position:absolute;top:5px;right:12px;
   background:var(--red3);border-radius:50%;
   width:7px;height:7px;display:none;
-  pointer-events:none;
-  z-index:1;
 }
 .nav-cat.has-alert .nav-badge{ display:block; }
 
@@ -722,6 +715,13 @@ html::after{
 
 /* Panel anim */
 .panel{display:none;animation:fi .25s ease;}.panel.active{display:block;padding-bottom:80px;}
+/* Garante que cards em panels ativos NUNCA ficam com opacity:0
+   O script cardReveal injeta .card{opacity:0} globalmente — isso sobrescreve */
+.panel.active .card,
+.panel.active .hb-item,
+.panel.active .sm-item,
+.panel.active .sh-item,
+.panel.active .inv-cell { opacity: 1 !important; }
 @keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 
 /* Legacy tab hidden (keep for JS compat) */
@@ -1239,7 +1239,7 @@ html::after{
 .notif{
   position:fixed;top:16px;right:16px;
   background:linear-gradient(135deg,rgba(6,5,13,.99),rgba(10,8,18,.99));
-  border-radius:0;padding:12px 16px;z-index:100000;
+  border-radius:0;padding:12px 16px;z-index:1000;
   transform:translateX(120%);
   transition:transform .35s cubic-bezier(.175,.885,.32,1.275);
   max-width:290px;
@@ -1384,7 +1384,7 @@ input:focus,select:focus{
   border:1px solid transparent;
   border-image:linear-gradient(135deg,rgba(201,168,76,.7),rgba(201,168,76,.2),rgba(201,168,76,.6)) 1;
   border-radius:0;
-  padding:12px 16px;z-index:100000;
+  padding:12px 16px;z-index:1000;
   transform:translateX(120%);
   transition:transform .35s cubic-bezier(.175,.885,.32,1.275);
   max-width:290px;
@@ -1774,7 +1774,7 @@ input[type="file"]{display:none;}
 /* ── ACHIEVEMENT UNLOCK POPUP ───────────────────────────────── */
 #ach-popup{
   position:fixed;top:0;left:0;right:0;bottom:0;
-  z-index:100001;
+  z-index:99998;
   display:none;
   pointer-events:none;
 }
